@@ -8,7 +8,7 @@ import { promises as fs } from 'fs';
 import { join } from 'path';
 
 describe('Automation System Integration Tests', () => {
-  const testDir = '/tmp/ro-fan-integration-test';
+  const testDir = '/tmp/ro-fi-integration-test';
   let masterEngine: MasterAutomationEngine;
   let novelDetector: NovelDetector;
   let storyEngine: StoryDiversityEngine;
