@@ -1,0 +1,190 @@
+# 콘텐츠 품질 자동 검사 (Push 이벤트 대응)
+name: Content Quality Auto-Check
+
+on:
+  push:
+    paths: 
+      - "src/content/chapters/**/*.md"
+      - "src/content/novels/**/*.md"
+    branches:
+      - main
+      - master
+
+jobs:
+  auto-quality-check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Check Content Files
+        id: check_files
+        run: |
+          echo "🔍 콘텐츠 파일 변경사항 확인 중..."
+          
+          # 변경된 파일 확인
+          changed_files=$(git diff --name-only HEAD~1 HEAD | grep -E "(src/content/chapters/.*\.md|src/content/novels/.*\.md)" || echo "")
+          
+          if [[ -n "$changed_files" ]]; then
+            echo "📝 변경된 콘텐츠 파일:"
+            echo "$changed_files"
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "changed_files<<EOF" >> $GITHUB_OUTPUT
+            echo "$changed_files" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "ℹ️ 콘텐츠 파일 변경사항 없음"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Basic Quality Validation
+        if: steps.check_files.outputs.has_changes == 'true'
+        run: |
+          echo "🔍 기본 품질 검증 시작..."
+          
+          # 변경된 파일들에 대해 품질 검사
+          IFS=$'\n' read -rd '' -a files_array <<< "${{ steps.check_files.outputs.changed_files }}"
+          
+          failed_files=()
+          passed_files=()
+          
+          for file in "${files_array[@]}"; do
+            if [[ -f "$file" ]]; then
+              echo "📖 검사 중: $file"
+              
+              # 1. 메타데이터 확인
+              if ! head -10 "$file" | grep -q "^title:"; then
+                echo "❌ $file: 제목 메타데이터 누락"
+                failed_files+=("$file:메타데이터누락")
+                continue
+              fi
+              
+              # 2. 글자 수 확인
+              char_count=$(wc -m < "$file" | tr -d ' ')
+              if [[ $char_count -lt 2000 ]]; then
+                echo "❌ $file: 글자 수 부족 ($char_count < 2000)"
+                failed_files+=("$file:글자수부족($char_count)")
+                continue
+              fi
+              
+              # 3. 마크다운 형식 확인
+              dialogue_count=$(grep -c '^> "' "$file" 2>/dev/null || echo 0)
+              if [[ $dialogue_count -eq 0 ]]; then
+                echo "⚠️ $file: 대화체 없음 (확인 필요)"
+              fi
+              
+              # 4. 한글 콘텐츠 확인
+              korean_chars=$(grep -o '[가-힣]' "$file" 2>/dev/null | wc -l | tr -d ' ')
+              if [[ $korean_chars -lt 500 ]]; then
+                echo "❌ $file: 한글 콘텐츠 부족 ($korean_chars < 500)"
+                failed_files+=("$file:한글부족($korean_chars)")
+                continue
+              fi
+              
+              echo "✅ $file: 기본 품질 기준 통과 (${char_count}자, 한글 ${korean_chars}자, 대화 ${dialogue_count}개)"
+              passed_files+=("$file")
+            else
+              echo "⚠️ 파일이 존재하지 않음: $file"
+            fi
+          done
+          
+          # 결과 요약
+          echo ""
+          echo "📊 품질 검증 결과:"
+          echo "✅ 통과: ${#passed_files[@]}개 파일"
+          echo "❌ 실패: ${#failed_files[@]}개 파일"
+          
+          if [[ ${#failed_files[@]} -gt 0 ]]; then
+            echo ""
+            echo "실패한 파일들:"
+            for failed in "${failed_files[@]}"; do
+              echo "  - $failed"
+            done
+            
+            # GitHub Issue 생성을 위한 정보 저장
+            echo "quality_failed=true" >> $GITHUB_OUTPUT
+            echo "failed_files<<EOF" >> $GITHUB_OUTPUT
+            printf '%s\n' "${failed_files[@]}" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "quality_failed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Quality Issue
+        if: steps.check_files.outputs.has_changes == 'true' && steps.basic_quality.outputs.quality_failed == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const failedFiles = `${{ steps.basic_quality.outputs.failed_files }}`.split('\n').filter(f => f.trim());
+            
+            const issueBody = `
+            ## 📊 콘텐츠 품질 검증 실패
+            
+            **커밋**: ${{ github.sha }}
+            **브랜치**: ${{ github.ref_name }}
+            **시간**: ${new Date().toLocaleString('ko-KR', {timeZone: 'Asia/Seoul'})}
+            
+            ### ❌ 실패한 파일들
+            
+            ${failedFiles.map(f => `- \`${f}\``).join('\n')}
+            
+            ### 🔧 개선 필요사항
+            
+            1. **메타데이터**: 모든 파일에 \`title:\`, \`novel:\`, \`chapterNumber:\` 필수
+            2. **최소 분량**: 챕터당 최소 2,000자 이상
+            3. **한글 콘텐츠**: 최소 500자 이상의 한글 콘텐츠
+            4. **마크다운 형식**: 
+               - 대화: \`> "내용"\`
+               - 독백: \`> _'내용'_\`
+               - 액션: \`> [행동]\`
+            
+            ### 📋 체크리스트
+            
+            - [ ] 메타데이터 보완
+            - [ ] 콘텐츠 분량 확보
+            - [ ] 마크다운 형식 적용
+            - [ ] 품질 재검증
+            
+            **자동 생성된 이슈입니다. 문제 해결 후 이 이슈를 닫아주세요.**
+            `;
+            
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `[품질검증] 콘텐츠 품질 기준 미달 (${failedFiles.length}개 파일)`,
+              body: issueBody,
+              labels: ['quality-check', 'content', 'automated']
+            });
+
+      - name: Quality Check Summary
+        if: steps.check_files.outputs.has_changes == 'true'
+        run: |
+          echo "📊 콘텐츠 품질 검사 완료"
+          echo "========================"
+          echo "🔍 검사 대상: ${{ steps.check_files.outputs.has_changes == 'true' && '있음' || '없음' }}"
+          
+          if [[ "${{ steps.basic_quality.outputs.quality_failed }}" == "true" ]]; then
+            echo "❌ 품질 검증: 실패 (개선 필요)"
+            echo "📋 GitHub 이슈가 자동 생성되었습니다."
+            exit 1
+          else
+            echo "✅ 품질 검증: 통과"
+          fi
+
+      - name: Success Notification
+        if: steps.check_files.outputs.has_changes == 'true' && steps.basic_quality.outputs.quality_failed != 'true'
+        run: |
+          echo "🎉 모든 콘텐츠 파일이 품질 기준을 충족합니다!"
+          echo "✅ 자동 배포 준비 완료"

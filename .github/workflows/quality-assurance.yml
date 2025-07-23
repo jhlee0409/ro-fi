@@ -2,13 +2,6 @@
 name: Quality Assurance Check
 
 on:
-  push:
-    paths: 
-      - "src/content/chapters/**/*.md"
-      - "src/content/novels/**/*.md"
-    branches:
-      - main
-      - master
   pull_request:
     paths:
       - "src/content/chapters/**/*.md"
@@ -17,6 +10,14 @@ on:
       - main
       - master
   workflow_dispatch:
+    inputs:
+      force_check:
+        description: 'Force quality check even without file changes'
+        required: false
+        default: false
+        type: boolean
+  schedule:
+    - cron: '30 2 * * *'  # 매일 새벽 2:30 (자동화 이후 품질 검사)
 
 jobs:
   quality-check:
