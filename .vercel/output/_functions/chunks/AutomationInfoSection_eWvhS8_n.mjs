@@ -1,0 +1,11 @@
+import { c as createComponent, m as maybeRenderHead, r as renderTemplate } from './astro/server_CZqxw96B.mjs';
+import 'kleur/colors';
+import 'clsx';
+
+const $$AutomationInfoSection = createComponent(($$result, $$props, $$slots) => {
+  return renderTemplate`${maybeRenderHead()}<section class="py-20 bg-gradient-to-r from-purple-900 via-pink-900 to-indigo-900"> <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8"> <div class="text-center"> <h2 class="text-3xl sm:text-4xl font-bold text-white mb-8">
+완전 자동화된 AI 연재 시스템
+</h2> <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12"> <div class="text-center"> <div class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4"> <span class="text-2xl">🕐</span> </div> <h3 class="text-xl font-semibold text-white mb-2">매일 새벽 2시</h3> <p class="text-purple-200">정확한 시간에 자동으로 새로운 에피소드 업데이트</p> </div> <div class="text-center"> <div class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4"> <span class="text-2xl">🤖</span> </div> <h3 class="text-xl font-semibold text-white mb-2">Claude AI 창작</h3> <p class="text-purple-200">최고 수준의 AI가 완벽한 스토리 연속성으로 창작</p> </div> <div class="text-center"> <div class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4"> <span class="text-2xl">⭐</span> </div> <h3 class="text-xl font-semibold text-white mb-2">품질 보장</h3> <p class="text-purple-200">7.5/10 이상의 품질을 자동으로 검증하고 보장</p> </div> </div> </div> </div> </section>`;
+}, "/Users/jack/client/ro-fan/src/components/sections/AutomationInfoSection.astro", void 0);
+
+export { $$AutomationInfoSection as $ };

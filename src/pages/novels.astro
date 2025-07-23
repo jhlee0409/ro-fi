@@ -1,0 +1,162 @@
+---
+import Layout from '../layouts/Layout.astro';
+import LibraryHeroSection from '../components/sections/LibraryHeroSection.astro';
+import FilterSection from '../components/sections/FilterSection.astro';
+import NovelListSection from '../components/sections/NovelListSection.astro';
+import AutomationInfoSection from '../components/sections/AutomationInfoSection.astro';
+import { NovelDataService } from '../lib/data-services';
+import '../styles/globals.css';
+
+// 데이터 서비스를 통해 통합된 데이터 가져오기
+const [novels, platformStats] = await Promise.all([
+  NovelDataService.getAllNovels(),
+  NovelDataService.getPlatformStats()
+]);
+
+// 각 소설별 통계 계산
+const novelStats = await NovelDataService.getNovelStats(novels);
+---
+
+<Layout 
+  title="로맨스 판타지 연재 소설 | RO-FAN"
+  description="AI가 창조하는 무한한 로맨스 판타지 세계를 탐험하세요. 매일 새로운 이야기를 만나보세요."
+>
+  <LibraryHeroSection 
+    totalNovels={platformStats.totalNovels}
+    activeNovels={platformStats.activeNovels}
+    totalChapters={platformStats.totalChapters}
+  />
+  
+  <FilterSection />
+  
+  <NovelListSection novels={novelStats} />
+  
+  <AutomationInfoSection />
+
+  <!-- JavaScript for Filtering and Search -->
+  <script>
+    // DOM 요소들
+    const searchInput = document.getElementById('searchInput');
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    const novelCards = document.querySelectorAll('.novel-card');
+
+    // 현재 필터 상태
+    let currentFilter = 'all';
+    let currentSearch = '';
+
+    // 검색 기능
+    searchInput?.addEventListener('input', (e) => {
+      const target = e.target as HTMLInputElement;
+      currentSearch = target.value.toLowerCase().trim();
+      filterNovels();
+    });
+
+    // 필터 버튼 기능
+    filterButtons.forEach(button => {
+      button.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement;
+        const filter = target.dataset.filter;
+        if (!filter) return;
+
+        // 활성 버튼 스타일 업데이트
+        filterButtons.forEach(btn => {
+          btn.classList.remove('active', 'bg-purple-600', 'text-white');
+          btn.classList.add('bg-gray-100', 'text-gray-700');
+        });
+
+        target.classList.add('active', 'bg-purple-600', 'text-white');
+        target.classList.remove('bg-gray-100', 'text-gray-700');
+
+        currentFilter = filter;
+        filterNovels();
+      });
+    });
+
+    // 소설 필터링 함수
+    function filterNovels() {
+      novelCards.forEach(card => {
+        const cardElement = card as HTMLElement;
+        const title = cardElement.dataset.title || '';
+        const status = cardElement.dataset.status || '';
+
+        let showCard = true;
+
+        // 검색 필터
+        if (currentSearch && !title.includes(currentSearch)) {
+          showCard = false;
+        }
+
+        // 상태 필터
+        if (currentFilter !== 'all' && currentFilter !== 'latest') {
+          if (status !== currentFilter) {
+            showCard = false;
+          }
+        }
+
+        // 카드 표시/숨김
+        if (showCard) {
+          cardElement.style.display = 'block';
+          cardElement.classList.add('animate-fadeIn');
+        } else {
+          cardElement.style.display = 'none';
+          cardElement.classList.remove('animate-fadeIn');
+        }
+      });
+
+      // 최신순 정렬 - 이미 서버에서 정렬되어 있으므로 특별한 처리 불필요
+
+      // 결과가 없는 경우 메시지 표시
+      const visibleCards = Array.from(novelCards).filter(card => {
+        const el = card as HTMLElement;
+        return el.style.display !== 'none';
+      });
+      const noResultsMessage = document.getElementById('no-results');
+
+      if (visibleCards.length === 0 && !noResultsMessage) {
+        const grid = document.getElementById('novels-grid');
+        if (grid) {
+          const message = document.createElement('div');
+          message.id = 'no-results';
+          message.className = 'col-span-full text-center py-16';
+          message.innerHTML = `
+            <div class="text-6xl mb-4">🔍</div>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">검색 결과가 없습니다</h3>
+            <p class="text-gray-600">다른 검색어나 필터를 시도해보세요</p>
+          `;
+          grid.appendChild(message);
+        }
+      } else if (visibleCards.length > 0 && noResultsMessage) {
+        noResultsMessage.remove();
+      }
+    }
+
+    // 애니메이션 클래스 추가
+    const style = document.createElement('style');
+    style.textContent = `
+      .animate-fadeIn {
+        animation: fadeIn 0.5s ease-in-out;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  </script>
+</Layout>
+
+<style>
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>

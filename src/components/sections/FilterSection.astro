@@ -1,0 +1,56 @@
+---
+/**
+ * 소설 필터링 및 검색 섹션
+ */
+---
+
+<section class="py-12 bg-white border-b border-gray-100">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+      <!-- 검색 -->
+      <div class="flex-1 max-w-md">
+        <div class="relative">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+          </div>
+          <input
+            type="text"
+            placeholder="소설 제목으로 검색..."
+            id="searchInput"
+            class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm"
+          />
+        </div>
+      </div>
+
+      <!-- 필터 버튼들 -->
+      <div class="flex items-center space-x-3">
+        <button
+          data-filter="all"
+          class="filter-btn active px-4 py-2 text-sm font-medium rounded-full transition-all duration-200 bg-purple-600 text-white"
+        >
+          전체
+        </button>
+        <button
+          data-filter="연재 중"
+          class="filter-btn px-4 py-2 text-sm font-medium rounded-full transition-all duration-200 bg-gray-100 text-gray-700 hover:bg-purple-100 hover:text-purple-700"
+        >
+          연재 중
+        </button>
+        <button
+          data-filter="완결"
+          class="filter-btn px-4 py-2 text-sm font-medium rounded-full transition-all duration-200 bg-gray-100 text-gray-700 hover:bg-purple-100 hover:text-purple-700"
+        >
+          완결
+        </button>
+        <button
+          data-filter="latest"
+          class="filter-btn px-4 py-2 text-sm font-medium rounded-full transition-all duration-200 bg-gray-100 text-gray-700 hover:bg-purple-100 hover:text-purple-700"
+        >
+          최신순
+        </button>
+      </div>
+    </div>
+  </div>
+</section>

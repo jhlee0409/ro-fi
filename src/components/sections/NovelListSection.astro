@@ -1,0 +1,143 @@
+---
+/**
+ * 소설 목록 섹션
+ */
+import type { NovelStats } from '../../lib/data-services';
+
+interface Props {
+  novels: NovelStats[];
+}
+
+const { novels } = Astro.props;
+---
+
+<section class="py-20 bg-gradient-to-b from-gray-50 to-white" id="novels-section">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    {novels.length === 0 ? (
+      <!-- 빈 상태 -->
+      <div class="text-center py-16">
+        <div class="text-6xl mb-6">📚</div>
+        <h3 class="text-2xl font-semibold text-gray-900 mb-4">아직 연재 중인 소설이 없습니다</h3>
+        <p class="text-gray-600 mb-8">곧 멋진 로맨스 판타지 소설들이 시작됩니다!</p>
+        <a
+          href="/"
+          class="inline-flex items-center px-6 py-3 border border-transparent rounded-lg text-base font-medium text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 transition-all duration-200"
+        >
+          홈으로 돌아가기
+        </a>
+      </div>
+    ) : (
+      <!-- 소설 그리드 -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="novels-grid">
+        {novels.map((novel) => (
+          <div
+            class="novel-card group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden transform hover:-translate-y-2"
+            data-status={novel.data.status}
+            data-title={novel.data.title?.toLowerCase()}
+          >
+            <!-- 소설 커버 -->
+            <div class="relative h-64 bg-gradient-to-br from-purple-400 via-pink-500 to-red-400 overflow-hidden">
+              {novel.data.coverImage ? (
+                <img
+                  src={novel.data.coverImage}
+                  alt={novel.data.title}
+                  class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                />
+              ) : (
+                <div class="w-full h-full flex items-center justify-center text-white text-6xl font-bold group-hover:scale-110 transition-transform duration-500">
+                  {novel.data.title?.[0] || '📖'}
+                </div>
+              )}
+              <!-- 오버레이 -->
+              <div class="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-all duration-300"></div>
+
+              <!-- 상태 뱃지 -->
+              <div class="absolute top-4 left-4">
+                <span class={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                  novel.data.status === '연재 중'
+                    ? 'bg-green-100 text-green-800'
+                    : novel.data.status === '완결'
+                    ? 'bg-blue-100 text-blue-800'
+                    : 'bg-gray-100 text-gray-800'
+                }`}>
+                  {novel.data.status}
+                </span>
+              </div>
+
+              <!-- 챕터 수 -->
+              <div class="absolute top-4 right-4">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/90 text-gray-800">
+                  {novel.chaptersCount}화
+                </span>
+              </div>
+
+              <!-- 품질 점수 -->
+              {novel.data.rating !== undefined && novel.data.rating > 0 && (
+                <div class="absolute bottom-4 left-4">
+                  <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                    ⭐ {novel.data.rating}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <!-- 소설 정보 -->
+            <div class="p-6 space-y-4">
+              <div>
+                <h3 class="text-xl font-bold text-gray-900 group-hover:text-purple-600 transition-colors mb-2">
+                  <a href={`/novels/${novel.slug}`} class="block">
+                    {novel.data.title}
+                  </a>
+                </h3>
+                <p class="text-sm text-gray-500 mb-3">by {novel.data.author}</p>
+                <p class="text-gray-600 text-sm leading-relaxed line-clamp-3">
+                  {novel.data.summary}
+                </p>
+              </div>
+
+              <!-- 트렌드 태그 -->
+              <div class="flex flex-wrap gap-2">
+                {novel.data.tropes?.slice(0, 3).map((trope) => (
+                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                    #{trope}
+                  </span>
+                ))}
+              </div>
+
+              <!-- 통계 -->
+              <div class="flex items-center justify-between text-xs text-gray-500">
+                <div class="flex items-center space-x-3">
+                  <span>📖 {novel.chaptersCount}화</span>
+                  <span>📅 {novel.lastUpdate?.toLocaleDateString('ko-KR')}</span>
+                </div>
+                {novel.latestChapter > 0 && (
+                  <span class="font-medium text-purple-600">최신 {novel.latestChapter}화</span>
+                )}
+              </div>
+
+              <!-- 액션 버튼 -->
+              <div class="pt-4">
+                <a
+                  href={`/novels/${novel.slug}`}
+                  class="w-full inline-flex items-center justify-center px-4 py-3 border border-transparent rounded-lg text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 transition-all duration-200 transform hover:scale-105"
+                >
+                  <span class="mr-2">📖</span>
+                  읽기 시작하기
+                </a>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+</section>
+
+<style>
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>

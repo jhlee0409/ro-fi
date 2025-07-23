@@ -1,0 +1,196 @@
+name: 자동 로판 연재 시스템 (Romance Fantasy Auto Publisher)
+
+on:
+  schedule:
+    # 매일 오전 9시, 오후 3시, 오후 9시 KST 실행 (UTC 기준 00:00, 06:00, 12:00)
+    - cron: '0 0,6,12 * * *'
+  workflow_dispatch:
+    inputs:
+      action_type:
+        description: '실행할 액션 타입'
+        required: true
+        default: 'auto'
+        type: choice
+        options:
+        - auto
+        - new_novel_only
+        - continue_only
+        - complete_only
+      verbose:
+        description: '상세 로그 출력'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  automation:
+    runs-on: ubuntu-latest
+    
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      NODE_ENV: production
+    
+    steps:
+    - name: 🛒 체크아웃 코드
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        fetch-depth: 0
+    
+    - name: 📦 Node.js 설정
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+    
+    - name: 🔧 pnpm 설치
+      uses: pnpm/action-setup@v4
+      with:
+        version: latest
+    
+    - name: 📚 의존성 설치
+      run: pnpm install --frozen-lockfile
+    
+    - name: 🧪 테스트 실행
+      run: |
+        pnpm test
+        pnpm test:e2e --reporter=list
+      continue-on-error: false
+    
+    - name: 🔍 보안 검사
+      run: |
+        pnpm security:audit
+        pnpm lint
+      continue-on-error: true
+    
+    - name: 🚀 자동화 실행
+      id: automation
+      run: |
+        if [[ "${{ github.event.inputs.verbose }}" == "true" ]]; then
+          node scripts/run-automation.js --verbose
+        else
+          node scripts/run-automation.js
+        fi
+      continue-on-error: false
+    
+    - name: 📊 결과 업로드 (Artifacts)
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: automation-results-${{ github.run_number }}
+        path: |
+          logs/
+          src/content/
+          test-results/
+        retention-days: 30
+    
+    - name: 🎯 Git 설정
+      if: success()
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "로판 자동화 봇 🤖"
+    
+    - name: 📝 변경사항 커밋
+      if: success()
+      run: |
+        git add src/content/
+        git add logs/
+        
+        # 변경사항이 있는지 확인
+        if git diff --staged --quiet; then
+          echo "변경사항이 없습니다. 커밋을 건너뜁니다."
+          exit 0
+        fi
+        
+        # 커밋 메시지 생성
+        TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S KST')
+        AUTOMATION_LOG=$(tail -n 20 logs/automation-report-$(date '+%Y-%m-%d').json | grep -o '"summary":[^}]*}' | head -1 || echo '"summary": {"activeNovels": "N/A"}')
+        
+        git commit -m "🤖 자동 연재 업데이트 - $TIMESTAMP
+
+        $AUTOMATION_LOG
+        
+        🤖 Generated with Claude AI Automation System
+        Co-Authored-By: Claude <noreply@anthropic.com>"
+    
+    - name: 📤 GitHub에 푸시
+      if: success()
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: ${{ github.ref }}
+    
+    - name: 🔔 알림 (성공시)
+      if: success()
+      run: |
+        echo "::notice title=자동화 성공::로맨스 판타지 자동 연재가 성공적으로 완료되었습니다! 🎉"
+    
+    - name: ❌ 알림 (실패시)
+      if: failure()
+      run: |
+        echo "::error title=자동화 실패::로맨스 판타지 자동 연재 중 오류가 발생했습니다. 로그를 확인해주세요."
+
+  deploy:
+    needs: automation
+    if: success()
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 🛒 체크아웃 (최신 변경사항 포함)
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.ref }}
+        fetch-depth: 0
+    
+    - name: 📦 Node.js 설정
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+    
+    - name: 🔧 pnpm 설치
+      uses: pnpm/action-setup@v4
+      with:
+        version: latest
+    
+    - name: 📚 의존성 설치
+      run: pnpm install --frozen-lockfile
+    
+    - name: 🏗️ Astro 빌드
+      run: pnpm build
+      env:
+        NODE_ENV: production
+    
+    - name: 🚀 Vercel 배포
+      uses: amondnet/vercel-action@v25
+      if: github.ref == 'refs/heads/main'
+      with:
+        vercel-token: ${{ secrets.VERCEL_TOKEN }}
+        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+        vercel-args: '--prod'
+        working-directory: .
+    
+    - name: 🎉 배포 완료 알림
+      if: success()
+      run: |
+        echo "::notice title=배포 완료::새로운 콘텐츠가 라이브 사이트에 배포되었습니다! ✨"
+
+  health_check:
+    needs: [automation, deploy]
+    if: always()
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 🏥 시스템 상태 체크
+      run: |
+        if [[ "${{ needs.automation.result }}" == "success" && "${{ needs.deploy.result }}" == "success" ]]; then
+          echo "::notice title=시스템 정상::모든 자동화 프로세스가 정상적으로 완료되었습니다! 🟢"
+        elif [[ "${{ needs.automation.result }}" == "failure" ]]; then
+          echo "::error title=자동화 실패::콘텐츠 생성 프로세스에서 오류가 발생했습니다. 🔴"
+          exit 1
+        elif [[ "${{ needs.deploy.result }}" == "failure" ]]; then
+          echo "::warning title=배포 실패::콘텐츠는 생성되었으나 배포에서 오류가 발생했습니다. 🟡"
+        else
+          echo "::warning title=부분 성공::일부 프로세스가 완료되지 않았습니다. 🟡"
+        fi

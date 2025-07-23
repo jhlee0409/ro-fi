@@ -1,0 +1,713 @@
+---
+import Layout from '../../../../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+import '../../../../styles/globals.css';
+
+// 정적 사이트 생성을 위한 설정
+export const prerender = true;
+
+// URL에서 파라미터 가져오기
+export async function getStaticPaths() {
+  const novels = await getCollection('novels');
+  const chapters = await getCollection('chapters');
+
+  const paths = [];
+
+  for (const novel of novels) {
+    const novelChapters = chapters.filter(chapter => chapter.data.novel === novel.slug);
+
+    for (const chapter of novelChapters) {
+      paths.push({
+        params: {
+          slug: novel.slug,
+          chapterNumber: chapter.data.chapterNumber.toString()
+        },
+        props: {
+          novel,
+          chapter,
+          allChapters: novelChapters.sort((a, b) => a.data.chapterNumber - b.data.chapterNumber)
+        },
+      });
+    }
+  }
+
+  return paths;
+}
+
+const { novel, chapter, allChapters } = Astro.props;
+const { slug, chapterNumber } = Astro.params;
+
+// 만약 getStaticPaths에서 데이터를 전달받지 못했다면, 직접 불러오기
+let currentNovel = novel;
+let currentChapter = chapter;
+let currentAllChapters = allChapters;
+
+if (!currentNovel || !currentChapter || !currentAllChapters) {
+  const novels = await getCollection('novels');
+  const chapters = await getCollection('chapters');
+
+  const foundNovel = novels.find(n => n.slug === slug);
+  if (!foundNovel) {
+    throw new Error(`Novel not found for slug: ${slug}`);
+  }
+  currentNovel = foundNovel;
+
+  currentAllChapters = chapters
+    .filter(ch => ch.data.novel === slug)
+    .sort((a, b) => a.data.chapterNumber - b.data.chapterNumber);
+
+  const foundChapter = currentAllChapters.find(ch => ch.data.chapterNumber === parseInt(chapterNumber || '0'));
+  if (!foundChapter) {
+    throw new Error(`Chapter not found for novel: ${slug}, chapter: ${chapterNumber}`);
+  }
+  currentChapter = foundChapter;
+}
+
+// 챕터 콘텐츠 렌더링
+const { Content } = await currentChapter.render();
+
+// 현재 챕터 위치 찾기
+const currentIndex = currentAllChapters.findIndex(ch => ch.data.chapterNumber === parseInt(chapterNumber || '0'));
+const prevChapter = currentIndex > 0 ? currentAllChapters[currentIndex - 1] : null;
+const nextChapter = currentIndex < currentAllChapters.length - 1 ? currentAllChapters[currentIndex + 1] : null;
+
+// 읽기 시간 계산 (분당 200단어 기준)
+const readingTime = Math.ceil((currentChapter.data.wordCount || 1000) / 200);
+
+// 진행률 계산
+const progress = ((currentIndex + 1) / currentAllChapters.length * 100).toFixed(1);
+---
+
+<Layout title={`${currentChapter.data.title} - ${currentNovel.data.title} | RO-FAN`}>
+  <!-- 상단 네비게이션 바 -->
+  <nav class="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-lg border-b border-gray-200 transition-all duration-300" id="navbar">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <!-- 소설 정보 -->
+        <div class="flex items-center space-x-4">
+          <a
+            href={`/novels/${slug}`}
+            class="flex items-center space-x-2 text-gray-700 hover:text-purple-600 transition-colors"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+            <span class="hidden sm:block font-medium">{currentNovel.data.title}</span>
+          </a>
+          <span class="text-gray-400 hidden sm:block">•</span>
+          <span class="text-sm text-gray-600 hidden sm:block">{currentChapter.data.chapterNumber}화</span>
+        </div>
+
+        <!-- 진행률 -->
+        <div class="flex items-center space-x-4">
+          <div class="hidden md:flex items-center space-x-2 text-sm text-gray-600">
+            <span>{currentIndex + 1} / {currentAllChapters.length}</span>
+            <div class="w-20 h-1 bg-gray-200 rounded-full overflow-hidden">
+              <div
+                class="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-300"
+                style={`width: ${progress}%`}
+              ></div>
+            </div>
+            <span>{progress}%</span>
+          </div>
+
+          <!-- 설정 버튼 -->
+          <button
+            id="settingsBtn"
+            class="p-2 text-gray-600 hover:text-purple-600 rounded-lg hover:bg-gray-100 transition-colors"
+            title="읽기 설정"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- 읽기 설정 패널 -->
+  <div
+    id="settingsPanel"
+    class="fixed top-16 right-4 z-40 bg-white rounded-2xl shadow-2xl border border-gray-200 p-6 w-80 transform translate-x-full transition-transform duration-300"
+  >
+    <h3 class="text-lg font-semibold text-gray-900 mb-4">읽기 설정</h3>
+
+    <div class="space-y-4">
+      <!-- 폰트 크기 -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">폰트 크기</label>
+        <div class="flex items-center space-x-2">
+          <button class="font-size-btn px-3 py-1 text-sm rounded-lg bg-gray-100 hover:bg-purple-100" data-size="16">작게</button>
+          <button class="font-size-btn active px-3 py-1 text-sm rounded-lg bg-purple-600 text-white" data-size="18">보통</button>
+          <button class="font-size-btn px-3 py-1 text-sm rounded-lg bg-gray-100 hover:bg-purple-100" data-size="20">크게</button>
+          <button class="font-size-btn px-3 py-1 text-sm rounded-lg bg-gray-100 hover:bg-purple-100" data-size="22">매우 크게</button>
+        </div>
+      </div>
+
+      <!-- 줄 간격 -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">줄 간격</label>
+        <div class="flex items-center space-x-2">
+          <button class="line-height-btn px-3 py-1 text-sm rounded-lg bg-gray-100 hover:bg-purple-100" data-height="1.5">좁게</button>
+          <button class="line-height-btn active px-3 py-1 text-sm rounded-lg bg-purple-600 text-white" data-height="1.8">보통</button>
+          <button class="line-height-btn px-3 py-1 text-sm rounded-lg bg-gray-100 hover:bg-purple-100" data-height="2.1">넓게</button>
+        </div>
+      </div>
+
+      <!-- 테마 -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">테마</label>
+        <div class="flex items-center space-x-2">
+          <button class="theme-btn active px-3 py-1 text-sm rounded-lg bg-white border border-gray-300" data-theme="light">밝게</button>
+          <button class="theme-btn px-3 py-1 text-sm rounded-lg bg-amber-50 border border-amber-200" data-theme="sepia">세피아</button>
+          <button class="theme-btn px-3 py-1 text-sm rounded-lg bg-gray-800 text-white" data-theme="dark">어둡게</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 메인 콘텐츠 -->
+  <main class="pt-16 min-h-screen bg-white transition-colors duration-300" id="main-content">
+    <!-- 챕터 헤더 -->
+    <section class="bg-gradient-to-b from-purple-50 to-white py-12">
+      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- 브레드크럼 -->
+        <nav class="flex items-center space-x-2 text-sm text-gray-600 mb-6">
+          <a href="/" class="hover:text-purple-600 transition-colors">홈</a>
+          <span>›</span>
+          <a href="/novels" class="hover:text-purple-600 transition-colors">소설</a>
+          <span>›</span>
+          <a href={`/novels/${slug}`} class="hover:text-purple-600 transition-colors">{currentNovel.data.title}</a>
+          <span>›</span>
+          <span class="text-purple-600 font-medium">{currentChapter.data.chapterNumber}화</span>
+        </nav>
+
+        <!-- 챕터 정보 -->
+        <div class="text-center space-y-4">
+          <div class="flex items-center justify-center space-x-3 text-sm text-gray-600">
+            <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full font-medium">
+              {currentChapter.data.chapterNumber}화
+            </span>
+            <span>•</span>
+            <span>{readingTime}분 소요</span>
+            <span>•</span>
+            <span>{currentChapter.data.wordCount || 1000}자</span>
+          </div>
+
+          <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 leading-tight">
+            {currentChapter.data.title}
+          </h1>
+
+          {currentChapter.data.summary && (
+            <p class="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
+              {currentChapter.data.summary}
+            </p>
+          )}
+
+          <div class="flex items-center justify-center space-x-2 text-sm text-gray-500">
+            <span>📅 {currentChapter.data.publicationDate.toLocaleDateString('ko-KR')}</span>
+            <span>•</span>
+            <span>🤖 Claude AI 창작</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 챕터 내용 -->
+    <section class="py-12">
+      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <article
+          id="chapter-content"
+          class="max-w-none prose-none reading-content"
+        >
+          <!-- 실제 콘텐츠는 여기에 들어갑니다 -->
+          <div class="novel-content novel-typography space-y-6 text-justify">
+            {Content ? (
+              <div class="fade-in-up">
+                <Content />
+              </div>
+            ) : (
+              <!-- 샘플 콘텐츠 -->
+              <>
+                <p>
+                  달빛이 창가로 스며들던 그 밤, 엘리아나는 마법서의 마지막 페이지를 넘기고 있었다.
+                  고대 룬 문자들이 은빛으로 빛나며 공중에 떠오르는 것을 보며, 그녀는 자신이
+                  얼마나 큰 힘을 다루고 있는지 깨달았다.
+                </p>
+
+                <p>
+                  "이제 돌이킬 수 없어..." 그녀의 목소리가 떨렸다. 마법진 중앙에서 푸른 빛이
+                  소용돌이치기 시작했고, 바람이 일어나 그녀의 긴 머리카락을 흩날렸다.
+                </p>
+
+                <p>
+                  그때 문이 열리며 카엘이 들어왔다. 그의 검은 눈동자가 마법진의 빛을 반사하며
+                  번쩍였다. "엘리아나, 멈춰. 아직 준비가 되지 않았어."
+                </p>
+
+                <p>
+                  "준비?" 그녀가 뒤돌아보며 웃었다. "나는 이미 충분히 기다렸어요, 카엘.
+                  이 힘으로 우리 왕국을 구할 수 있다면..."
+                </p>
+
+                <p>
+                  "그 대가가 너의 목숨일 수도 있다는 걸 알고 있나?" 카엘의 목소리에 절망이
+                  섞여 있었다. 그는 한 걸음 더 다가갔다. "나는... 나는 너를 잃을 수 없어."
+                </p>
+
+                <p>
+                  엘리아나의 심장이 빠르게 뛰었다. 카엘의 고백인가? 아니면 단순한 동료애인가?
+                  마법진의 빛이 더욱 강해지며 두 사람을 감쌌다.
+                </p>
+
+                <p>
+                  "만약 내가 살아돌아온다면..." 엘리아나가 조심스럽게 말했다. "당신은
+                  나에게 무엇을 말하고 싶었던 건가요?"
+                </p>
+
+                <p>
+                  카엘의 손이 그녀의 뺨을 부드럽게 어루만졌다. "나는 이미 말했어.
+                  너를 잃을 수 없다고." 그의 목소리가 속삭임으로 바뀌었다. "왜냐하면...
+                  나는 너를 사랑하니까."
+                </p>
+              </>
+            )}
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- 챕터 네비게이션 -->
+    <section class="py-12 bg-gray-50">
+      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- 이전/다음 챕터 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          {prevChapter ? (
+            <a
+              href={`/novels/${slug}/chapter/${prevChapter.data.chapterNumber}`}
+              class="group bg-white rounded-2xl p-6 shadow-sm border border-gray-200 hover:border-purple-300 hover:shadow-md transition-all duration-300"
+            >
+              <div class="flex items-center space-x-3 mb-3">
+                <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+                <span class="text-sm font-medium text-purple-600">이전 챕터</span>
+              </div>
+              <h3 class="text-lg font-semibold text-gray-900 group-hover:text-purple-600 transition-colors">
+                {prevChapter.data.chapterNumber}화. {prevChapter.data.title}
+              </h3>
+            </a>
+          ) : (
+            <div class="bg-gray-100 rounded-2xl p-6 flex items-center justify-center text-gray-500">
+              <span>첫 번째 챕터입니다</span>
+            </div>
+          )}
+
+          {nextChapter ? (
+            <a
+              href={`/novels/${slug}/chapter/${nextChapter.data.chapterNumber}`}
+              class="group bg-white rounded-2xl p-6 shadow-sm border border-gray-200 hover:border-purple-300 hover:shadow-md transition-all duration-300 text-right"
+            >
+              <div class="flex items-center justify-end space-x-3 mb-3">
+                <span class="text-sm font-medium text-purple-600">다음 챕터</span>
+                <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+              </div>
+              <h3 class="text-lg font-semibold text-gray-900 group-hover:text-purple-600 transition-colors">
+                {nextChapter.data.chapterNumber}화. {nextChapter.data.title}
+              </h3>
+            </a>
+          ) : (
+            <div class="bg-gray-100 rounded-2xl p-6 flex items-center justify-center text-gray-500">
+              <span>다음 챕터를 기다려주세요</span>
+            </div>
+          )}
+        </div>
+
+        <!-- 소설로 돌아가기 -->
+        <div class="text-center">
+          <a
+            href={`/novels/${slug}`}
+            class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-pink-700 transition-all duration-200 transform hover:scale-105"
+          >
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+            </svg>
+            소설 정보로 돌아가기
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 하단 네비게이션 (모바일용) -->
+  <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 md:hidden">
+    <div class="flex items-center justify-between">
+      {prevChapter ? (
+        <a
+          href={`/novels/${slug}/chapter/${prevChapter.data.chapterNumber}`}
+          class="flex items-center px-4 py-2 bg-gray-100 rounded-lg text-gray-700 hover:bg-purple-100 hover:text-purple-700 transition-colors"
+        >
+          <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+          이전
+        </a>
+      ) : (
+        <div></div>
+      )}
+
+      <div class="text-sm text-gray-600">
+        {currentIndex + 1} / {currentAllChapters.length}
+      </div>
+
+      {nextChapter ? (
+        <a
+          href={`/novels/${slug}/chapter/${nextChapter.data.chapterNumber}`}
+          class="flex items-center px-4 py-2 bg-purple-600 rounded-lg text-white hover:bg-purple-700 transition-colors"
+        >
+          다음
+          <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+          </svg>
+        </a>
+      ) : (
+        <div></div>
+      )}
+    </div>
+  </div>
+
+  <!-- JavaScript for Reading Experience -->
+  <script>
+    // DOM 요소들
+    const settingsBtn = document.getElementById('settingsBtn');
+    const settingsPanel = document.getElementById('settingsPanel');
+    const chapterContent = document.getElementById('chapter-content');
+    const mainContent = document.getElementById('main-content');
+    const navbar = document.getElementById('navbar');
+
+    // 설정 패널 토글
+    settingsBtn?.addEventListener('click', () => {
+      if (settingsPanel?.classList.contains('translate-x-full')) {
+        settingsPanel.classList.remove('translate-x-full');
+        settingsPanel.classList.add('translate-x-0');
+      } else {
+        settingsPanel?.classList.add('translate-x-full');
+        settingsPanel?.classList.remove('translate-x-0');
+      }
+    });
+
+    // 외부 클릭시 설정 패널 닫기
+    document.addEventListener('click', (e) => {
+      const target = e.target as Element;
+      if (!settingsPanel?.contains(target) && !settingsBtn?.contains(target)) {
+        settingsPanel?.classList.add('translate-x-full');
+        settingsPanel?.classList.remove('translate-x-0');
+      }
+    });
+
+    // 폰트 크기 설정
+    const fontSizeButtons = document.querySelectorAll('.font-size-btn');
+    fontSizeButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement;
+        const size = target.dataset.size;
+        if (chapterContent && size) {
+          chapterContent.style.fontSize = size + 'px';
+        }
+
+        // 활성 버튼 스타일 업데이트
+        fontSizeButtons.forEach(b => {
+          b.classList.remove('active', 'bg-purple-600', 'text-white');
+          b.classList.add('bg-gray-100');
+        });
+        target.classList.add('active', 'bg-purple-600', 'text-white');
+        target.classList.remove('bg-gray-100');
+
+        // 로컬 저장소에 저장
+        if (size) {
+          localStorage.setItem('reading-font-size', size);
+        }
+      });
+    });
+
+    // 줄 간격 설정
+    const lineHeightButtons = document.querySelectorAll('.line-height-btn');
+    lineHeightButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement;
+        const height = target.dataset.height;
+        if (chapterContent && height) {
+          chapterContent.style.lineHeight = height;
+        }
+
+        // 활성 버튼 스타일 업데이트
+        lineHeightButtons.forEach(b => {
+          b.classList.remove('active', 'bg-purple-600', 'text-white');
+          b.classList.add('bg-gray-100');
+        });
+        target.classList.add('active', 'bg-purple-600', 'text-white');
+        target.classList.remove('bg-gray-100');
+
+        // 로컬 저장소에 저장
+        if (height) {
+          localStorage.setItem('reading-line-height', height);
+        }
+      });
+    });
+
+    // 테마 설정
+    const themeButtons = document.querySelectorAll('.theme-btn');
+    themeButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement;
+        const theme = target.dataset.theme;
+
+        // 테마 스타일 적용
+        if (theme === 'light' && mainContent && chapterContent && navbar) {
+          mainContent.className = 'pt-16 min-h-screen bg-white transition-colors duration-300';
+          chapterContent.className = 'prose prose-lg max-w-none leading-relaxed text-gray-900';
+          navbar.className = 'fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-lg border-b border-gray-200 transition-all duration-300';
+        } else if (theme === 'sepia' && mainContent && chapterContent && navbar) {
+          mainContent.className = 'pt-16 min-h-screen bg-amber-50 transition-colors duration-300';
+          chapterContent.className = 'prose prose-lg max-w-none leading-relaxed text-amber-900';
+          navbar.className = 'fixed top-0 left-0 right-0 z-50 bg-amber-50/95 backdrop-blur-lg border-b border-amber-200 transition-all duration-300';
+        } else if (theme === 'dark' && mainContent && chapterContent && navbar) {
+          mainContent.className = 'pt-16 min-h-screen bg-gray-900 transition-colors duration-300';
+          chapterContent.className = 'prose prose-lg max-w-none leading-relaxed text-gray-100';
+          navbar.className = 'fixed top-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-lg border-b border-gray-700 transition-all duration-300';
+        }
+
+        // 활성 버튼 스타일 업데이트
+        themeButtons.forEach(b => {
+          b.classList.remove('active');
+          const btnElement = b as HTMLElement;
+          if (theme === 'light') {
+            b.classList.remove('bg-white', 'bg-amber-50', 'bg-gray-800');
+            b.classList.add(btnElement.dataset.theme === 'light' ? 'bg-white' : btnElement.dataset.theme === 'sepia' ? 'bg-amber-50' : 'bg-gray-800');
+          }
+        });
+        target.classList.add('active');
+
+        // 로컬 저장소에 저장
+        if (theme) {
+          localStorage.setItem('reading-theme', theme);
+        }
+      });
+    });
+
+    // 스크롤시 네비게이션 바 숨기기/보이기
+    let lastScrollY = window.scrollY;
+    window.addEventListener('scroll', () => {
+      const currentScrollY = window.scrollY;
+
+      if (currentScrollY > lastScrollY && currentScrollY > 100 && navbar) {
+        // 아래로 스크롤시 숨기기
+        navbar.style.transform = 'translateY(-100%)';
+      } else if (navbar) {
+        // 위로 스크롤시 보이기
+        navbar.style.transform = 'translateY(0)';
+      }
+
+      lastScrollY = currentScrollY;
+    });
+
+    // NOVEL_MARKDOWN_FORMAT.md 표준에 맞춘 소설 콘텐츠 스타일링
+    function applyNovelFormatStyling() {
+      console.log('소설 포맷 스타일링 적용 시작');
+      const contentElement = document.querySelector('.novel-content');
+      if (!contentElement) {
+        console.log('소설 콘텐츠 요소를 찾을 수 없음');
+        return;
+      }
+
+      // 모든 요소에 대해 처리
+      const allElements = contentElement.querySelectorAll('*');
+      console.log('처리할 요소 수:', allElements.length);
+
+      allElements.forEach((element) => {
+        const text = element.textContent?.trim() || '';
+        const html = element.innerHTML || '';
+        
+        // blockquote 요소 처리 (표준 포맷의 >, 대화체, 독백체, 액션)
+        if (element.tagName === 'BLOCKQUOTE') {
+          // 기존 클래스 초기화
+          element.className = '';
+          
+          // 1. 대화체 감지: > "내용"
+          if (/^>?\s*".*"$/.test(text) || text.includes('"')) {
+            if ((text.match(/[!?！？]/g) || []).length >= 2) {
+              // 강조 대화체 (감정이 격한 대사)
+              element.className = 'novel-dialogue-emphasis';
+              console.log('강조 대화체 적용:', text.substring(0, 50));
+            } else {
+              // 일반 대화체
+              element.className = 'novel-dialogue';
+              console.log('대화체 적용:', text.substring(0, 50));
+            }
+          }
+          // 2. 독백체 감지: > _'내용'_
+          else if (/^>?\s*[_*]'.*'[_*]$/.test(text) || (text.includes("'") && (html.includes('<em>') || html.includes('_')))) {
+            element.className = 'novel-monologue';
+            console.log('독백체 적용:', text.substring(0, 50));
+          }
+          // 3. 액션 감지: > [내용]
+          else if (/^>?\s*\[.*\]$/.test(text) || (text.includes('[') && text.includes(']'))) {
+            element.className = 'novel-action';
+            console.log('액션 적용:', text.substring(0, 50));
+          }
+          // 기타 blockquote
+          else {
+            element.className = 'my-6 px-6 py-4 bg-gray-50 dark:bg-gray-800/20 border-l-4 border-gray-400 rounded-r-lg italic text-gray-700 dark:text-gray-300';
+          }
+        }
+        
+        // 일반 p 태그 처리 (서술)
+        else if (element.tagName === 'P' && !element.closest('blockquote')) {
+          // 화자 설명 감지: **이름**이 ~했다
+          if (/\*\*[^*]+\*\*.*(?:말했다|대답했다|물었다|소리쳤다|속삭였다|웃었다|울었다|말을)/.test(text)) {
+            element.className = 'novel-speaker';
+            console.log('화자 설명 적용:', text.substring(0, 50));
+          }
+          // 일반 서술
+          else {
+            element.className = 'novel-narrative novel-typography';
+          }
+        }
+        
+        // hr 태그 처리 (장면 전환)
+        else if (element.tagName === 'HR') {
+          element.className = 'novel-scene-break';
+          element.innerHTML = '<span class="inline-block px-4 py-2 text-gray-400 dark:text-gray-600 text-xl">✦ ✦ ✦</span>';
+        }
+      });
+
+      // Strong 태그 스타일링
+      const strongElements = contentElement.querySelectorAll('strong');
+      strongElements.forEach(strong => {
+        if (!strong.closest('blockquote') && !strong.classList.contains('novel-speaker')) {
+          strong.className = 'font-bold text-gray-900 dark:text-gray-100 bg-yellow-100 dark:bg-yellow-900/30 px-1 py-0.5 rounded';
+        }
+      });
+
+      // Em 태그 스타일링
+      const emElements = contentElement.querySelectorAll('em');
+      emElements.forEach(em => {
+        if (!em.closest('blockquote')) {
+          em.className = 'italic text-purple-600 dark:text-purple-400 font-medium';
+        }
+      });
+      
+      console.log('소설 포맷 스타일링 완료');
+    }
+
+
+    // 저장된 설정 불러오기
+    window.addEventListener('load', () => {
+      const savedFontSize = localStorage.getItem('reading-font-size');
+      const savedLineHeight = localStorage.getItem('reading-line-height');
+      const savedTheme = localStorage.getItem('reading-theme');
+
+      if (savedFontSize && chapterContent) {
+        chapterContent.style.fontSize = savedFontSize + 'px';
+        const fontBtn = document.querySelector(`[data-size="${savedFontSize}"]`) as HTMLElement;
+        fontBtn?.click();
+      }
+
+      if (savedLineHeight && chapterContent) {
+        chapterContent.style.lineHeight = savedLineHeight;
+        const lineBtn = document.querySelector(`[data-height="${savedLineHeight}"]`) as HTMLElement;
+        lineBtn?.click();
+      }
+
+      if (savedTheme) {
+        const themeBtn = document.querySelector(`[data-theme="${savedTheme}"]`) as HTMLElement;
+        themeBtn?.click();
+      }
+
+      // 소설 포맷 스타일링 적용
+      applyNovelFormatStyling();
+    });
+
+    // 키보드 단축키
+    document.addEventListener('keydown', (e) => {
+      // ESC: 설정 패널 닫기
+      if (e.key === 'Escape') {
+        settingsPanel?.classList.add('translate-x-full');
+        settingsPanel?.classList.remove('translate-x-0');
+      }
+
+      // 좌우 화살표: 이전/다음 챕터
+      const chapterNum = parseInt(window.location.pathname.split('/').pop() || '0');
+
+      if (e.key === 'ArrowLeft') {
+        const prevLink = document.querySelector(`[href*="chapter/${chapterNum - 1}"]`) as HTMLAnchorElement;
+        if (prevLink) prevLink.click();
+      }
+
+      if (e.key === 'ArrowRight') {
+        const nextLink = document.querySelector(`[href*="chapter/${chapterNum + 1}"]`) as HTMLAnchorElement;
+        if (nextLink) nextLink.click();
+      }
+    });
+
+    // 읽기 진행률 추적
+    const progressBar = document.querySelector('.bg-gradient-to-r.from-purple-500.to-pink-500') as HTMLElement;
+    window.addEventListener('scroll', () => {
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const scrolled = (window.scrollY / docHeight) * 100;
+
+      if (progressBar) {
+        progressBar.style.width = Math.min(scrolled, 100) + '%';
+      }
+    });
+
+    // 접근성 개선: 키보드 네비게이션
+    document.addEventListener('keydown', (e) => {
+      // Ctrl/Cmd + Enter: 다음 챕터로 이동
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        const nextLink = document.querySelector('a[href*="chapter/"]:last-of-type') as HTMLAnchorElement;
+        if (nextLink) nextLink.click();
+      }
+      
+      // Alt + 숫자키: 폰트 크기 조절
+      if (e.altKey && /^[1-4]$/.test(e.key)) {
+        const sizes = ['16', '18', '20', '22'];
+        const fontBtn = document.querySelector(`[data-size="${sizes[parseInt(e.key) - 1]}"]`) as HTMLElement;
+        fontBtn?.click();
+        e.preventDefault();
+      }
+    });
+
+    // 읽기 위치 자동 저장 및 복원
+    const saveReadingPosition = () => {
+      const scrollPosition = window.scrollY;
+      const chapterKey = `reading-position-${window.location.pathname}`;
+      localStorage.setItem(chapterKey, scrollPosition.toString());
+    };
+
+    const restoreReadingPosition = () => {
+      const chapterKey = `reading-position-${window.location.pathname}`;
+      const savedPosition = localStorage.getItem(chapterKey);
+      if (savedPosition) {
+        window.scrollTo(0, parseInt(savedPosition));
+      }
+    };
+
+    // 페이지 로드 시 읽기 위치 복원
+    window.addEventListener('load', () => {
+      setTimeout(restoreReadingPosition, 100);
+    });
+
+    // 스크롤 시 읽기 위치 저장 (디바운스)
+    let saveTimeout: NodeJS.Timeout;
+    window.addEventListener('scroll', () => {
+      clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(saveReadingPosition, 1000);
+    });
+  </script>
+</Layout>
+

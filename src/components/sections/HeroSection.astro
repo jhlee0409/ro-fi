@@ -1,0 +1,95 @@
+---
+/**
+ * 메인 페이지 히어로 섹션
+ */
+interface Props {
+  totalNovels: number;
+  totalChapters: number;
+}
+
+const { totalNovels, totalChapters } = Astro.props;
+---
+
+<section class="relative min-h-screen flex items-center justify-center overflow-hidden">
+  <!-- 배경 그라디언트 -->
+  <div class="absolute inset-0 bg-gradient-to-br from-purple-900 via-pink-900 to-indigo-900"></div>
+
+  <!-- 배경 파티클 효과 -->
+  <div class="absolute inset-0 overflow-hidden">
+    {[...Array(50)].map((_, i) => (
+      <div
+        class="absolute w-1 h-1 bg-white rounded-full opacity-20 animate-pulse"
+        style={{
+          left: `${Math.random() * 100}%`,
+          top: `${Math.random() * 100}%`,
+          animationDelay: `${Math.random() * 3}s`,
+          animationDuration: `${2 + Math.random() * 3}s`
+        }}
+      ></div>
+    ))}
+  </div>
+
+  <!-- 중앙 컨텐츠 -->
+  <div class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+    <div class="space-y-8">
+      <!-- 메인 제목 -->
+      <div class="space-y-4">
+        <h1 class="text-4xl sm:text-6xl lg:text-7xl font-bold text-white leading-tight">
+          <span class="block bg-gradient-to-r from-pink-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent">
+            AI가 창조하는
+          </span>
+          <span class="block">로맨스 판타지</span>
+        </h1>
+        <p class="text-xl sm:text-2xl text-purple-100 max-w-3xl mx-auto leading-relaxed">
+          클로드 AI가 매일 새벽 2시, 완벽한 스토리 연속성으로 새로운 로맨스 판타지 세계를 선사합니다
+        </p>
+      </div>
+
+      <!-- 통계 카드 -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-12">
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
+          <div class="text-3xl sm:text-4xl font-bold text-white mb-2">{totalNovels}</div>
+          <div class="text-purple-200">연재 소설</div>
+        </div>
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
+          <div class="text-3xl sm:text-4xl font-bold text-white mb-2">{totalChapters}</div>
+          <div class="text-purple-200">총 챕터</div>
+        </div>
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
+          <div class="text-3xl sm:text-4xl font-bold text-white mb-2">100%</div>
+          <div class="text-purple-200">AI 자동 생성</div>
+        </div>
+      </div>
+
+      <!-- CTA 버튼 -->
+      <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mt-12">
+        <a
+          href="/novels"
+          class="group relative px-8 py-4 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full text-white font-semibold text-lg hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-2xl"
+        >
+          <span class="relative z-10">소설 읽어보기</span>
+          <div class="absolute inset-0 bg-gradient-to-r from-pink-400 to-purple-500 rounded-full blur opacity-30 group-hover:opacity-50 transition-opacity"></div>
+        </a>
+        <a
+          href="#latest"
+          class="px-8 py-4 border-2 border-white/30 rounded-full text-white font-semibold text-lg hover:bg-white/10 transition-all duration-300"
+        >
+          최신 업데이트 보기
+        </a>
+      </div>
+
+      <!-- 자동 생성 안내 -->
+      <div class="mt-8 flex items-center justify-center space-x-3 text-purple-200">
+        <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+        <span class="text-sm">매일 새벽 2시 새로운 에피소드 자동 업데이트</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 스크롤 다운 표시 -->
+  <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+    <div class="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center">
+      <div class="w-1 h-3 bg-white/50 rounded-full mt-2 animate-pulse"></div>
+    </div>
+  </div>
+</section>
