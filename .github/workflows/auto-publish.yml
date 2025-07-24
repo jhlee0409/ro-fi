@@ -77,11 +77,6 @@ jobs:
         pnpm vitest --run
       continue-on-error: false
 
-    - name: 🎭 E2E 테스트 실행
-      run: |
-        pnpm test:e2e --reporter=list
-      continue-on-error: true
-
     - name: 🔍 보안 검사
       run: |
         pnpm run security:audit
@@ -179,7 +174,14 @@ jobs:
         cache: 'pnpm'
 
     - name: 📚 의존성 설치
-      run: pnpm install --ignore-scripts
+      # Playwright가 브라우저 바이너리를 설치하려면 스크립트를 실행해야 하므로 --ignore-scripts를 제거합니다.
+      run: pnpm install
+
+    - name: 🎭 E2E 테스트 실행 (배포 전 최종 검증)
+      run: |
+        echo "🔬 배포 전 E2E 테스트를 실행하여 사이트의 안정성을 최종 검증합니다."
+        pnpm test:e2e --reporter=list
+      # E2E 테스트 실패 시 배포를 중단하도록 continue-on-error를 제거합니다.
 
     - name: 🏗️ Astro 빌드
       run: pnpm build
@@ -187,8 +189,8 @@ jobs:
         NODE_ENV: production
 
     - name: 🚀 Vercel 배포
-      uses: amondnet/vercel-action@v25
       if: github.ref == 'refs/heads/main'
+      uses: amondnet/vercel-action@v25
       with:
         vercel-token: ${{ secrets.VERCEL_TOKEN }}
         vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}

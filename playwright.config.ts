@@ -26,10 +26,10 @@ export default defineConfig({
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
-    
+
     /* Take screenshot on failure */
     screenshot: 'only-on-failure',
-    
+
     /* Record video on failure */
     video: 'retain-on-failure',
   },
@@ -77,6 +77,8 @@ export default defineConfig({
     command: 'pnpm dev',
     url: 'http://127.0.0.1:4321',
     reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
+    // CI 환경 등에서 개발 서버 구동이 오래 걸리는 경우를 대비해
+    // 타임아웃을 3분(180,000ms)으로 늘립니다.
+    timeout: 180 * 1000,
   },
 });
