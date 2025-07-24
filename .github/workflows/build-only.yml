@@ -28,7 +28,7 @@ jobs:
     - name: 🔧 pnpm 설치
       uses: pnpm/action-setup@v4
       with:
-        version: 8
+        version: latest
     
     - name: 📦 Node.js 설정
       uses: actions/setup-node@v4
@@ -39,8 +39,8 @@ jobs:
     - name: 📚 의존성 설치
       run: |
         echo "📦 의존성 설치 중..."
-        # lockfile 호환성 문제 해결
-        pnpm install --no-frozen-lockfile
+        # 의존성 설치
+        pnpm install
         echo "✅ 의존성 설치 완료"
     
     - name: 🏗️ 빌드 수행

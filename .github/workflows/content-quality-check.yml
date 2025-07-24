@@ -50,6 +50,7 @@ jobs:
           fi
 
       - name: Basic Quality Validation
+        id: basic_quality
         if: steps.check_files.outputs.has_changes == 'true'
         run: |
           echo "🔍 기본 품질 검증 시작..."

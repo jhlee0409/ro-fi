@@ -26,15 +26,15 @@ jobs:
           node-version: '20'
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
         with:
-          version: 8
+          version: latest
 
       - name: Install Dependencies
         run: |
           echo "📦 의존성 설치 중..."
-          # lockfile 호환성 문제 해결
-          pnpm install --no-frozen-lockfile
+          # 의존성 설치
+          pnpm install
           # PATH에 node_modules/.bin 추가
           echo "$PWD/node_modules/.bin" >> $GITHUB_PATH
           

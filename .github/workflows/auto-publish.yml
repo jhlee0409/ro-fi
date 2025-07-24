@@ -40,7 +40,7 @@ jobs:
     - name: 🔧 pnpm 설치
       uses: pnpm/action-setup@v4
       with:
-        version: 8
+        version: latest
     
     - name: 📦 Node.js 설정
       uses: actions/setup-node@v4
@@ -54,8 +54,8 @@ jobs:
         pnpm --version
         
         echo "📦 의존성 설치 중..."
-        # lockfile 호환성 문제 해결을 위해 --no-frozen-lockfile 사용
-        pnpm install --no-frozen-lockfile
+        # 의존성 설치
+        pnpm install
         
         echo "🔍 설치된 패키지 확인"
         ls -la node_modules/.bin/ | grep -E "(vitest|playwright)" || echo "테스트 관련 바이너리 없음"
@@ -95,8 +95,8 @@ jobs:
     
     - name: 🔍 보안 검사
       run: |
-        pnpm security:audit
-        pnpm lint
+        pnpm run security:audit
+        pnpm run lint
       continue-on-error: true
     
     - name: 🚀 자동화 실행
@@ -181,7 +181,7 @@ jobs:
     - name: 🔧 pnpm 설치
       uses: pnpm/action-setup@v4
       with:
-        version: 8
+        version: latest
     
     - name: 📦 Node.js 설정
       uses: actions/setup-node@v4
