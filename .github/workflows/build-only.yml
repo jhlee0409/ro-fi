@@ -1,0 +1,76 @@
+# 테스트 없이 빌드만 수행하는 워크플로우
+name: Build Only (No Tests)
+
+on:
+  workflow_dispatch:
+    inputs:
+      skip_tests:
+        description: '테스트 건너뛰기'
+        required: false
+        default: true
+        type: boolean
+
+jobs:
+  build-without-tests:
+    runs-on: ubuntu-latest
+    
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      NODE_ENV: production
+    
+    steps:
+    - name: 🛒 체크아웃 코드
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        fetch-depth: 0
+    
+    - name: 🔧 pnpm 설치
+      uses: pnpm/action-setup@v4
+      with:
+        version: 8
+    
+    - name: 📦 Node.js 설정
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'pnpm'
+    
+    - name: 📚 의존성 설치
+      run: |
+        echo "📦 의존성 설치 중..."
+        pnpm install
+        echo "✅ 의존성 설치 완료"
+    
+    - name: 🏗️ 빌드 수행
+      run: |
+        echo "🏗️ Astro 빌드 시작..."
+        pnpm build
+        echo "✅ 빌드 완료"
+    
+    - name: 🧪 자동화 스크립트 실행
+      if: github.event.inputs.skip_tests != 'true'
+      run: |
+        echo "🚀 자동화 스크립트 실행..."
+        node scripts/run-automation.js --verbose
+      continue-on-error: true
+    
+    - name: 📊 빌드 결과 업로드
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: build-results-${{ github.run_number }}
+        path: |
+          dist/
+          logs/
+        retention-days: 7
+    
+    - name: ✅ 빌드 성공 알림
+      if: success()
+      run: |
+        echo "::notice title=빌드 성공::프로젝트가 성공적으로 빌드되었습니다! 🎉"
+    
+    - name: ❌ 빌드 실패 알림  
+      if: failure()
+      run: |
+        echo "::error title=빌드 실패::프로젝트 빌드 중 오류가 발생했습니다."

@@ -32,7 +32,8 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          pnpm install --ignore-scripts
+          echo "📦 의존성 설치 중..."
+          pnpm install
           # PATH에 node_modules/.bin 추가
           echo "$PWD/node_modules/.bin" >> $GITHUB_PATH
           
