@@ -117,6 +117,17 @@ export class ReaderAnalyticsEngine {
   }
 
   /**
+   * 캐시 업데이트
+   */
+  updateCache(novelSlug, data) {
+    const cacheKey = `${novelSlug}_analysis`;
+    this.trendCache.set(cacheKey, {
+      data: data,
+      timestamp: Date.now()
+    });
+  }
+
+  /**
    * 기본 메트릭스 수집
    */
   async collectBasicMetrics(novelSlug, chapterNumber) {
@@ -155,6 +166,18 @@ export class ReaderAnalyticsEngine {
    * 참여도 분석
    */
   analyzeEngagement(metrics) {
+    // null 체크
+    if (!metrics) {
+      return {
+        score: 0,
+        level: 'critical',
+        trend: 'insufficient_data',
+        strongPoints: [],
+        weakPoints: ['데이터 없음'],
+        recommendations: ['데이터 수집 필요']
+      };
+    }
+
     // 참여도 점수 계산 (0-1 스케일)
     const engagementScore = (
       (metrics.completionRate * this.config.weights.completionRate) +
@@ -181,6 +204,18 @@ export class ReaderAnalyticsEngine {
    * 감정 반응 분석
    */
   analyzeEmotionResponse(novelSlug, chapterNumber) {
+    // null 체크
+    if (!novelSlug || chapterNumber == null) {
+      return {
+        variety: 0,
+        intensity: 0,
+        dominantEmotion: 'unknown',
+        progression: 'flat',
+        stagnation: { isStagnant: true, duration: 0 },
+        recommendations: ['데이터 수집 필요']
+      };
+    }
+
     // 가상 감정 데이터 (실제로는 댓글 감정 분석, 리액션 등에서 추출)
     const mockEmotionData = this.generateMockEmotionData(chapterNumber);
     
@@ -213,6 +248,17 @@ export class ReaderAnalyticsEngine {
    * 이탈 패턴 분석
    */
   analyzeDropoutPatterns(metrics) {
+    // null 체크
+    if (!metrics) {
+      return {
+        rate: 1.0,
+        severity: 'critical',
+        criticalPoints: [],
+        causes: ['데이터 없음'],
+        recommendations: ['데이터 수집 필요']
+      };
+    }
+
     const dropoutRate = metrics.dropoutRate;
     const dropoutPoints = metrics.dropoutPoints;
     

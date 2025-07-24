@@ -32,7 +32,10 @@ describe('NovelDetector', () => {
     await fs.mkdir(testChaptersDir, { recursive: true });
     
     detector = new NovelDetector(testNovelsDir, testChaptersDir);
-    
+  });
+
+  // 테스트 데이터 생성 헬퍼 함수
+  async function createTestData() {
     // 테스트용 소설 파일 생성
     await fs.writeFile(
       join(testNovelsDir, 'active-novel.md'),
@@ -83,7 +86,7 @@ rating: 0
 챕터 내용입니다.`
       );
     }
-  });
+  }
 
   afterEach(async () => {
     // 테스트 후 정리
@@ -95,6 +98,8 @@ rating: 0
   });
 
   test('연재 중인 소설들을 정확히 감지해야 함', async () => {
+    await createTestData();
+    
     const activeNovels = await detector.getActiveNovels();
     
     expect(activeNovels).toHaveLength(1);
@@ -103,6 +108,8 @@ rating: 0
   });
 
   test('각 소설의 진행도를 정확히 계산해야 함', async () => {
+    await createTestData();
+    
     const novelWithProgress = await detector.getNovelWithProgress('active-novel');
     
     expect(novelWithProgress).toBeDefined();
@@ -112,46 +119,8 @@ rating: 0
   });
 
   test('완결이 가까운 소설을 식별해야 함', async () => {
-    // 기본 소설과 챕터들이 beforeEach에서 이미 생성되었는지 확인
-    try {
-      await fs.access(join(testNovelsDir, 'active-novel.md'));
-    } catch {
-      // 없으면 다시 생성
-      await fs.writeFile(
-        join(testNovelsDir, 'active-novel.md'),
-        `---
-title: "진행 중인 소설"
-status: "연재 중"
-author: "테스트 작가"
-publishedDate: 2024-01-01
-totalChapters: 10
-rating: 0
-tropes: ["enemies-to-lovers"]
----
-
-# 진행 중인 소설
-내용입니다.`
-      );
-
-      // 기본 챕터들 생성 (1-5)
-      for (let i = 1; i <= 5; i++) {
-        await fs.writeFile(
-          join(testChaptersDir, `active-novel-ch${i.toString().padStart(2, '0')}.md`),
-          `---
-title: "챕터 ${i}"
-novel: "active-novel"
-chapterNumber: ${i}
-publicationDate: 2024-01-${i.toString().padStart(2, '0')}
-wordCount: 1000
-rating: 0
----
-
-# 챕터 ${i}
-챕터 내용입니다.`
-        );
-      }
-    }
-
+    await createTestData();
+    
     // 4개 챕터 추가로 생성 (총 9개, 목표 10개의 90%)
     for (let i = 6; i <= 9; i++) {
       await fs.writeFile(
@@ -182,45 +151,7 @@ rating: 0
   });
 
   test('새 소설이 필요한지 판단해야 함', async () => {
-    // 기본 소설과 챕터들이 beforeEach에서 이미 생성되었는지 확인
-    try {
-      await fs.access(join(testNovelsDir, 'active-novel.md'));
-    } catch {
-      // 없으면 다시 생성
-      await fs.writeFile(
-        join(testNovelsDir, 'active-novel.md'),
-        `---
-title: "진행 중인 소설"
-status: "연재 중"
-author: "테스트 작가"
-publishedDate: 2024-01-01
-totalChapters: 10
-rating: 0
-tropes: ["enemies-to-lovers"]
----
-
-# 진행 중인 소설
-내용입니다.`
-      );
-
-      // 기본 챕터들 생성 (1-5)
-      for (let i = 1; i <= 5; i++) {
-        await fs.writeFile(
-          join(testChaptersDir, `active-novel-ch${i.toString().padStart(2, '0')}.md`),
-          `---
-title: "챕터 ${i}"
-novel: "active-novel"
-chapterNumber: ${i}
-publicationDate: 2024-01-${i.toString().padStart(2, '0')}
-wordCount: 1000
-rating: 0
----
-
-# 챕터 ${i}
-챕터 내용입니다.`
-        );
-      }
-    }
+    await createTestData();
 
     const needsNewNovel = await detector.needsNewNovel();
     
@@ -229,6 +160,8 @@ rating: 0
   });
 
   test('마크다운 frontmatter 파싱이 정확해야 함', async () => {
+    await createTestData();
+    
     const novelWithProgress = await detector.getNovelWithProgress('active-novel');
     
     expect(novelWithProgress).toBeDefined();
@@ -245,6 +178,8 @@ rating: 0
   });
 
   test('챕터 파일의 frontmatter 파싱이 정확해야 함', async () => {
+    await createTestData();
+    
     const novelWithProgress = await detector.getNovelWithProgress('active-novel');
     
     expect(novelWithProgress).toBeDefined();
@@ -270,6 +205,8 @@ rating: 0
   });
 
   test('잘못된 frontmatter가 있는 파일을 적절히 처리해야 함', async () => {
+    await createTestData();
+    
     // 잘못된 frontmatter를 가진 소설 파일 생성
     await fs.writeFile(
       join(testNovelsDir, 'invalid-novel.md'),
@@ -293,45 +230,7 @@ totalChapters: not_a_number
   });
 
   test('가장 오래된 업데이트 소설을 선택해야 함', async () => {
-    // 기본 소설과 챕터들이 beforeEach에서 이미 생성되었는지 확인
-    try {
-      await fs.access(join(testNovelsDir, 'active-novel.md'));
-    } catch {
-      // 없으면 다시 생성
-      await fs.writeFile(
-        join(testNovelsDir, 'active-novel.md'),
-        `---
-title: "진행 중인 소설"
-status: "연재 중"
-author: "테스트 작가"
-publishedDate: 2024-01-01
-totalChapters: 10
-rating: 0
-tropes: ["enemies-to-lovers"]
----
-
-# 진행 중인 소설
-내용입니다.`
-      );
-
-      // 기본 챕터들 생성 (1-5)
-      for (let i = 1; i <= 5; i++) {
-        await fs.writeFile(
-          join(testChaptersDir, `active-novel-ch${i.toString().padStart(2, '0')}.md`),
-          `---
-title: "챕터 ${i}"
-novel: "active-novel"
-chapterNumber: ${i}
-publicationDate: 2024-01-${i.toString().padStart(2, '0')}
-wordCount: 1000
-rating: 0
----
-
-# 챕터 ${i}
-챕터 내용입니다.`
-        );
-      }
-    }
+    await createTestData();
     
     // 두 번째 활성 소설 추가
     await fs.writeFile(
@@ -367,6 +266,7 @@ rating: 0
 
     const oldestNovel = await detector.getOldestUpdatedNovel();
     
-    expect(oldestNovel.slug).toBe('active-novel'); // 더 오래된 것
+    expect(oldestNovel).not.toBeNull();
+    expect(oldestNovel!.slug).toBe('active-novel'); // 더 오래된 것
   });
 });

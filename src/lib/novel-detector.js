@@ -114,13 +114,15 @@ export class NovelDetector {
     try {
       const activeNovels = await this.getActiveNovels();
       let oldestNovel = null;
-      let oldestDate = new Date();
+      let oldestDate = null;
 
       for (const novel of activeNovels) {
         const progress = await this.getNovelWithProgress(novel.slug);
-        if (progress && progress.lastUpdate < oldestDate) {
-          oldestDate = progress.lastUpdate;
-          oldestNovel = progress;
+        if (progress) {
+          if (oldestDate === null || progress.lastUpdate < oldestDate) {
+            oldestDate = progress.lastUpdate;
+            oldestNovel = progress;
+          }
         }
       }
 
