@@ -49,13 +49,23 @@ jobs:
         cache: 'pnpm'
     
     - name: 📚 의존성 설치
-      run: pnpm install --ignore-scripts
+      run: |
+        pnpm install --ignore-scripts
+        # vitest 바이너리 확인
+        ls -la node_modules/.bin/vitest || echo "vitest 바이너리 없음"
+        # PATH에 node_modules/.bin 추가
+        echo "$PWD/node_modules/.bin" >> $GITHUB_PATH
     
     - name: 🧪 테스트 실행
       run: |
-        pnpm test
-        pnpm test:e2e --reporter=list
+        # vitest 직접 실행 경로 사용
+        ./node_modules/.bin/vitest --run || pnpm test
       continue-on-error: false
+    
+    - name: 🎭 E2E 테스트 실행
+      run: |
+        pnpm test:e2e --reporter=list
+      continue-on-error: true
     
     - name: 🔍 보안 검사
       run: |

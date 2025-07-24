@@ -33,6 +33,8 @@ jobs:
       - name: Install Dependencies
         run: |
           pnpm install --ignore-scripts
+          # PATH에 node_modules/.bin 추가
+          echo "$PWD/node_modules/.bin" >> $GITHUB_PATH
           
       - name: 🚀 Execute Master Automation Engine
         env:
