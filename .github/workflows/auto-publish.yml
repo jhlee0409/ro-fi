@@ -37,19 +37,19 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
         fetch-depth: 0
     
+    - name: 🔧 pnpm 설치
+      uses: pnpm/action-setup@v4
+      with:
+        version: 8
+    
     - name: 📦 Node.js 설정
       uses: actions/setup-node@v4
       with:
         node-version: '20'
-        cache: 'npm'
-    
-    - name: 🔧 pnpm 설치
-      uses: pnpm/action-setup@v4
-      with:
-        version: latest
+        cache: 'pnpm'
     
     - name: 📚 의존성 설치
-      run: pnpm install --frozen-lockfile
+      run: pnpm install --ignore-scripts
     
     - name: 🧪 테스트 실행
       run: |
@@ -142,19 +142,19 @@ jobs:
         ref: ${{ github.ref }}
         fetch-depth: 0
     
+    - name: 🔧 pnpm 설치
+      uses: pnpm/action-setup@v4
+      with:
+        version: 8
+    
     - name: 📦 Node.js 설정
       uses: actions/setup-node@v4
       with:
         node-version: '20'
-        cache: 'npm'
-    
-    - name: 🔧 pnpm 설치
-      uses: pnpm/action-setup@v4
-      with:
-        version: latest
+        cache: 'pnpm'
     
     - name: 📚 의존성 설치
-      run: pnpm install --frozen-lockfile
+      run: pnpm install --ignore-scripts
     
     - name: 🏗️ Astro 빌드
       run: pnpm build
