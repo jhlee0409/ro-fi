@@ -24,81 +24,70 @@ on:
 
 jobs:
   automation:
+    permissions:
+      # Give the default GITHUB_TOKEN write permission to commit and push the generated content.
+      contents: write
     runs-on: ubuntu-latest
-    
+
     env:
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       NODE_ENV: production
-    
+
     steps:
     - name: 🛒 체크아웃 코드
       uses: actions/checkout@v4
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         fetch-depth: 0
-    
+
     - name: 🔧 pnpm 설치
       uses: pnpm/action-setup@v4
       with:
         version: latest
-    
+
     - name: 📦 Node.js 설정
       uses: actions/setup-node@v4
       with:
         node-version: '20'
         cache: 'pnpm'
-    
+
     - name: 📚 의존성 설치
       run: |
         echo "🔍 pnpm 버전 확인"
         pnpm --version
-        
+
         echo "📦 의존성 설치 중..."
         # 의존성 설치
         pnpm install
-        
+
         echo "🔍 설치된 패키지 확인"
         ls -la node_modules/.bin/ | grep -E "(vitest|playwright)" || echo "테스트 관련 바이너리 없음"
-        
+
         echo "📋 주요 패키지 확인"
         pnpm list vitest || echo "vitest 패키지 설치되지 않음"
         pnpm list @playwright/test || echo "playwright 패키지 설치되지 않음"
-        
+
         # PATH에 node_modules/.bin 추가
         echo "$PWD/node_modules/.bin" >> $GITHUB_PATH
-    
+
     - name: 🧪 테스트 실행
       run: |
-        echo "🔍 테스트 실행 전 환경 확인"
-        echo "PATH: $PATH"
-        echo "현재 디렉토리: $(pwd)"
-        echo "node_modules/.bin 내용:"
-        ls -la node_modules/.bin/ | head -10
-        
         echo "🧪 테스트 시작..."
-        if [ -f "node_modules/.bin/vitest" ]; then
-          echo "✅ vitest 바이너리 직접 실행"
-          ./node_modules/.bin/vitest --run
-        elif command -v vitest >/dev/null 2>&1; then
-          echo "✅ PATH에서 vitest 실행"
-          vitest --run
-        else
-          echo "⚠️ vitest 바이너리 없음, npx로 실행 시도"
-          npx vitest --run
-        fi
+        # pnpm adds node_modules/.bin to the PATH, so we can call vitest directly.
+        pnpm vitest --run
       continue-on-error: false
-    
+
     - name: 🎭 E2E 테스트 실행
       run: |
         pnpm test:e2e --reporter=list
       continue-on-error: true
-    
+
     - name: 🔍 보안 검사
       run: |
         pnpm run security:audit
         pnpm run lint
       continue-on-error: true
-    
+
     - name: 🚀 자동화 실행
       id: automation
       run: |
@@ -108,7 +97,7 @@ jobs:
           node scripts/run-automation.js
         fi
       continue-on-error: false
-    
+
     - name: 📊 결과 업로드 (Artifacts)
       uses: actions/upload-artifact@v4
       if: always()
@@ -119,48 +108,48 @@ jobs:
           src/content/
           test-results/
         retention-days: 30
-    
+
     - name: 🎯 Git 설정
       if: success()
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "로판 자동화 봇 🤖"
-    
+
     - name: 📝 변경사항 커밋
       if: success()
       run: |
         git add src/content/
         git add logs/
-        
+
         # 변경사항이 있는지 확인
         if git diff --staged --quiet; then
           echo "변경사항이 없습니다. 커밋을 건너뜁니다."
           exit 0
         fi
-        
+
         # 커밋 메시지 생성
         TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S KST')
         AUTOMATION_LOG=$(tail -n 20 logs/automation-report-$(date '+%Y-%m-%d').json | grep -o '"summary":[^}]*}' | head -1 || echo '"summary": {"activeNovels": "N/A"}')
-        
+
         git commit -m "🤖 자동 연재 업데이트 - $TIMESTAMP
 
         $AUTOMATION_LOG
-        
+
         🤖 Generated with Claude AI Automation System
         Co-Authored-By: Claude <noreply@anthropic.com>"
-    
+
     - name: 📤 GitHub에 푸시
       if: success()
-      uses: ad-m/github-push-action@master
+      uses: ad-m/github-push-action@v0.8.0
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         branch: ${{ github.ref }}
-    
+
     - name: 🔔 알림 (성공시)
       if: success()
       run: |
         echo "::notice title=자동화 성공::로맨스 판타지 자동 연재가 성공적으로 완료되었습니다! 🎉"
-    
+
     - name: ❌ 알림 (실패시)
       if: failure()
       run: |
@@ -170,33 +159,33 @@ jobs:
     needs: automation
     if: success()
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: 🛒 체크아웃 (최신 변경사항 포함)
       uses: actions/checkout@v4
       with:
         ref: ${{ github.ref }}
         fetch-depth: 0
-    
+
     - name: 🔧 pnpm 설치
       uses: pnpm/action-setup@v4
       with:
         version: latest
-    
+
     - name: 📦 Node.js 설정
       uses: actions/setup-node@v4
       with:
         node-version: '20'
         cache: 'pnpm'
-    
+
     - name: 📚 의존성 설치
       run: pnpm install --ignore-scripts
-    
+
     - name: 🏗️ Astro 빌드
       run: pnpm build
       env:
         NODE_ENV: production
-    
+
     - name: 🚀 Vercel 배포
       uses: amondnet/vercel-action@v25
       if: github.ref == 'refs/heads/main'
@@ -206,7 +195,7 @@ jobs:
         vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
         vercel-args: '--prod'
         working-directory: .
-    
+
     - name: 🎉 배포 완료 알림
       if: success()
       run: |
@@ -216,7 +205,7 @@ jobs:
     needs: [automation, deploy]
     if: always()
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: 🏥 시스템 상태 체크
       run: |

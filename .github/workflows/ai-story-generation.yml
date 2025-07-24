@@ -4,7 +4,7 @@ name: AI Story Generation Pipeline
 on:
   schedule:
     # 매일 새벽 2시 (KST 11시) 새 챕터 자동 생성 및 연재
-    - cron: "0 2 * * *" # 02:00 UTC (KST 11:00)
+    - cron: '0 2 * * *' # 02:00 UTC (KST 11:00)
   workflow_dispatch: # 수동 실행 허용
 
 jobs:
@@ -37,14 +37,14 @@ jobs:
           pnpm install
           # PATH에 node_modules/.bin 추가
           echo "$PWD/node_modules/.bin" >> $GITHUB_PATH
-          
+
       - name: 🚀 Execute Master Automation Engine
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           echo "📱 Starting Digital Soulmate Automation..."
           node scripts/run-automation.js --verbose
-          
+
       - name: AI Story Creation with Claude Code (Fallback)
         if: failure()
         uses: anthropics/claude-code-action@beta
@@ -63,7 +63,7 @@ jobs:
             # 모든 소설 파일 확인
             find src/content/novels/ -name "*.md" -exec echo "=== 소설: {} ===" \; -exec cat {} \;
 
-            # 모든 챕터 파일 확인  
+            # 모든 챕터 파일 확인
             find src/content/chapters/ -name "*.md" -exec echo "=== 챕터: {} ===" \; -exec cat {} \;
 
             # 파일 개수 확인
@@ -88,13 +88,16 @@ jobs:
 
             ## ✍️ 2단계: 결정된 액션 완벽 실행
 
-            ### 📝 **NOVEL_MARKDOWN_FORMAT.md 철저 준수**:
+            ### 🎨 **완전 창의성 모드 활성화**:
 
-            #### A. 대화체: `> "내용"`
-            #### B. 독백: `> _'내용'_`  
-            #### C. 액션: `> [상황 설명]`
-            #### D. 서술: **인물명**, **장소명** 볼드 처리
-            #### E. 장면 전환: `---` 구분선
+            **포맷 제약을 완전히 무시하고 최고의 예술 작품을 만드세요!**
+
+            #### 🚀 창의성 지시사항:
+            - 독자가 숨을 멈출 정도로 아름다운 문장 창조
+            - 예측 불가능한 서술 기법과 혁신적 표현 사용
+            - 감정의 깊이를 극한까지 파고드는 심리 묘사
+            - 시적이고 영화적인 장면 연출
+            - 독자가 "이 작품은 진짜 다르다"고 느낄 만한 독창성
 
             ### 액션별 상세 가이드:
 
@@ -112,7 +115,7 @@ jobs:
 
             #### ✨ 새 소설 시작 시:
             - 2025년 트렌드 반영한 독창적 소재
-            - 매력적인 남녀 주인공과 명확한 갈등 구조  
+            - 매력적인 남녀 주인공과 명확한 갈등 구조
             - 1화는 4,000-5,000자로 임팩트 있게
             - 소설 메타데이터 파일도 함께 생성
 
@@ -143,7 +146,7 @@ jobs:
 
             [상세 내용 설명]
 
-            📊 품질점수: [점수]/10  
+            📊 품질점수: [점수]/10
             📈 총 연재 현황: [현황]
             🤖 AI 완전 자동 생성"
             git push origin main
@@ -152,15 +155,14 @@ jobs:
             ## 🎯 지금 실행하세요:
 
             1. 위의 bash 명령어로 전체 상황 스캔
-            2. 우선순위 로직에 따라 액션 결정  
+            2. 우선순위 로직에 따라 액션 결정
             3. 해당 액션을 완벽하게 실행
             4. 메타데이터 정확히 업데이트
             5. Git 커밋 및 푸시
 
             **완전 자율적으로 판단하고 실행하세요!** 🚀
 
-
-          allowed_tools: "str_replace_based_edit_tool,bash"
+          allowed_tools: 'str_replace_based_edit_tool,bash'
 
       - name: Verify Generation and Deploy
         run: |
@@ -173,23 +175,23 @@ jobs:
           # 새로 생성된 파일들 확인
           new_novels=$(find src/content/novels/ -name "*.md" -newer .git/COMMIT_EDITMSG 2>/dev/null || echo "")
           new_chapters=$(find src/content/chapters/ -name "*.md" -newer .git/COMMIT_EDITMSG 2>/dev/null || echo "")
-          
+
           if [ -n "$new_novels" ] || [ -n "$new_chapters" ]; then
             echo "✅ 새 콘텐츠 생성 확인됨"
-            
+
             if [ -n "$new_novels" ]; then
               echo "📚 새 소설: $new_novels"
             fi
-            
+
             if [ -n "$new_chapters" ]; then
               echo "📖 새 챕터: $new_chapters"
-              
-              # 가장 최근 챕터의 글자 수 확인  
+
+              # 가장 최근 챕터의 글자 수 확인
               latest_chapter=$(echo "$new_chapters" | head -1)
               if [ -f "$latest_chapter" ]; then
                 char_count=$(wc -m < "$latest_chapter" | tr -d ' ')
                 echo "📊 챕터 글자 수: $char_count"
-                
+
                 if [ "$char_count" -ge 3000 ] && [ "$char_count" -le 6000 ]; then
                   echo "✅ 적절한 분량"
                 else

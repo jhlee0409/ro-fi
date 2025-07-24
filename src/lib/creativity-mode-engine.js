@@ -18,7 +18,7 @@ export class CreativityModeEngine {
         'season_end',        // 시즌 종료
         'emotional_peak'      // 감정적 정점
       ],
-      
+
       // 독자 메트릭스 임계값
       readerMetrics: {
         dropoutRate: 0.2,           // 이탈률 20% 초과
@@ -26,7 +26,7 @@ export class CreativityModeEngine {
         similarityThreshold: 3,     // 3화 연속 유사 전개
         engagementDrop: 0.3        // 참여도 30% 하락
       },
-      
+
       // 외부 요인
       externalFactors: {
         competitionAlert: true,     // 경쟁작 대응
@@ -34,22 +34,22 @@ export class CreativityModeEngine {
         seasonalEvent: true        // 시즌 이벤트
       }
     };
-    
+
     // 토큰 전략 설정
     this.tokenStrategy = {
       efficiency: {
-        min: 1500,
-        max: 2000,
-        avgTokens: 1750,
-        costReduction: 0.75,
-        quality: 'standard'
+        min: 2000,
+        max: 3000,
+        avgTokens: 2500,
+        costReduction: 0.5,
+        quality: 'enhanced'
       },
       creativity: {
         min: null,              // 무제한
         max: null,              // 무제한
-        avgTokens: 7000,
+        avgTokens: 15000,       // 대폭 증가
         costReduction: 0,
-        quality: 'premium'
+        quality: 'masterpiece'
       },
       balanced: {
         min: 2000,
@@ -59,7 +59,7 @@ export class CreativityModeEngine {
         quality: 'enhanced'
       }
     };
-    
+
     // 창의성 ROI 추적
     this.roiTracker = {
       investments: [],
@@ -67,10 +67,10 @@ export class CreativityModeEngine {
       successPatterns: new Map(),
       averageROI: 0
     };
-    
+
     // 모드 전환 히스토리
     this.modeHistory = [];
-    
+
     // 창의성 부스트 쿨다운 (남용 방지)
     this.cooldownPeriod = 2; // 챕터
     this.lastCreativityBoost = null;
@@ -81,7 +81,7 @@ export class CreativityModeEngine {
    */
   shouldActivateCreativityMode(novelState, readerMetrics, chapterContext) {
     console.log('🤔 창의성 모드 필요성 분석 중...');
-    
+
     // null 입력값 방어 처리
     if (!novelState || !chapterContext) {
       return {
@@ -92,7 +92,7 @@ export class CreativityModeEngine {
         reason: 'Invalid input parameters'
       };
     }
-    
+
     // 쿨다운 체크
     if (this.isInCooldown(novelState.slug)) {
       console.log('⏳ 창의성 모드 쿨다운 중');
@@ -104,9 +104,9 @@ export class CreativityModeEngine {
         reason: 'Cooldown period active'
       };
     }
-    
+
     const triggers = [];
-    
+
     // 1. 스토리 마일스톤 체크
     const milestoneCheck = this.checkStoryMilestones(chapterContext);
     if (milestoneCheck.triggered) {
@@ -117,7 +117,7 @@ export class CreativityModeEngine {
         score: 0.9
       });
     }
-    
+
     // 2. 독자 메트릭스 체크
     const metricsCheck = this.checkReaderMetrics(readerMetrics);
     if (metricsCheck.triggered) {
@@ -128,7 +128,7 @@ export class CreativityModeEngine {
         score: metricsCheck.score
       });
     }
-    
+
     // 3. 패턴 반복 체크
     const patternCheck = this.checkRepetitivePatterns(novelState);
     if (patternCheck.triggered) {
@@ -139,7 +139,7 @@ export class CreativityModeEngine {
         score: 0.6
       });
     }
-    
+
     // 4. 외부 요인 체크
     const externalCheck = this.checkExternalFactors();
     if (externalCheck.triggered) {
@@ -150,17 +150,17 @@ export class CreativityModeEngine {
         score: 0.5
       });
     }
-    
+
     // 종합 점수 계산
     const totalScore = triggers.reduce((sum, t) => sum + t.score, 0);
     const shouldActivate = totalScore >= 0.7;
-    
+
     if (shouldActivate) {
       console.log('🎨 창의성 모드 활성화 결정!');
       console.log('📊 트리거:', triggers);
       this.recordModeActivation(novelState.slug, triggers);
     }
-    
+
     return {
       activate: shouldActivate,
       triggers,
@@ -175,7 +175,7 @@ export class CreativityModeEngine {
   checkStoryMilestones(chapterContext) {
     // 챕터 번호와 진행도를 기반으로 마일스톤 예측
     const { chapterNumber, progressPercentage, plotStage } = chapterContext;
-    
+
     // 첫 만남 (1-3화)
     if (chapterNumber <= 3 && plotStage === 'introduction') {
       return {
@@ -183,7 +183,7 @@ export class CreativityModeEngine {
         reason: '첫 만남 - 강렬한 첫인상 필요'
       };
     }
-    
+
     // 감정적 전환점 (30-40% 진행)
     if (progressPercentage >= 30 && progressPercentage <= 40) {
       return {
@@ -191,7 +191,7 @@ export class CreativityModeEngine {
         reason: '감정 전환점 - 관계 변화의 핵심 순간'
       };
     }
-    
+
     // 클라이맥스 (70-80% 진행)
     if (progressPercentage >= 70 && progressPercentage <= 80) {
       return {
@@ -199,7 +199,7 @@ export class CreativityModeEngine {
         reason: '클라이맥스 - 스토리의 정점'
       };
     }
-    
+
     // 시즌 종료 (90% 이상)
     if (progressPercentage >= 90) {
       return {
@@ -207,7 +207,7 @@ export class CreativityModeEngine {
         reason: '시즌 피날레 - 감동적인 마무리 필요'
       };
     }
-    
+
     return { triggered: false };
   }
 
@@ -216,7 +216,7 @@ export class CreativityModeEngine {
    */
   checkReaderMetrics(metrics) {
     if (!metrics) return { triggered: false };
-    
+
     // 이탈률 체크
     if (metrics.dropoutRate > this.creativityTriggers.readerMetrics.dropoutRate) {
       return {
@@ -226,7 +226,7 @@ export class CreativityModeEngine {
         score: 0.9
       };
     }
-    
+
     // 참여도 하락 체크
     if (metrics.engagementDrop > this.creativityTriggers.readerMetrics.engagementDrop) {
       return {
@@ -236,7 +236,7 @@ export class CreativityModeEngine {
         score: 0.8
       };
     }
-    
+
     // 감정 정체 체크
     if (metrics.emotionStagnation >= this.creativityTriggers.readerMetrics.emotionStagnation) {
       return {
@@ -246,7 +246,7 @@ export class CreativityModeEngine {
         score: 0.7
       };
     }
-    
+
     return { triggered: false };
   }
 
@@ -256,12 +256,12 @@ export class CreativityModeEngine {
   checkRepetitivePatterns(novelState) {
     // 최근 3화의 패턴 분석
     const recentChapters = novelState.recentChapters || [];
-    
+
     if (recentChapters.length >= 3) {
       // 간단한 유사도 체크 (실제로는 더 정교한 알고리즘 필요)
       const patterns = this.extractPatterns(recentChapters);
       const similarity = this.calculateSimilarity(patterns);
-      
+
       if (similarity > 0.7) {
         return {
           triggered: true,
@@ -269,7 +269,7 @@ export class CreativityModeEngine {
         };
       }
     }
-    
+
     return { triggered: false };
   }
 
@@ -279,14 +279,14 @@ export class CreativityModeEngine {
   checkExternalFactors() {
     // 실제로는 외부 API나 데이터베이스에서 정보를 가져와야 함
     const mockCompetitionAlert = Math.random() > 0.9; // 10% 확률로 경쟁작 알림
-    
+
     if (mockCompetitionAlert) {
       return {
         triggered: true,
         reason: '경쟁작 대히트 - 차별화 전략 필요'
       };
     }
-    
+
     return { triggered: false };
   }
 
@@ -305,12 +305,12 @@ export class CreativityModeEngine {
         techniques: []
       };
     }
-    
+
     const { novel, chapter, emotionalStage } = context;
     const primaryTrigger = triggers[0]; // 가장 중요한 트리거
-    
+
     let creativeDirective = '';
-    
+
     switch (primaryTrigger.type) {
       case 'milestone':
         creativeDirective = `
@@ -321,7 +321,7 @@ export class CreativityModeEngine {
 - 예상을 뛰어넘는 창의적인 전개로 독자를 놀라게 하세요
 - 아름다운 문체와 시적인 표현을 아끼지 마세요`;
         break;
-        
+
       case 'metrics':
         creativeDirective = `
 🚨 독자 이탈 방지 특별 지시:
@@ -331,7 +331,7 @@ export class CreativityModeEngine {
 - 클리프행어는 필수 - 다음 화를 안 볼 수 없게 만드세요
 - 독자 리뷰에서 "미쳤다"는 반응이 나올 정도의 임팩트`;
         break;
-        
+
       case 'pattern':
         creativeDirective = `
 🔄 패턴 탈피 창의성 지시:
@@ -341,7 +341,7 @@ export class CreativityModeEngine {
 - 독자의 예상을 완전히 벗어나는 전개
 - 신선하고 독창적인 아이디어를 마음껏 펼치세요`;
         break;
-        
+
       case 'external':
         creativeDirective = `
 🏆 경쟁작 대응 특별 창작:
@@ -352,7 +352,7 @@ export class CreativityModeEngine {
 - 다른 작품과 비교 불가한 유니크한 요소 강조`;
         break;
     }
-    
+
     return {
       mode: 'CREATIVITY_BOOST',
       tokenLimit: 'UNLIMITED',
@@ -395,23 +395,23 @@ export class CreativityModeEngine {
       },
       score: this.calculateROIScore(investment, outcome)
     };
-    
+
     this.roiTracker.investments.push(roi);
-    
+
     // 성공 패턴 학습
     if (roi.score > 1.5) { // 150% 이상의 ROI
-      const pattern = investment.triggers && investment.triggers.length > 0 
-        ? `${investment.triggers[0].type}_${investment.triggers[0].reason.replace(/\s+/g, '_')}` 
+      const pattern = investment.triggers && investment.triggers.length > 0
+        ? `${investment.triggers[0].type}_${investment.triggers[0].reason.replace(/\s+/g, '_')}`
         : 'unknown_pattern';
       this.roiTracker.successPatterns.set(
         pattern,
         (this.roiTracker.successPatterns.get(pattern) || 0) + 1
       );
     }
-    
+
     // 평균 ROI 업데이트
     this.updateAverageROI();
-    
+
     return roi;
   }
 
@@ -423,7 +423,7 @@ export class CreativityModeEngine {
     const engagementBoost = outcome.engagement / (investment.baseline || 1);
     const ratingBoost = outcome.rating / (investment.baselineRating || 3.5);
     const viralScore = (outcome.shares + outcome.comments) / 100;
-    
+
     return (engagementBoost + ratingBoost + viralScore) / 3;
   }
 
@@ -432,12 +432,12 @@ export class CreativityModeEngine {
    */
   updateAverageROI() {
     if (this.roiTracker.investments.length === 0) return;
-    
+
     const totalScore = this.roiTracker.investments.reduce(
       (sum, inv) => sum + inv.score,
       0
     );
-    
+
     this.roiTracker.averageROI = totalScore / this.roiTracker.investments.length;
   }
 
@@ -448,14 +448,14 @@ export class CreativityModeEngine {
     const lastBoost = this.modeHistory
       .filter(h => h.novelSlug === novelSlug && h.mode === 'creativity')
       .pop();
-      
+
     if (!lastBoost) return false;
-    
+
     // 마지막 창의성 모드 사용 이후 기록된 총 챕터 수 계산
     const chaptersSinceBoost = this.modeHistory
       .filter(h => h.novelSlug === novelSlug && h.timestamp > lastBoost.timestamp)
       .length;
-      
+
     return chaptersSinceBoost < this.cooldownPeriod;
   }
 
@@ -469,7 +469,7 @@ export class CreativityModeEngine {
       mode: 'creativity',
       triggers
     });
-    
+
     // 히스토리 크기 제한 (최근 100개만 유지)
     if (this.modeHistory.length > 100) {
       this.modeHistory = this.modeHistory.slice(-100);
@@ -492,10 +492,10 @@ export class CreativityModeEngine {
    */
   calculateSimilarity(patterns) {
     if (patterns.length < 2) return 0;
-    
+
     let similarityScore = 0;
     const compareFields = ['emotionalTone', 'plotType', 'characterFocus'];
-    
+
     for (let i = 1; i < patterns.length; i++) {
       let matches = 0;
       compareFields.forEach(field => {
@@ -505,7 +505,7 @@ export class CreativityModeEngine {
       });
       similarityScore += matches / compareFields.length;
     }
-    
+
     return similarityScore / (patterns.length - 1);
   }
 
@@ -518,7 +518,7 @@ export class CreativityModeEngine {
       context.readerMetrics,
       context.chapterContext
     );
-    
+
     if (creativityCheck.activate) {
       return {
         mode: 'creativity',
@@ -527,7 +527,7 @@ export class CreativityModeEngine {
         prompt: this.generateCreativePrompt(context, creativityCheck.triggers)
       };
     }
-    
+
     // 밸런스 모드 체크 (중간 수준의 창의성)
     if (creativityCheck.score >= 0.4 && creativityCheck.score < 0.7) {
       return {
@@ -537,7 +537,7 @@ export class CreativityModeEngine {
         tokenStrategy: this.tokenStrategy.balanced
       };
     }
-    
+
     // 효율 모드
     return {
       mode: 'efficiency',
@@ -562,7 +562,7 @@ export class CreativityModeEngine {
         .filter(inv => inv.score > 1.5)
         .length
     };
-    
+
     return report;
   }
 
@@ -573,11 +573,11 @@ export class CreativityModeEngine {
     const totalChapters = this.modeHistory.length;
     const creativityChapters = this.modeHistory.filter(h => h.mode === 'creativity').length;
     const efficiencyChapters = totalChapters - creativityChapters;
-    
-    const savedTokens = efficiencyChapters * 
-      (this.tokenStrategy.creativity.avgTokens - this.tokenStrategy.efficiency.avgTokens) * 
+
+    const savedTokens = efficiencyChapters *
+      (this.tokenStrategy.creativity.avgTokens - this.tokenStrategy.efficiency.avgTokens) *
       this.tokenStrategy.efficiency.costReduction;
-      
+
     return {
       totalSaved: Math.round(savedTokens),
       percentageSaved: Math.round((savedTokens / (totalChapters * this.tokenStrategy.creativity.avgTokens)) * 100)
