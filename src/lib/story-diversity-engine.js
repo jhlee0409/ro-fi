@@ -166,6 +166,11 @@ export class StoryDiversityEngine {
   }
 
   generateCatchyTitle(concept) {
+    // null/undefined 체크
+    if (!concept) {
+      concept = {};
+    }
+
     const pattern = this.getRandomElement(this.titlePatterns);
     let title = pattern;
 
@@ -189,6 +194,11 @@ export class StoryDiversityEngine {
   }
 
   designMemorableCharacters(concept) {
+    // null/undefined 체크
+    if (!concept) {
+      concept = {};
+    }
+
     const characterTypes = {
       protagonist: this.generateProtagonist(concept),
       male_lead: this.generateMaleLead(concept),
@@ -301,11 +311,13 @@ export class StoryDiversityEngine {
     let score = 100;
 
     // 기존 조합과의 유사도 체크
-    for (const existing of existingCombinations) {
-      if (existing.main === concept.main) score -= 15;
-      if (existing.sub === concept.sub) score -= 10;
-      if (existing.conflict === concept.conflict) score -= 10;
-      if (existing.genre === concept.genre) score -= 5;
+    if (existingCombinations) {
+      for (const existing of existingCombinations) {
+        if (existing.main === concept.main) score -= 15;
+        if (existing.sub === concept.sub) score -= 10;
+        if (existing.conflict === concept.conflict) score -= 10;
+        if (existing.genre === concept.genre) score -= 5;
+      }
     }
 
     // 트로프 조합의 신선함 점수
@@ -320,7 +332,7 @@ export class StoryDiversityEngine {
       score += 20;
     }
 
-    return Math.max(0, Math.min(100, score));
+    return Math.max(0, score); // 상한 제거하여 120점 가능하도록
   }
 
   getRandomElement(array) {
