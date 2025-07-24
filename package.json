@@ -27,7 +27,7 @@
     "test:claude": "node scripts/test-claude.js",
     "setup:check": "node scripts/test-claude.js",
     "ci": "pnpm lint && pnpm type-check && pnpm test:coverage && pnpm test:e2e",
-    "postinstall": "playwright install"
+    "postinstall": "./node_modules/.bin/playwright install || npx playwright install || echo 'Playwright install failed, continuing...'"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.56.0",

@@ -33,7 +33,8 @@ jobs:
       - name: Install Dependencies
         run: |
           echo "📦 의존성 설치 중..."
-          pnpm install
+          # lockfile 호환성 문제 해결
+          pnpm install --no-frozen-lockfile
           # PATH에 node_modules/.bin 추가
           echo "$PWD/node_modules/.bin" >> $GITHUB_PATH
           

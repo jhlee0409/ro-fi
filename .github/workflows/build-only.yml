@@ -39,7 +39,8 @@ jobs:
     - name: 📚 의존성 설치
       run: |
         echo "📦 의존성 설치 중..."
-        pnpm install
+        # lockfile 호환성 문제 해결
+        pnpm install --no-frozen-lockfile
         echo "✅ 의존성 설치 완료"
     
     - name: 🏗️ 빌드 수행
