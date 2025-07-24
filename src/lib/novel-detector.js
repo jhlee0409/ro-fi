@@ -15,14 +15,20 @@ export class NovelDetector {
       
       for (const file of files) {
         if (file.endsWith('.md')) {
-          const content = await fs.readFile(join(this.novelsDir, file), 'utf-8');
-          const { data } = matter(content);
-          
-          if (data.status === '연재 중') {
-            novels.push({
-              slug: file.replace('.md', ''),
-              data
-            });
+          try {
+            const content = await fs.readFile(join(this.novelsDir, file), 'utf-8');
+            const { data } = matter(content);
+            
+            if (data.status === '연재 중') {
+              novels.push({
+                slug: file.replace('.md', ''),
+                data
+              });
+            }
+          } catch (parseError) {
+            console.warn(`Skipping invalid file ${file}:`, parseError.message);
+            // 잘못된 frontmatter가 있는 파일은 스킵
+            continue;
           }
         }
       }
@@ -71,6 +77,10 @@ export class NovelDetector {
 
       return {
         slug,
+        novel: {
+          data: novelData,
+          content: matter(novelContent).content
+        },
         data: novelData,
         chaptersCount: novelChapters.length,
         latestChapter,

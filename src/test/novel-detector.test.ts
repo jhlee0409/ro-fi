@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach } from 'vitest';
-import { NovelDetector } from './novel-detector';
+import { NovelDetector } from '../lib/novel-detector';
 import { promises as fs } from 'fs';
 import { join } from 'path';
 import { TEST_CONTENT_DIR } from '../test/setup';

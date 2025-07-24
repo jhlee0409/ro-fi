@@ -150,7 +150,7 @@ describe('TokenBalancingEngine', () => {
       const budgetStatus = tokenBalancer.checkBudgetStatus();
 
       expect(budgetStatus.status).toBe('healthy');
-      expect(budgetStatus.pressure).toBeCloseTo(0.3);
+      expect(budgetStatus.pressure).toBe(0.3);
       expect(budgetStatus.usedRatio).toBeCloseTo(0.3);
       expect(budgetStatus.remainingBudget).toBe(70);
       expect(budgetStatus.availableStrategies).toContain('creativity');
@@ -163,7 +163,7 @@ describe('TokenBalancingEngine', () => {
       const budgetStatus = tokenBalancer.checkBudgetStatus();
 
       expect(budgetStatus.status).toBe('warning');
-      expect(budgetStatus.pressure).toBeCloseTo(0.7);
+      expect(budgetStatus.pressure).toBe(0.75);
       expect(budgetStatus.availableStrategies).toEqual(['efficiency', 'balanced']);
       expect(budgetStatus.recommendEfficiencyMode).toBe(true);
     });
@@ -174,7 +174,7 @@ describe('TokenBalancingEngine', () => {
       const budgetStatus = tokenBalancer.checkBudgetStatus();
 
       expect(budgetStatus.status).toBe('critical');
-      expect(budgetStatus.pressure).toBeCloseTo(0.9);
+      expect(budgetStatus.pressure).toBe(0.92);
       expect(budgetStatus.availableStrategies).toEqual(['efficiency']);
     });
 

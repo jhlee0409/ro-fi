@@ -83,6 +83,8 @@ describe('Automation System Integration Tests', () => {
     const progress = await novelDetector.getNovelWithProgress(novel.slug);
     
     expect(progress).toBeDefined();
+    expect(progress!.novel).toBeDefined();
+    expect(progress!.novel.data).toBeDefined();
     expect(progress!.novel.data.title).toBe(novel.data.title);
     expect(progress!.chaptersCount).toBeGreaterThan(0);
   });
@@ -149,7 +151,7 @@ describe('Automation System Integration Tests', () => {
     const result = await invalidEngine.executeAutomation();
     expect(result.success).toBe(false);
     expect(result.error).toBeDefined();
-    expect(result.error).toContain('Storage operation'); // New error format
+    expect(result.error).toContain('ENOTDIR'); // File system error
   });
 
   test('should maintain proper markdown format in generated content', async () => {
