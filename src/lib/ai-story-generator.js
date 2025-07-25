@@ -370,34 +370,37 @@ ${characterContext}
     // 이전 결과가 있는 경우 증분 개선 요청
     if (bestResult) {
       const previousWordCount = bestResult.content.replace(/\s+/g, '').length;
-      const targetIncrease = Math.max(4000 - previousWordCount, previousWordCount * 0.8);
+      const targetIncrease = Math.max(4000 - previousWordCount, 1500); // 최소 1500자 확장
       
-      enhancedPrompt += `\n\n🔄 **증분 개선 ${attempts}차** (${previousWordCount}→4,000자):
+      enhancedPrompt = `🔄 **CRITICAL: 증분 확장 모드 ${attempts}차** - 기존 콘텐츠 삭제 절대 금지
 
-🚨 **절대 필수**: ${4000 - previousWordCount}자 추가 확장 필요
+📖 **반드시 포함할 기존 콘텐츠** (${previousWordCount}자):
+${bestResult.content}
 
-🎯 **강화 확장 전략**:
-1. **장면 세분화**: 기존 장면을 7개로 분할 (각 500자)
-2. **대화 대폭 확장**: 
-   - 기존 대화를 3배 확장 (행동 묘사 포함)
-   - 대화 사이사이 감정 변화 상세 서술
-3. **심리 묘사 강화**: 
-   - 각 감정마다 3-4문장 내적 독백
-   - 과거 기억과 연결된 복합 감정 표현
-4. **환경 서술 확대**: 
-   - 5감 모두 활용한 장면 묘사 (각 100자 이상)
-   - 시간대별 분위기 변화 상세 표현
-5. **회상/배경 추가**: 
-   - 캐릭터 과거사 자연스럽게 삽입
-   - 세계관 설정 상세 설명
+🚨 **절대 규칙 (위반 시 실패)**:
+1. 위 기존 콘텐츠를 **한 글자도 삭제하거나 수정하지 마세요**
+2. 기존 내용을 **그대로 복사한 후** 추가 내용만 덧붙이세요
+3. 목표: 기존 ${previousWordCount}자 + 추가 ${targetIncrease}자 = 총 4,000자
 
-⚡ **구체적 실행**:
-- 단순 문장을 복합 문장으로 확장
-- 모든 행동에 감정적 맥락 추가
-- 대화 전후 상황 상세 묘사
-- 장면 전환시 시공간적 연결고리 강화
+🎯 **작업 방법**:
+STEP 1: 위 기존 콘텐츠를 **완전히 그대로** 복사
+STEP 2: 기존 내용 **뒤에** 다음 내용 추가:
+   - 기존 장면들 사이사이에 환경 묘사와 심리 서술 삽입
+   - 캐릭터 대화 확장 및 행동 묘사 추가
+   - 새로운 장면이나 회상 추가
+   - 감정적 깊이와 로맨틱 긴장감 강화
 
-💯 **목표**: 최소 ${Math.max(4000, previousWordCount + Math.round(targetIncrease))}자 달성`;
+⚡ **출력 형식**:
+**챕터 제목:** [제목]
+**본문:** 
+[↓ 기존 ${previousWordCount}자를 그대로 복사 ↓]
+${bestResult.content}
+[↑ 기존 내용 끝 ↑]
+
+[↓ 여기부터 ${targetIncrease}자 추가 확장 ↓]
+[새로운 확장 내용...]
+
+⚠️ 기존 콘텐츠를 수정하지 말고 **정확히 복사 + 확장**만 하세요!`;
     }
 
     // 캐시된 성공 패턴 활용
@@ -469,18 +472,39 @@ ${improvementCriteria.map((criteria, i) => `${i + 1}. ${criteria}`).join('\n')}
 
     const critique = critiqueResponse.content[0].type === 'text' ? critiqueResponse.content[0].text : '';
 
-    const improvementPrompt = `원본 챕터:
+    const currentWordCount = originalChapter.replace(/\s+/g, '').length;
+    const targetWordCount = Math.max(4000, currentWordCount + 1000); // 최소 1000자 확장
+    
+    const improvementPrompt = `🔧 **CRITICAL: 기존 챕터 확장 작업** - 삭제/수정 절대 금지
+
+📖 **반드시 포함할 원본 챕터** (${currentWordCount}자):
 ${originalChapter}
 
-비평 내용:
+🔍 **개선 포인트 분석**:
 ${critique}
 
-지적된 약점을 해결하여 챕터를 다시 작성하세요. 특히 다음 사항을 개선해주세요:
-- 대화를 더 날카롭고 캐릭터 개성이 드러나게 만들기
-- 로맨틱한 긴장감과 감정적 몰입도 높이기
-- 장면 묘사를 더 생생하고 구체적으로 표현하기
+🚨 **절대 규칙**:
+1. 위 원본 챕터 내용을 **한 글자도 삭제/수정하지 마세요**
+2. 원본을 **완전히 그대로 복사** 후 추가 내용만 덧붙이세요
+3. 목표: 원본 ${currentWordCount}자 + 확장 ${targetWordCount - currentWordCount}자 = 총 ${targetWordCount}자
 
-개선된 버전을 제공해주세요.`;
+🎯 **확장 작업 방법**:
+STEP 1: 원본 챕터를 **정확히 그대로** 복사
+STEP 2: 원본 내용 뒤에 다음 확장 내용 추가:
+   - 비평에서 지적된 부분 보완 (대화 개선, 묘사 강화 등)
+   - 기존 장면들 사이에 감정적 깊이 추가
+   - 환경 묘사와 캐릭터 심리 상세 서술
+   - 로맨틱 긴장감과 스토리 연결성 강화
+
+⚡ **출력 형식**:
+[↓ 원본 ${currentWordCount}자를 그대로 복사 ↓]
+${originalChapter}
+[↑ 원본 내용 끝 ↑]
+
+[↓ 여기부터 ${targetWordCount - currentWordCount}자 확장 내용 ↓]
+[비평을 반영한 추가 장면과 개선된 표현들...]
+
+⚠️ 원본을 수정하지 말고 **정확한 복사 + 확장**만 하세요!`;
 
     const improvementResponse = await this.anthropicWithRetry({
       model: 'claude-3-5-sonnet-20241022',
