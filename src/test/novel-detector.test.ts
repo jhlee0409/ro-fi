@@ -24,7 +24,7 @@ describe('NovelDetector', () => {
       // 디렉토리가 없으면 무시
     }
     
-    // 디렉토리 다시 생성 - fixtures 디렉토리도 확인
+    // 디렉토리 생성 - 차례대로 생성하여 안정성 확보
     const fixturesDir = join(process.cwd(), 'src/test/fixtures');
     await fs.mkdir(fixturesDir, { recursive: true });
     await fs.mkdir(testContentDir, { recursive: true });
@@ -38,8 +38,13 @@ describe('NovelDetector', () => {
   async function createTestData() {
     // 디렉토리가 존재하는지 확인하고 생성 - 에러 처리 개선
     try {
-      await fs.mkdir(testNovelsDir, { recursive: true });
-      await fs.mkdir(testChaptersDir, { recursive: true });
+      // 디렉토리 존재 여부 확인 후 생성
+      await fs.access(testNovelsDir).catch(async () => {
+        await fs.mkdir(testNovelsDir, { recursive: true });
+      });
+      await fs.access(testChaptersDir).catch(async () => {
+        await fs.mkdir(testChaptersDir, { recursive: true });
+      });
     } catch (error) {
       console.error('Directory creation failed:', error);
       throw error;

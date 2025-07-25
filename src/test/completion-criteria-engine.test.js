@@ -8,7 +8,7 @@ import { CompletionCriteriaEngine } from '../lib/completion-criteria-engine.js';
 
 describe('CompletionCriteriaEngine', () => {
   let completionEngine;
-  
+
   beforeEach(() => {
     completionEngine = new CompletionCriteriaEngine();
   });
@@ -27,7 +27,7 @@ describe('CompletionCriteriaEngine', () => {
       };
 
       const isComplete = completionEngine.checkStoryCompletion(novel);
-      
+
       expect(isComplete).toBe(true);
     });
 
@@ -44,7 +44,7 @@ describe('CompletionCriteriaEngine', () => {
       };
 
       const isComplete = completionEngine.checkStoryCompletion(novel);
-      
+
       expect(isComplete).toBe(false);
     });
 
@@ -60,7 +60,7 @@ describe('CompletionCriteriaEngine', () => {
       };
 
       const isComplete = completionEngine.checkStoryCompletion(novel);
-      
+
       expect(isComplete).toBe(true); // 4개 기준 충족 (최소 챕터만 미달)
     });
 
@@ -69,14 +69,14 @@ describe('CompletionCriteriaEngine', () => {
         currentChapter: 55, // ✓
         plotProgress: ['시작', '발전', '갈등', '절정', '해결'], // ✓
         relationshipStage: 'union', // ✓
-        openThreads: ['미해결 서브플롯'], // ✓ (1개 이하 허용)  
+        openThreads: ['미해결 서브플롯'], // ✓ (1개 이하 허용)
         characters: [
           { name: '주인공', growthArc: 70 } // ✗ (85 미만)
         ]
       };
 
       const isComplete = completionEngine.checkStoryCompletion(novel);
-      
+
       expect(isComplete).toBe(true); // 4개 충족
     });
   });
@@ -88,7 +88,7 @@ describe('CompletionCriteriaEngine', () => {
       };
 
       const isResolved = completionEngine.checkMainConflictResolution(novel);
-      
+
       expect(isResolved).toBe(true);
     });
 
@@ -98,7 +98,7 @@ describe('CompletionCriteriaEngine', () => {
       };
 
       const isResolved = completionEngine.checkMainConflictResolution(novel);
-      
+
       expect(isResolved).toBe(false);
     });
 
@@ -108,7 +108,7 @@ describe('CompletionCriteriaEngine', () => {
       };
 
       const isResolved = completionEngine.checkMainConflictResolution(novel);
-      
+
       expect(isResolved).toBe(true);
     });
   });
@@ -118,7 +118,7 @@ describe('CompletionCriteriaEngine', () => {
       const novel = { relationshipStage: 'confession' };
 
       const isComplete = completionEngine.checkRelationshipCompletion(novel);
-      
+
       expect(isComplete).toBe(true);
     });
 
@@ -126,7 +126,7 @@ describe('CompletionCriteriaEngine', () => {
       const novel = { relationshipStage: 'union' };
 
       const isComplete = completionEngine.checkRelationshipCompletion(novel);
-      
+
       expect(isComplete).toBe(true);
     });
 
@@ -134,7 +134,7 @@ describe('CompletionCriteriaEngine', () => {
       const novel = { relationshipStage: 'hostility' };
 
       const isComplete = completionEngine.checkRelationshipCompletion(novel);
-      
+
       expect(isComplete).toBe(false);
     });
   });
@@ -144,7 +144,7 @@ describe('CompletionCriteriaEngine', () => {
       const novel = { openThreads: [] };
 
       const isComplete = completionEngine.checkSubplotCompletion(novel);
-      
+
       expect(isComplete).toBe(true);
     });
 
@@ -152,17 +152,17 @@ describe('CompletionCriteriaEngine', () => {
       const novel = { openThreads: ['마지막 미해결 사항'] };
 
       const isComplete = completionEngine.checkSubplotCompletion(novel);
-      
+
       expect(isComplete).toBe(true);
     });
 
     test('서브플롯이 2개 이상 남은 경우', () => {
-      const novel = { 
-        openThreads: ['미해결1', '미해결2', '미해결3'] 
+      const novel = {
+        openThreads: ['미해결1', '미해결2', '미해결3']
       };
 
       const isComplete = completionEngine.checkSubplotCompletion(novel);
-      
+
       expect(isComplete).toBe(false);
     });
   });
@@ -178,7 +178,7 @@ describe('CompletionCriteriaEngine', () => {
       };
 
       const isComplete = completionEngine.checkCharacterGrowthCompletion(novel);
-      
+
       expect(isComplete).toBe(true);
     });
 
@@ -191,7 +191,7 @@ describe('CompletionCriteriaEngine', () => {
       };
 
       const isComplete = completionEngine.checkCharacterGrowthCompletion(novel);
-      
+
       expect(isComplete).toBe(false);
     });
 
@@ -204,7 +204,7 @@ describe('CompletionCriteriaEngine', () => {
       };
 
       const isComplete = completionEngine.checkCharacterGrowthCompletion(novel);
-      
+
       expect(isComplete).toBe(true); // 주요 캐릭터가 없으면 통과
     });
   });
@@ -217,7 +217,7 @@ describe('CompletionCriteriaEngine', () => {
       };
 
       const analysis = completionEngine.analyzeStoryArc(novel);
-      
+
       expect(analysis.currentStage).toBe('세계관 설정');
       expect(analysis.completionPercentage).toBe(40); // arcCompletion (10) + totalProgress * 15 (2 * 15)
       expect(analysis.nextStage).toBe('마무리 및 완결'); // '세계관 설정'은 어떤 코드 분기도 매칭되지 않음
@@ -231,7 +231,7 @@ describe('CompletionCriteriaEngine', () => {
       };
 
       const analysis = completionEngine.analyzeStoryArc(novel);
-      
+
       expect(analysis.currentStage).toBe('대결');
       expect(analysis.completionPercentage).toBe(75); // arcCompletion (0) + totalProgress * 15 (5 * 15)
       expect(analysis.nextStage).toBe('마무리 및 완결'); // '대결'에 매칭되는 키워드 없음
@@ -245,7 +245,7 @@ describe('CompletionCriteriaEngine', () => {
       };
 
       const analysis = completionEngine.analyzeStoryArc(novel);
-      
+
       expect(analysis.currentStage).toBe('결말 준비');
       expect(analysis.completionPercentage).toBe(100); // Math.min(arcCompletion + totalProgress * 15, 100)
       expect(analysis.nextStage).toBe('마무리 및 완결');
@@ -259,7 +259,7 @@ describe('CompletionCriteriaEngine', () => {
       };
 
       const analysis = completionEngine.analyzeStoryArc(novel);
-      
+
       expect(analysis.currentStage).toBe('시작');
       expect(analysis.completionPercentage).toBe(10); // arcCompletion (10) + totalProgress * 15 (0)
       expect(analysis.nextStage).toBe('갈등 발전 단계');
@@ -272,7 +272,7 @@ describe('CompletionCriteriaEngine', () => {
       const novel = { relationshipStage: 'hostility' };
 
       const analysis = completionEngine.analyzeRelationshipProgress(novel);
-      
+
       expect(analysis.currentStage).toBe('적대적 관계');
       expect(analysis.progress).toBe(0);
       expect(analysis.readyForConclusion).toBe(false);
@@ -283,7 +283,7 @@ describe('CompletionCriteriaEngine', () => {
       const novel = { relationshipStage: 'confession' };
 
       const analysis = completionEngine.analyzeRelationshipProgress(novel);
-      
+
       expect(analysis.currentStage).toBe('고백과 감정 확인');
       expect(analysis.progress).toBe(75);
       expect(analysis.readyForConclusion).toBe(true);
@@ -294,7 +294,7 @@ describe('CompletionCriteriaEngine', () => {
       const novel = { relationshipStage: 'union' };
 
       const analysis = completionEngine.analyzeRelationshipProgress(novel);
-      
+
       expect(analysis.currentStage).toBe('결합과 완성');
       expect(analysis.progress).toBe(100);
       expect(analysis.readyForConclusion).toBe(true);
@@ -305,7 +305,7 @@ describe('CompletionCriteriaEngine', () => {
       const novel = { relationshipStage: 'undefined-stage' };
 
       const analysis = completionEngine.analyzeRelationshipProgress(novel);
-      
+
       expect(analysis.currentStage).toBe('미정의 단계');
       expect(analysis.progress).toBe(0);
       expect(analysis.readyForConclusion).toBe(false);
@@ -318,7 +318,7 @@ describe('CompletionCriteriaEngine', () => {
       const novel = { openThreads: [] };
 
       const analysis = completionEngine.checkSubplotResolution(novel);
-      
+
       expect(analysis.openThreads).toBe(0);
       expect(analysis.resolutionNeeded).toEqual([]);
       expect(analysis.readyForEnding).toBe(true);
@@ -329,7 +329,7 @@ describe('CompletionCriteriaEngine', () => {
       const novel = { openThreads: ['마지막 미스터리'] };
 
       const analysis = completionEngine.checkSubplotResolution(novel);
-      
+
       expect(analysis.openThreads).toBe(1);
       expect(analysis.resolutionNeeded).toEqual(['마지막 미스터리']);
       expect(analysis.readyForEnding).toBe(true);
@@ -337,12 +337,12 @@ describe('CompletionCriteriaEngine', () => {
     });
 
     test('서브플롯 다수 남음', () => {
-      const novel = { 
-        openThreads: ['미스터리1', '로맨스 라인', '가족 비밀'] 
+      const novel = {
+        openThreads: ['미스터리1', '로맨스 라인', '가족 비밀']
       };
 
       const analysis = completionEngine.checkSubplotResolution(novel);
-      
+
       expect(analysis.openThreads).toBe(3);
       expect(analysis.resolutionNeeded).toEqual(['미스터리1', '로맨스 라인', '가족 비밀']);
       expect(analysis.readyForEnding).toBe(false);
@@ -362,7 +362,7 @@ describe('CompletionCriteriaEngine', () => {
       };
 
       const evaluation = completionEngine.evaluateCharacterGrowth(novel);
-      
+
       expect(evaluation.characters).toHaveLength(4);
       expect(evaluation.characters[0].completed).toBe(true);
       expect(evaluation.characters[3].needsWork).toBe(true);
@@ -380,7 +380,7 @@ describe('CompletionCriteriaEngine', () => {
       };
 
       const evaluation = completionEngine.evaluateCharacterGrowth(novel);
-      
+
       expect(evaluation.overallCompletion).toBe(0); // 완료된 캐릭터 없음
       expect(evaluation.readyForEnding).toBe(false);
       expect(evaluation.characters.every(char => char.needsWork)).toBe(false); // 70인 캐릭터는 needsWork가 false
@@ -390,7 +390,7 @@ describe('CompletionCriteriaEngine', () => {
       const novel = { characters: [] };
 
       const evaluation = completionEngine.evaluateCharacterGrowth(novel);
-      
+
       expect(evaluation.characters).toHaveLength(0);
       expect(evaluation.overallCompletion).toBeNaN(); // 0/0
       expect(evaluation.readyForEnding).toBe(true); // 캐릭터가 없으면 완료로 간주
@@ -400,7 +400,7 @@ describe('CompletionCriteriaEngine', () => {
   describe('결말 준비 단계', () => {
     test('개발 초기 단계', () => {
       const preparation = completionEngine.prepareEnding(25);
-      
+
       expect(preparation.phase).toBe('development');
       expect(preparation.pacing).toBe('normal');
       expect(preparation.focus).toBe('character_growth');
@@ -409,7 +409,7 @@ describe('CompletionCriteriaEngine', () => {
 
     test('결말 준비 단계', () => {
       const preparation = completionEngine.prepareEnding(45);
-      
+
       expect(preparation.phase).toBe('pre_ending');
       expect(preparation.pacing).toBe('accelerated');
       expect(preparation.focus).toBe('conflict_resolution');
@@ -421,7 +421,7 @@ describe('CompletionCriteriaEngine', () => {
 
     test('결말 준비 완료', () => {
       const preparation = completionEngine.prepareEnding(55);
-      
+
       expect(preparation.phase).toBe('ending_ready');
       expect(preparation.pacing).toBe('climactic');
       expect(preparation.focus).toBe('resolution');
@@ -441,7 +441,7 @@ describe('CompletionCriteriaEngine', () => {
       };
 
       const scenario = completionEngine.generateEndingScenario(novel);
-      
+
       expect(scenario.type).toBe('enemies-to-lovers');
       expect(scenario.scenes).toEqual(['최종 대결', '진실 폭로', '감정 고백', '화해', '결합']);
       expect(scenario.epilogueContent).toBe('몇 년 후 행복한 일상');
@@ -458,7 +458,7 @@ describe('CompletionCriteriaEngine', () => {
       };
 
       const scenario = completionEngine.generateEndingScenario(novel);
-      
+
       expect(scenario.type).toBe('fake-relationship');
       expect(scenario.scenes).toEqual(['가짜 관계 종료', '진심 깨달음', '재회', '진정한 고백', '결합']);
       expect(scenario.epilogueContent).toBe('진짜 관계로 발전한 모습');
@@ -472,7 +472,7 @@ describe('CompletionCriteriaEngine', () => {
       };
 
       const scenario = completionEngine.generateEndingScenario(novel);
-      
+
       expect(scenario.type).toBe('second-chance');
       expect(scenario.scenes).toEqual(['과거 청산', '용서', '새로운 시작', '약속', '미래 계획']);
     });
@@ -485,7 +485,7 @@ describe('CompletionCriteriaEngine', () => {
       };
 
       const scenario = completionEngine.generateEndingScenario(novel);
-      
+
       expect(scenario.type).toBe('forbidden-love');
       expect(scenario.scenes).toEqual(['장애물 극복', '사회적 인정', '선택의 순간', '희생', '승리']);
     });
@@ -498,7 +498,7 @@ describe('CompletionCriteriaEngine', () => {
       };
 
       const scenario = completionEngine.generateEndingScenario(novel);
-      
+
       expect(scenario.type).toBe('enemies-to-lovers'); // 기본값
       expect(scenario.themes).toContain('희망적 미래');
       expect(scenario.themes).toContain('새로운 시작');
@@ -510,40 +510,40 @@ describe('CompletionCriteriaEngine', () => {
       const novel = { relationshipStage: 'hostility', openThreads: [] };
 
       const type = completionEngine.detectRelationshipType(novel);
-      
+
       expect(type).toBe('enemies-to-lovers');
     });
 
     test('가짜 관계 감지', () => {
-      const novel = { 
-        relationshipStage: 'tension', 
-        openThreads: ['가짜 약혼 해제'] 
+      const novel = {
+        relationshipStage: 'tension',
+        openThreads: ['가짜 약혼 해제']
       };
 
       const type = completionEngine.detectRelationshipType(novel);
-      
+
       expect(type).toBe('fake-relationship');
     });
 
     test('과거 관계 감지', () => {
-      const novel = { 
-        relationshipStage: 'attraction', 
-        openThreads: ['과거 연인과의 재회'] 
+      const novel = {
+        relationshipStage: 'attraction',
+        openThreads: ['과거 연인과의 재회']
       };
 
       const type = completionEngine.detectRelationshipType(novel);
-      
+
       expect(type).toBe('second-chance');
     });
 
     test('금지된 사랑 감지', () => {
-      const novel = { 
-        relationshipStage: 'confession', 
-        openThreads: ['금지된 만남의 대가'] 
+      const novel = {
+        relationshipStage: 'confession',
+        openThreads: ['금지된 만남의 대가']
       };
 
       const type = completionEngine.detectRelationshipType(novel);
-      
+
       expect(type).toBe('forbidden-love');
     });
   });
@@ -557,7 +557,7 @@ describe('CompletionCriteriaEngine', () => {
       };
 
       const themes = completionEngine.extractEndingThemes(novel);
-      
+
       expect(themes).toContain('개인적 성장');
       expect(themes).toContain('사랑의 승리');
       expect(themes).toContain('갈등 해결');
@@ -573,7 +573,7 @@ describe('CompletionCriteriaEngine', () => {
       };
 
       const themes = completionEngine.extractEndingThemes(novel);
-      
+
       expect(themes).not.toContain('개인적 성장'); // 90 이하
       expect(themes).not.toContain('사랑의 승리'); // union 아님
       expect(themes).toContain('갈등 해결'); // openThreads.length (1) <= 1 이므로 포함
@@ -592,7 +592,7 @@ describe('CompletionCriteriaEngine', () => {
       };
 
       const needsEpilogue = completionEngine.shouldIncludeEpilogue(novel);
-      
+
       expect(needsEpilogue).toBe(true); // 4개 요소 모두 충족
     });
 
@@ -605,7 +605,7 @@ describe('CompletionCriteriaEngine', () => {
       };
 
       const needsEpilogue = completionEngine.shouldIncludeEpilogue(novel);
-      
+
       expect(needsEpilogue).toBe(false); // 요소 1개만 충족 (이상적 챕터)
     });
 
@@ -618,7 +618,7 @@ describe('CompletionCriteriaEngine', () => {
       };
 
       const needsEpilogue = completionEngine.shouldIncludeEpilogue(novel);
-      
+
       expect(needsEpilogue).toBe(true); // 3개 요소 충족으로 에필로그 필요
     });
   });
@@ -637,7 +637,7 @@ describe('CompletionCriteriaEngine', () => {
       };
 
       const report = completionEngine.generateCompletionReport(novel);
-      
+
       expect(report.overallReadiness).toBe(true);
       expect(report.storyArc.readyForEnding).toBe(true);
       expect(report.relationship.readyForConclusion).toBe(true);
@@ -659,7 +659,7 @@ describe('CompletionCriteriaEngine', () => {
       };
 
       const report = completionEngine.generateCompletionReport(novel);
-      
+
       expect(report.overallReadiness).toBe(false);
       expect(report.recommendation).toBe('Continue development');
       expect(report.estimatedChaptersToCompletion).toBe(15); // max(10, 50-35)
@@ -687,12 +687,12 @@ describe('CompletionCriteriaEngine', () => {
   describe('에러 처리', () => {
     test('잘못된 입력값에 대한 방어적 처리', () => {
       expect(() => {
-        completionEngine.checkStoryCompletion({ 
-          currentChapter: 0, 
-          plotProgress: [], 
-          relationshipStage: '', 
-          openThreads: [], 
-          characters: [] 
+        completionEngine.checkStoryCompletion({
+          currentChapter: 0,
+          plotProgress: [],
+          relationshipStage: '',
+          openThreads: [],
+          characters: []
         });
       }).not.toThrow();
 
@@ -701,10 +701,10 @@ describe('CompletionCriteriaEngine', () => {
       }).not.toThrow();
 
       expect(() => {
-        completionEngine.generateEndingScenario({ 
-          relationshipStage: '', 
-          openThreads: [], 
-          characters: [] 
+        completionEngine.generateEndingScenario({
+          relationshipStage: '',
+          openThreads: [],
+          characters: []
         });
       }).not.toThrow();
     });
@@ -732,7 +732,7 @@ describe('CompletionCriteriaEngine', () => {
       const novel = { relationshipStage: undefined };
 
       const analysis = completionEngine.analyzeRelationshipProgress(novel);
-      
+
       expect(analysis.currentStage).toBe('미정의 단계');
       expect(analysis.progress).toBe(0);
     });
@@ -754,19 +754,19 @@ describe('CompletionCriteriaEngine', () => {
 
       // 1. 전체 완결 판단
       const isComplete = completionEngine.checkStoryCompletion(novel);
-      
+
       // 2. 상세 분석
       const storyArc = completionEngine.analyzeStoryArc(novel);
       const relationship = completionEngine.analyzeRelationshipProgress(novel);
       const subplots = completionEngine.checkSubplotResolution(novel);
       const characters = completionEngine.evaluateCharacterGrowth(novel);
-      
+
       // 3. 결말 시나리오 생성
       const endingScenario = completionEngine.generateEndingScenario(novel);
-      
+
       // 4. 에필로그 필요성
       const needsEpilogue = completionEngine.shouldIncludeEpilogue(novel);
-      
+
       // 5. 종합 보고서
       const report = completionEngine.generateCompletionReport(novel);
 
