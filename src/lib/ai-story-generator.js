@@ -169,10 +169,10 @@ ${characterContext}
 
         const response = await this.anthropic.messages.create({
           model: 'claude-3-5-sonnet-20241022',
-          max_tokens: 8000, // 토큰 한도 대폭 증가 (3000자 이상 생성 위해)
+          max_tokens: 12000, // 한글 3000자+ 생성을 위해 대폭 증가
           messages: [{ role: 'user', content: enhancedPrompt }],
-          temperature: 0.8, // 창의성 향상
-          top_p: 0.95
+          temperature: 0.7, // 창의성과 일관성의 균형
+          top_p: 0.9
         });
 
         const fullResponse = response.content[0].type === 'text' ? response.content[0].text : '';
@@ -227,10 +227,10 @@ ${characterContext}
           });
         }
 
-        // 동적 품질 기준 (시도가 증가할수록 기준을 낮춤)
+        // 동적 품질 기준 (분량 미달 시 기준을 점진적으로 조정)
         const dynamicThreshold = Math.max(
-          50, // 최소 기준
-          this.qualityEngine.qualityStandards.qualityThreshold - (attempts - 1) * 15
+          70, // 최소 기준 강화 (50→70)
+          this.qualityEngine.qualityStandards.qualityThreshold - (attempts - 1) * 10 // 감소폭 축소 (15→10)
         );
         
         console.log(`🎯 동적 품질 기준: ${dynamicThreshold}점 (시도 ${attempts})`);
@@ -305,18 +305,26 @@ ${characterContext}
 이전 최고 결과: ${previousWordCount}자 (목표: 3,000자)
 필요 증가량: 최소 ${Math.round(targetIncrease)}자
 
-🎯 단계적 개선 전략:
-1. **이전 결과보다 반드시 더 길게** - 최소 ${previousWordCount + Math.round(targetIncrease)}자 이상
-2. **각 문단을 2배 확장** - 현재 문단들이 너무 짧습니다
-3. **대화 장면 3-5배 늘리기** - 단순한 한 줄 대화 → 여러 번의 주고받기
-4. **내적 독백 대폭 확장** - 캐릭터의 생각과 감정을 자세히
-5. **환경 묘사 강화** - 장소, 분위기, 감각적 세부사항 추가
+🚨 **절대 준수 요구사항** - 이는 품질의 핵심입니다:
+- **최소 3,000자 이상 필수** (현재 ${previousWordCount}자는 기준 미달)
+- 현재 ${Math.round((previousWordCount/3000)*100)}%만 달성, ${100 - Math.round((previousWordCount/3000)*100)}% 더 확장 필요
+- 분량 부족은 품질 실패로 간주됩니다
 
-⚡ 확장 포인트:
-- 대화 중간중간 행동과 표정 묘사 삽입
-- 과거 회상이나 배경 설정 자연스럽게 포함
-- 갈등 상황을 여러 단락에 걸쳐 천천히 고조
-- 캐릭터 간의 미묘한 감정 변화 상세 묘사`;
+🎯 단계적 확장 전략 (목표: ${previousWordCount + Math.round(targetIncrease)}자 이상):
+1. **장면 수 늘리기**: 기존 장면을 3-5개로 분할하여 각각 600-800자씩
+2. **대화 대폭 확장**: 기존 한 줄 대화를 5-7번 주고받기로 확장
+3. **내적 독백 3배 증가**: 각 감정 변화마다 최소 2-3문장 심리 묘사
+4. **환경 묘사 강화**: 5감을 활용한 상세한 배경 설정과 분위기 묘사
+5. **회상 장면 추가**: 과거 사건이나 배경 설정을 자연스럽게 포함
+
+⚡ 실전 확장 기법:
+- 한 장면을 시작-전개-절정-마무리로 4단계 구성
+- 대화 사이마다 행동, 표정, 몸짓, 환경 반응 삽입
+- 감정 변화를 여러 문단에 걸쳐 점진적으로 서술
+- 긴장감 고조를 위한 세밀한 타이밍 조절
+- 캐릭터의 과거와 현재를 연결하는 회상 장면
+
+💯 성공 조건: 3,000자 이상 + 5개 이상 장면 + 풍부한 대화와 심리묘사`;
     }
 
     // 캐시된 성공 패턴 활용

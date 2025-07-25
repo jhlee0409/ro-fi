@@ -136,7 +136,23 @@ export class MasterAutomationEngine {
     try {
       // 1단계: 현재 상황 분석
       const situation = await this.analyzeSituation();
-      console.log('📊 현재 상황:', situation);
+
+      // 가독성 있는 상황 요약 로깅
+      console.log('📊 현재 상황 요약:');
+      console.log(`   📚 활성 소설: ${situation.totalActiveCount}개`);
+      console.log(`   🆕 새 소설 필요: ${situation.needsNewNovel ? 'YES' : 'NO'}`);
+      console.log(`   🏁 완결 준비 소설: ${situation.readyForCompletion.length}개`);
+
+      if (situation.activeNovels.length > 0) {
+        console.log('   📖 활성 소설 목록:');
+        situation.activeNovels.forEach((novel, index) => {
+          console.log(`     ${index + 1}. ${novel.data?.title || novel.slug}`);
+          console.log(
+            `        진행도: ${novel.progressPercentage}% (${novel.latestChapter}/${novel.data?.totalChapters || 75}화)`
+          );
+          console.log(`        최종 업데이트: ${novel.lastUpdate.toLocaleDateString('ko-KR')}`);
+        });
+      }
 
       // 2단계: 액션 결정
       const action = this.decideAction(situation);
@@ -144,7 +160,22 @@ export class MasterAutomationEngine {
 
       // 3단계: 액션 실행
       const result = await this.executeAction(action, situation);
-      console.log('✅ 실행 결과:', result);
+
+      // 실행 결과 요약 로깅
+      console.log('✅ 실행 결과 요약:');
+      if (result.completedNovel) {
+        console.log(`   📚 완결 소설: ${result.completedNovel}`);
+        console.log(`   📖 완결 챕터: ${result.finalChapters?.join(', ')}화`);
+      } else if (result.newNovel) {
+        console.log(`   🆕 새 소설: ${result.title}`);
+        console.log(`   📖 첫 챕터: ${result.firstChapter}화`);
+      } else if (result.continuedNovel) {
+        console.log(`   📝 챕터 추가: ${result.newChapter}화`);
+        console.log(`   📚 소설: ${result.continuedNovel}`);
+        if (result.emotionStage) {
+          console.log(`   😊 감정 단계: ${result.emotionStage}`);
+        }
+      }
 
       return {
         success: true,
@@ -153,10 +184,17 @@ export class MasterAutomationEngine {
         situation,
       };
     } catch (error) {
-      console.error('❌ 자동화 실행 실패:', error);
+      console.error('❌ 자동화 실행 실패:');
+      console.error(`   🔍 에러 타입: ${error.constructor.name}`);
+      console.error(`   💬 에러 메시지: ${error.message}`);
+      if (error.stack) {
+        console.error(`   📍 스택 트레이스: ${error.stack.split('\n')[1]?.trim()}`);
+      }
+
       return {
         success: false,
         error: error.message,
+        errorType: error.constructor.name,
       };
     }
   }
@@ -320,14 +358,19 @@ export class MasterAutomationEngine {
     if (this.aiGenerator && typeof this.aiGenerator.initializeNovel === 'function') {
       try {
         console.log('🎭 하이브리드 AI로 소설 초기화 중...');
-        novelInitialization = await this.aiGenerator.initializeNovel(title, [uniqueConcept.main, uniqueConcept.sub], uniqueConcept);
+        novelInitialization = await this.aiGenerator.initializeNovel(
+          title,
+          [uniqueConcept.main, uniqueConcept.sub],
+          uniqueConcept
+        );
       } catch (error) {
         console.warn('⚠️ 하이브리드 초기화 실패, 기본 방식 사용:', error.message);
       }
     }
 
     // 캐릭터 생성 (하이브리드 결과 우선 사용)
-    const characters = novelInitialization?.characters || this.storyEngine.designMemorableCharacters(uniqueConcept);
+    const characters =
+      novelInitialization?.characters || this.storyEngine.designMemorableCharacters(uniqueConcept);
 
     // 소설 슬러그 생성
     const slug = this.generateSlug(title);
@@ -338,7 +381,7 @@ export class MasterAutomationEngine {
       concept: uniqueConcept,
       characters,
       worldSettings: novelInitialization?.worldSettings,
-      plotStructure: novelInitialization?.plotStructure
+      plotStructure: novelInitialization?.plotStructure,
     });
 
     // 첫 번째 챕터 생성
@@ -428,7 +471,7 @@ export class MasterAutomationEngine {
 
         try {
           let aiResult;
-          
+
           if (i === 0) {
             // 첫 번째 시도: 표준 생성
             aiResult = await this.aiGenerator.generateChapter({
@@ -445,13 +488,16 @@ export class MasterAutomationEngine {
             // 두 번째 시도: 이전 결과의 문제점을 바탕으로 개선
             const previousAssessment = await this.qualityEngine.assessQuality(bestResult.content);
             const mainIssues = previousAssessment.issues.slice(0, 2); // 주요 문제 2개만 집중
-            
+
             console.log(`🔧 이전 결과 개선 중: ${mainIssues.join(', ')}`);
-            const improvedContent = await this.aiGenerator.improveChapter(bestResult.content, mainIssues);
-            
+            const improvedContent = await this.aiGenerator.improveChapter(
+              bestResult.content,
+              mainIssues
+            );
+
             aiResult = {
               title: bestResult.title,
-              content: improvedContent
+              content: improvedContent,
             };
           }
 
@@ -463,10 +509,12 @@ export class MasterAutomationEngine {
           const qualityAssessment = await this.qualityEngine.assessQuality(aiResult.content, {
             title: aiResult.title,
             chapterNumber,
-            expectedLength: 3000
+            expectedLength: 3000,
           });
 
-          console.log(`📊 품질 점수: ${qualityAssessment.score}/100 (상태: ${qualityAssessment.status})`);
+          console.log(
+            `📊 품질 점수: ${qualityAssessment.score}/100 (상태: ${qualityAssessment.status})`
+          );
 
           // 업데이트된 기준으로 승인 체크
           if (qualityAssessment.score >= this.qualityEngine.qualityStandards.qualityThreshold) {
@@ -494,7 +542,6 @@ export class MasterAutomationEngine {
           if (qualityAssessment.issues.length > 0) {
             console.log(`⚠️ 주요 문제점: ${qualityAssessment.issues.slice(0, 2).join(', ')}`);
           }
-
         } catch (error) {
           console.error(`❌ 시도 ${i + 1} 실패:`, error.message);
           if (i === maxRetries - 1) {
@@ -506,9 +553,9 @@ export class MasterAutomationEngine {
       // 모든 시도가 기준에 미달하는 경우 최고 점수 결과 반환
       if (bestResult) {
         console.log(`⚠️ 품질 기준 미달이지만 최고 점수(${bestScore}/100) 결과 반환`);
-        
+
         const finalContent = bestResult.content;
-        
+
         return {
           frontmatter: {
             title: bestResult.title || `${chapterNumber}화`,
@@ -601,11 +648,13 @@ export class MasterAutomationEngine {
   // 파일 저장 함수들
   async createNovelFile(slug, novelData) {
     // 하이브리드 AI 정보 활용
-    const worldInfo = novelData.worldSettings ? 
-      `\n\n## 세계관 설정\n${novelData.worldSettings.substring(0, 500)}...` : '';
-    
-    const plotInfo = novelData.plotStructure ? 
-      `\n\n## 플롯 구조\n${novelData.plotStructure.substring(0, 500)}...` : '';
+    const worldInfo = novelData.worldSettings
+      ? `\n\n## 세계관 설정\n${novelData.worldSettings.substring(0, 500)}...`
+      : '';
+
+    const plotInfo = novelData.plotStructure
+      ? `\n\n## 플롯 구조\n${novelData.plotStructure.substring(0, 500)}...`
+      : '';
 
     const frontmatter = `---
 title: "${novelData.title}"
