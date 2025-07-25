@@ -12,6 +12,9 @@ export default defineConfig({
       '**/tests/e2e/**', // Exclude Playwright tests from Vitest
       '**/*.spec.ts' // Exclude Playwright spec files
     ],
+    // 환경별 타임아웃 설정
+    testTimeout: process.env.NODE_ENV === 'test' ? 5000 : 15000,
+    hookTimeout: process.env.NODE_ENV === 'test' ? 3000 : 10000,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
@@ -43,9 +46,7 @@ export default defineConfig({
         maxThreads: 4,
         minThreads: 1
       }
-    },
-    testTimeout: 10000,
-    hookTimeout: 10000
+    }
   },
   resolve: {
     alias: {

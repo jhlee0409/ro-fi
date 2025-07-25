@@ -8,11 +8,12 @@ import { TokenBalancingEngine } from './token-balancing-engine.js';
 import { QualityAssuranceEngine } from './quality-assurance-engine.js';
 import { createStoryGenerator } from './ai-story-generator.js';
 import { getQualitySample } from './high-quality-samples.js';
+import { shouldMockAIService, debugEnvironment, getEnvironmentInfo } from './environment.js';
 import { promises as fs } from 'fs';
 import { join } from 'path';
 
 export class MasterAutomationEngine {
-  constructor(contentDir = 'src/content') {
+  constructor(contentDir = 'src/content', dependencies = {}) {
     this.contentDir = contentDir;
     this.novelsDir = join(contentDir, 'novels');
     this.chaptersDir = join(contentDir, 'chapters');
@@ -29,8 +30,11 @@ export class MasterAutomationEngine {
     this.readerAnalytics = new ReaderAnalyticsEngine();
     this.tokenBalancer = new TokenBalancingEngine();
 
-    // AI 스토리 생성기 초기화
-    this.aiGenerator = createStoryGenerator();
+    // 환경 정보 디버깅
+    debugEnvironment();
+    
+    // AI 스토리 생성기 초기화 - 의존성 주입 지원
+    this.aiGenerator = dependencies.aiGenerator || this.createAIGenerator();
 
     this.automationConfig = {
       maxActiveNovels: 3,
@@ -47,6 +51,71 @@ export class MasterAutomationEngine {
         qualityPriority: true
       }
     };
+  }
+
+  // 환경별 AI 생성기 생성
+  createAIGenerator() {
+    const shouldMock = shouldMockAIService() || this.dryRun === true;
+    
+    if (shouldMock) {
+      const env = getEnvironmentInfo();
+      console.log(`🧪 모킹 모드: MockAIGenerator 사용 (환경: ${env.nodeEnv}, 모킹 필요: ${shouldMock})`);
+      return this.createMockAIGenerator();
+    }
+    
+    console.log('🤖 실제 AI 서비스 사용');
+    return createStoryGenerator();
+  }
+
+  // 모킹된 AI 생성기 생성
+  createMockAIGenerator() {
+    return {
+      generateChapter: async (options) => {
+        const { chapterNumber, tropes = ['enemies-to-lovers'] } = options;
+        
+        return {
+          title: `${chapterNumber}화`,
+          content: this.generateMockChapterContent(tropes, chapterNumber)
+        };
+      },
+      
+      improveChapter: async (content, criteria) => {
+        return `개선된 ${content.substring(0, 100)}...`;
+      }
+    };
+  }
+
+  // 모킹 챕터 콘텐츠 생성
+  generateMockChapterContent(tropes, chapterNumber) {
+    const tropeElements = {
+      'enemies-to-lovers': '적대적 긴장감 속에서도 서로에 대한 끌림',
+      'fated-mates': '운명적 이끌림과 예언의 실현',
+      'regression': '과거의 기억과 미래에 대한 지식',
+      'bodyguard-romance': '보호자와 피보호자 사이의 금지된 감정'
+    };
+    
+    const mainTrope = tropes[0] || 'enemies-to-lovers';
+    const tropeDescription = tropeElements[mainTrope] || '로맨틱한 긴장감';
+    
+    return `# ${chapterNumber}화
+
+## 테스트 챕터
+
+**모킹된 콘텐츠**: 이 챕터는 테스트를 위해 자동 생성된 내용입니다.
+
+**주요 트롭**: ${mainTrope}
+
+**스토리 요소**: ${tropeDescription}
+
+> "이것은 테스트용 대화입니다."
+
+주인공들 사이에 ${tropeDescription}이 흐르고 있었다.
+
+### 장면 전개
+
+테스트 환경에서 생성된 스토리가 자연스럽게 전개됩니다.
+
+**워드카운트**: 약 500자 (테스트용)`;
   }
 
   // 🎯 메인 실행 함수 - 100% 자동화

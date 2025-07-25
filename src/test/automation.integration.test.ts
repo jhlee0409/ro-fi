@@ -4,6 +4,7 @@ import { NovelDetector } from '../lib/novel-detector.js';
 import { StoryDiversityEngine } from '../lib/story-diversity-engine.js';
 import { EmotionalDepthEngine } from '../lib/emotional-depth-engine.js';
 import { CompletionCriteriaEngine } from '../lib/completion-criteria-engine.js';
+import { createMockAIGenerator } from './fixtures/mock-ai-generator.js';
 import { promises as fs } from 'fs';
 import { join } from 'path';
 
@@ -28,8 +29,9 @@ describe('Automation System Integration Tests', () => {
     emotionEngine = new EmotionalDepthEngine();
     completionEngine = new CompletionCriteriaEngine();
     
-    // 🔧 테스트용 자동화 엔진 - 격리된 디렉토리 사용
-    automationEngine = new MasterAutomationEngine(testDir);
+    // 🔧 테스트용 자동화 엔진 - 모킹된 AI 생성기 주입
+    const mockAIGenerator = createMockAIGenerator();
+    automationEngine = new MasterAutomationEngine(testDir, { aiGenerator: mockAIGenerator });
   });
 
   afterEach(async () => {
