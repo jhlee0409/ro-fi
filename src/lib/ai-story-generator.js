@@ -171,7 +171,7 @@ ${characterContext}
         const titleMatch = fullResponse.match(/\*\*챕터 제목:\*\*\s*(.+)/);
         const contentMatch = fullResponse.match(/\*\*본문:\*\*\s*([\s\S]+)/);
         
-        let result = {
+        const result = {
           title: titleMatch ? titleMatch[1].trim() : `제${chapterNumber}장`,
           content: contentMatch ? contentMatch[1].trim() : fullResponse
         };

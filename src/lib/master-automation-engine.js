@@ -7,6 +7,7 @@ import { ReaderAnalyticsEngine } from './reader-analytics-engine.js';
 import { TokenBalancingEngine } from './token-balancing-engine.js';
 import { QualityAssuranceEngine } from './quality-assurance-engine.js';
 import { createStoryGenerator } from './ai-story-generator.js';
+import { createHybridGenerator } from './hybrid-ai-generator.js';
 import { getQualitySample } from './high-quality-samples.js';
 import { shouldMockAIService, debugEnvironment, getEnvironmentInfo } from './environment.js';
 import { promises as fs } from 'fs';
@@ -33,7 +34,7 @@ export class MasterAutomationEngine {
     // 환경 정보 디버깅
     debugEnvironment();
 
-    // AI 스토리 생성기 초기화 - 의존성 주입 지원
+    // AI 스토리 생성기 초기화 - 하이브리드 기본 설정
     this.aiGenerator = dependencies.aiGenerator || this.createAIGenerator();
 
     this.automationConfig = {
@@ -65,7 +66,15 @@ export class MasterAutomationEngine {
       return this.createMockAIGenerator();
     }
 
-    console.log('🤖 실제 AI 서비스 사용');
+    // 하이브리드 AI 생성기 사용 시도
+    const hybridGenerator = createHybridGenerator();
+    if (hybridGenerator) {
+      console.log('🌟 하이브리드 AI 시스템 사용 (Claude + Gemini)');
+      return hybridGenerator;
+    }
+
+    // 폴백: Claude 단독 사용
+    console.log('🤖 Claude 단독 서비스 사용');
     return createStoryGenerator();
   }
 
@@ -306,17 +315,30 @@ export class MasterAutomationEngine {
     // 제목 생성
     const title = this.storyEngine.generateCatchyTitle(uniqueConcept);
 
-    // 캐릭터 생성
-    const characters = this.storyEngine.designMemorableCharacters(uniqueConcept);
+    // 하이브리드 AI로 소설 초기화 시도
+    let novelInitialization = null;
+    if (this.aiGenerator && typeof this.aiGenerator.initializeNovel === 'function') {
+      try {
+        console.log('🎭 하이브리드 AI로 소설 초기화 중...');
+        novelInitialization = await this.aiGenerator.initializeNovel(title, [uniqueConcept.main, uniqueConcept.sub], uniqueConcept);
+      } catch (error) {
+        console.warn('⚠️ 하이브리드 초기화 실패, 기본 방식 사용:', error.message);
+      }
+    }
+
+    // 캐릭터 생성 (하이브리드 결과 우선 사용)
+    const characters = novelInitialization?.characters || this.storyEngine.designMemorableCharacters(uniqueConcept);
 
     // 소설 슬러그 생성
     const slug = this.generateSlug(title);
 
-    // 소설 파일 생성
+    // 소설 파일 생성 (하이브리드 정보 포함)
     await this.createNovelFile(slug, {
       title,
       concept: uniqueConcept,
       characters,
+      worldSettings: novelInitialization?.worldSettings,
+      plotStructure: novelInitialization?.plotStructure
     });
 
     // 첫 번째 챕터 생성
@@ -578,9 +600,16 @@ export class MasterAutomationEngine {
 
   // 파일 저장 함수들
   async createNovelFile(slug, novelData) {
+    // 하이브리드 AI 정보 활용
+    const worldInfo = novelData.worldSettings ? 
+      `\n\n## 세계관 설정\n${novelData.worldSettings.substring(0, 500)}...` : '';
+    
+    const plotInfo = novelData.plotStructure ? 
+      `\n\n## 플롯 구조\n${novelData.plotStructure.substring(0, 500)}...` : '';
+
     const frontmatter = `---
 title: "${novelData.title}"
-author: "클로드 소네트 AI"
+author: "하이브리드 AI (Claude + Gemini)"
 status: "연재 중"
 summary: "${novelData.concept.world}에서 펼쳐지는 ${novelData.concept.main} 스토리"
 publishedDate: ${new Date().toISOString().split('T')[0]}
@@ -595,9 +624,9 @@ ${novelData.concept.world}에서 펼쳐지는 ${novelData.concept.mainConflict}�
 
 ## 주요 캐릭터
 
-**주인공**: ${novelData.characters.protagonist.background}, ${novelData.characters.protagonist.personality}
+**주인공**: ${novelData.characters.protagonist?.background || '신비로운 배경'}, ${novelData.characters.protagonist?.personality || '매력적인 성격'}
 
-**남주**: ${novelData.characters.male_lead.archetype}, ${novelData.characters.male_lead.personality}`;
+**남주**: ${novelData.characters.male_lead?.archetype || '강력한 존재'}, ${novelData.characters.male_lead?.personality || '복잡한 내면'}${worldInfo}${plotInfo}`;
 
     if (this.dryRun) {
       console.log(`🔄 [DRY-RUN] 소설 파일 생성 시뮬레이션: ${slug}.md`);

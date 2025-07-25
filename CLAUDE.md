@@ -15,9 +15,11 @@ Token optimization: For complex tasks, consider using `gemini -p "{prompt conten
 ro-fan is an AI-powered romance fantasy novel platform that combines modern web technologies with sophisticated AI automation for fully automated story creation and publishing.
 
 ### Mission
+
 Create a self-sustaining romance fantasy novel platform that generates high-quality, diverse stories automatically while maintaining reader engagement and narrative consistency.
 
 ### Architecture Philosophy
+
 - AI-First: Everything is designed around intelligent automation
 - Quality-Driven: 80%+ test coverage with TDD methodology
 - Production-Ready: Real-world deployment with monitoring and error handling
@@ -26,6 +28,7 @@ Create a self-sustaining romance fantasy novel platform that generates high-qual
 ## Project Architecture
 
 ### Frontend Stack
+
 - Framework: Astro.js 5.12.0 (SSR mode) for optimal performance
 - UI Components: React 18.2.0 + Radix UI (complete component library)
 - Styling: Tailwind CSS 3.4.0 + Tailwind Animate
@@ -33,12 +36,18 @@ Create a self-sustaining romance fantasy novel platform that generates high-qual
 - Deployment: Vercel with global CDN and image optimization
 
 ### AI & Automation Stack
-- AI Provider: Anthropic Claude Sonnet 4 (@anthropic-ai/sdk 0.56.0)
+
+- **Primary AI**: Anthropic Claude Sonnet 4 (@anthropic-ai/sdk 0.56.0)
+- **Secondary AI**: Google Gemini 2.5 Pro (@google/generative-ai 0.21.0) [선택사항]
+- **Hybrid AI System**: 작업 유형별 최적 AI 자동 선택
+  - Claude: 감성적 표현, 대화, 창의적 문체에 특화
+  - Gemini: 세계관 구축, 논리적 일관성, 복잡한 설정 관리에 특화
 - Content Management: Gray Matter for markdown processing
 - Automation: 7 specialized AI engines (3,300+ lines of code)
 - Scheduling: GitHub Actions (4 workflows, 1-day intervals)
 
 ### Development Stack
+
 - Language: TypeScript 5.7.2 + JavaScript ES Modules
 - Testing: Vitest 3.2.4 + Playwright (E2E)
 - Quality: ESLint 9.15.0 + Prettier 3.4.2
@@ -49,6 +58,7 @@ Create a self-sustaining romance fantasy novel platform that generates high-qual
 ### v3.1 - Advanced AI Automation System - PRODUCTION READY
 
 #### Core Systems (100% Complete)
+
 - 7 AI Engines: 3,300+ lines of sophisticated automation logic
 - Test Coverage: 87 tests with 85% pass rate (74/87 passing)
 - v2.1 Creativity Mode: Dynamic quality enhancement based on reader metrics
@@ -57,24 +67,26 @@ Create a self-sustaining romance fantasy novel platform that generates high-qual
 - Quality Assurance: Comprehensive error handling and logging
 
 #### AI Engine Architecture
-| Engine | Lines | Purpose | Status |
-|--------|-------|---------|--------|
-| MasterAutomationEngine | 597 | Orchestration & decision-making | Active |
-| TokenBalancingEngine | 713 | Cost optimization (75% savings) | Active |
-| ReaderAnalyticsEngine | 621 | Reader behavior analysis | Active |
-| CreativityModeEngine | 558 | Dynamic quality enhancement | Active |
-| StoryDiversityEngine | 328 | Unique story generation | Active |
-| CompletionCriteriaEngine | 262 | Smart story completion | Active |
-| EmotionalDepthEngine | 253 | Emotional storytelling | Active |
+
+| Engine                   | Lines | Purpose                         | Status |
+| ------------------------ | ----- | ------------------------------- | ------ |
+| MasterAutomationEngine   | 597   | Orchestration & decision-making | Active |
+| TokenBalancingEngine     | 713   | Cost optimization (75% savings) | Active |
+| ReaderAnalyticsEngine    | 621   | Reader behavior analysis        | Active |
+| CreativityModeEngine     | 558   | Dynamic quality enhancement     | Active |
+| StoryDiversityEngine     | 328   | Unique story generation         | Active |
+| CompletionCriteriaEngine | 262   | Smart story completion          | Active |
+| EmotionalDepthEngine     | 253   | Emotional storytelling          | Active |
 
 #### Automation Workflow
+
 ```
 1. Novel Completion (Highest Priority)
    └─ Automatically completes stories meeting criteria
-   
-2. New Novel Creation (High Priority)  
+
+2. New Novel Creation (High Priority)
    └─ Creates unique stories when needed (max 3 active)
-   
+
 3. Chapter Continuation (Normal Priority)
    └─ Adds chapters to existing novels with consistency
 ```
@@ -82,25 +94,29 @@ Create a self-sustaining romance fantasy novel platform that generates high-qual
 ## Development Setup
 
 ### Prerequisites
+
 ```bash
 Node.js: v22.17.0+
 Package Manager: pnpm (preferred)
-Environment: ANTHROPIC_API_KEY required
+Environment: ANTHROPIC_API_KEY required, GEMINI_API_KEY optional
 ```
 
 ### Installation
+
 ```bash
 # Clone and install dependencies
 pnpm install --ignore-scripts
 
 # Setup environment variables
 cp .env.example .env.local
-# Add your ANTHROPIC_API_KEY
+# Add your ANTHROPIC_API_KEY (required)
+# Add your GEMINI_API_KEY (optional - for hybrid AI features)
 ```
 
 ### Essential Commands
 
 #### Automation System
+
 ```bash
 # Production automation
 pnpm automation:run                    # Execute full automation
@@ -114,6 +130,7 @@ pnpm setup:check                       # Verify setup
 ```
 
 #### Testing & Quality
+
 ```bash
 # Testing suite
 pnpm test                              # Run all unit tests
@@ -134,6 +151,7 @@ pnpm security:audit                    # Security audit
 ```
 
 #### Development Server
+
 ```bash
 # Development
 pnpm dev                               # Start dev server (http://localhost:4321)
@@ -147,6 +165,7 @@ pnpm ci                                # Complete CI pipeline
 ## Advanced System Architecture
 
 ### AI Engine Integration Flow
+
 ```
 User Request/Schedule Trigger
          ↓
@@ -163,7 +182,7 @@ User Request/Schedule Trigger
    ┌─────────────────────────┐
    │    Quality Control      │
    │  ↳ Token Balancing      │ ←─ Token Balancing Engine
-   │  ↳ Reader Analytics     │ ←─ Reader Analytics Engine  
+   │  ↳ Reader Analytics     │ ←─ Reader Analytics Engine
    │  ↳ Creativity Mode      │ ←─ Creativity Mode Engine
    └─────────────────────────┘
          ↓
@@ -171,6 +190,7 @@ User Request/Schedule Trigger
 ```
 
 ### Smart Decision Making
+
 - Priority-Based: Critical tasks first (completion > creation > continuation)
 - Resource-Aware: Dynamic cost optimization (75% savings in efficiency mode)
 - Quality-Focused: Reader engagement metrics drive creativity investment
@@ -190,7 +210,7 @@ ro-fan/                               # AI Romance Fantasy Platform
 ├── AI Automation System
 │   ├── .github/workflows/           # 4 automated workflows
 │   │   ├── ai-story-generation.yml  # Main AI content creation
-│   │   ├── auto-publish.yml         # Publishing automation  
+│   │   ├── auto-publish.yml         # Publishing automation
 │   │   ├── quality-assurance.yml    # Quality checks
 │   │   └── github-pages.yml         # Deployment
 │   ├── scripts/
@@ -218,31 +238,35 @@ ro-fan/                               # AI Romance Fantasy Platform
 │
 └── Infrastructure
     ├── logs/                        # Automation logs
-    ├── .vercel/                     # Deployment configuration  
+    ├── .vercel/                     # Deployment configuration
     └── dist/                        # Production build
 ```
 
 ## Advanced Features
 
 ### Intelligent Content Generation
+
 - Context-Aware: Maintains character consistency across chapters
 - Trope-Based: Generates unique combinations (enemies-to-lovers, regression, etc.)
 - Emotional Progression: Sophisticated emotional arc development
 - Anti-Repetition: Algorithmic diversity ensuring fresh content
 
 ### Cost Optimization
+
 - Efficiency Mode: 75% cost reduction for standard content
 - Creativity Mode: Unlimited budget for critical moments
 - Dynamic Balancing: Real-time cost vs quality optimization
 - ROI Tracking: Performance-based strategy adjustment
 
 ### Reader-Driven Quality
+
 - Analytics Engine: Reader behavior and engagement tracking
 - Dropout Prevention: Automatic quality enhancement triggers
 - Feedback Loops: Reader response influences future content
 - A/B Testing: Content strategy optimization
 
 ### Production Automation
+
 - GitHub Actions: 4 workflows, daily execution schedule
 - Error Recovery: Comprehensive error handling and retry logic
 - Monitoring: Detailed logging and performance tracking
@@ -251,11 +275,12 @@ ro-fan/                               # AI Romance Fantasy Platform
 ## Content Strategy
 
 ### Content Model
+
 ```typescript
 Novel: {
   title: string,
   slug: string,
-  author: "Claude Sonnet AI",
+  author: "하이브리드 AI (Claude + Gemini)",
   status: "연재 중" | "완결" | "휴재",
   summary: string,
   tropes: string[],
@@ -276,14 +301,18 @@ Chapter: {
 ```
 
 ### AI Strategy
-- Chain-of-Thought: Multi-step reasoning for plot development
-- Context Injection: Character and world-state awareness
-- Quality Loops: Self-improvement through feedback analysis
-- Template-Based: Romance fantasy trope integration
+
+- **Hybrid Intelligence**: Claude + Gemini 최적 조합으로 작업 특성별 AI 선택
+- **Chain-of-Thought**: Multi-step reasoning for plot development
+- **Context Injection**: Character and world-state awareness
+- **Quality Loops**: Self-improvement through feedback analysis
+- **Template-Based**: Romance fantasy trope integration
+- **Intelligent Fallback**: Gemini 불가용시 Claude 단독 모드 자동 전환
 
 ## Advanced Configuration
 
 ### Environment Variables
+
 ```bash
 # Required for production
 ANTHROPIC_API_KEY=sk-ant-api03-xxx     # Claude API access
@@ -292,22 +321,25 @@ VERCEL_ORG_ID=xxx                      # Organization ID
 VERCEL_PROJECT_ID=xxx                  # Project ID
 
 # Optional for enhanced features
+GEMINI_API_KEY=AIzaSyXXXXXXXXXXXXXX     # Gemini API for hybrid AI system
 NODE_ENV=production                    # Environment mode
 LOG_LEVEL=info                         # Logging verbosity
 ```
 
 ### Automation Schedule
+
 ```yaml
 GitHub Actions Schedule:
-- 09:00 KST (00:00 UTC): auto-publish (1차)
-- 11:00 KST (02:00 UTC): ai-story-generation (메인)  
-- 15:00 KST (06:00 UTC): auto-publish (2차)
-- 21:00 KST (12:00 UTC): auto-publish (3차)
+  - 09:00 KST (00:00 UTC): auto-publish (1차)
+  - 11:00 KST (02:00 UTC): ai-story-generation (메인)
+  - 15:00 KST (06:00 UTC): auto-publish (2차)
+  - 21:00 KST (12:00 UTC): auto-publish (3차)
 ```
 
 ## Best Practices & Guidelines
 
 ### Development Guidelines
+
 1. Test-Driven: Write tests before implementation (TDD)
 2. TypeScript First: Use strong typing for reliability
 3. Modular Design: Keep engines independent and composable
@@ -315,6 +347,7 @@ GitHub Actions Schedule:
 5. Performance: Monitor and optimize for production use
 
 ### AI Development
+
 1. Context Preservation: Maintain story continuity across sessions
 2. Quality Gates: Validate output before publication
 3. Cost Awareness: Balance quality vs resource consumption
@@ -322,6 +355,7 @@ GitHub Actions Schedule:
 5. Diversity: Ensure content variety and freshness
 
 ### Code Quality Standards
+
 - Coverage: Minimum 80% test coverage
 - Linting: ESLint + Prettier compliance
 - Security: Regular Snyk vulnerability scans
@@ -331,6 +365,7 @@ GitHub Actions Schedule:
 ## Deployment & Operations
 
 ### Production Deployment
+
 - Platform: Vercel with global CDN
 - Build: Astro SSR with optimizations
 - Monitoring: Built-in analytics and error tracking
@@ -338,6 +373,7 @@ GitHub Actions Schedule:
 - CI/CD: GitHub Actions automated deployment
 
 ### Monitoring & Maintenance
+
 - Logs: Comprehensive automation logs in `/logs/`
 - Metrics: Performance and quality metrics tracking
 - Alerts: Automated failure notifications
@@ -347,6 +383,7 @@ GitHub Actions Schedule:
 ## Performance Metrics
 
 ### System Performance
+
 - Automation Success Rate: 95%+
 - Average Generation Time: <5 minutes per chapter
 - Cost Efficiency: 75% savings in standard mode
@@ -354,6 +391,7 @@ GitHub Actions Schedule:
 - Reader Engagement: Tracked and optimized
 
 ### Technical Metrics
+
 - Test Coverage: 540+ test cases, 95% pass rate
 - Build Time: <2 minutes
 - Deployment Time: <30 seconds
@@ -363,12 +401,14 @@ GitHub Actions Schedule:
 ## Future Roadmap
 
 ### Near-term Enhancements
+
 - [ ] Multi-language content generation
 - [ ] Advanced reader personalization
 - [ ] Real-time content optimization
 - [ ] Enhanced analytics dashboard
 
 ### Long-term Vision
+
 - [ ] AI-driven marketing optimization
 - [ ] Multi-platform publishing
 - [ ] Community features integration
@@ -377,6 +417,7 @@ GitHub Actions Schedule:
 ## Support & Resources
 
 ### Documentation
+
 - `PLAN.md` - Original project planning document
 - `PROMPT_ENHANCER.md` - AI prompt optimization guide
 - `NOVEL_MARKDOWN_FORMAT.md` - Content formatting standards
@@ -385,6 +426,9 @@ GitHub Actions Schedule:
 ### Key Files
 
 - `src/lib/master-automation-engine.js` - Main orchestration
+- `src/lib/hybrid-ai-generator.js` - Hybrid AI system coordinator
+- `src/lib/gemini-story-generator.js` - Gemini API integration
+- `src/lib/ai-story-generator.js` - Claude API integration
 - `scripts/run-automation.js` - Production runner
 - `.github/workflows/` - Automation workflows
 - `src/test/` - Test suites and examples
@@ -395,7 +439,7 @@ Production-Ready AI Platform - Fully automated romance fantasy content generatio
 Comprehensive Testing - 540+ test cases with 95% success rate  
 Advanced AI Integration - 7 specialized engines with 3,300+ lines of logic  
 Professional Deployment - Vercel hosting with monitoring and optimization  
-Quality Assurance - ESLint, Prettier, TypeScript, and security scanning  
+Quality Assurance - ESLint, Prettier, TypeScript, and security scanning
 
 **The ro-fi platform represents a complete, production-ready AI-powered content generation system that demonstrates the potential of automated creative writing while maintaining high quality standards and reader engagement.**
 
@@ -406,4 +450,4 @@ Quality Assurance - ESLint, Prettier, TypeScript, and security scanning
 Do what has been asked; nothing more, nothing less.
 NEVER create files unless they're absolutely necessary for achieving your goal.
 ALWAYS prefer editing an existing file to creating a new one.
-NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
+NEVER proactively create documentation files (\*.md) or README files. Only create documentation files if explicitly requested by the User.

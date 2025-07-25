@@ -31,6 +31,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.56.0",
+    "@google/generative-ai": "^0.21.0",
     "@astrojs/react": "^4.0.0",
     "@astrojs/tailwind": "^6.0.0",
     "@astrojs/vercel": "^8.2.2",

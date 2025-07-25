@@ -82,9 +82,11 @@ export class CompletionCriteriaEngine {
     const currentStage = novel.plotProgress[totalProgress - 1] || "시작";
     
     let arcCompletion = 0;
-    for (const [stage, data] of Object.entries(this.storyArcStages)) {
+    for (const [stageName, data] of Object.entries(this.storyArcStages)) {
       if (data.keywords.some(keyword => currentStage.includes(keyword))) {
         arcCompletion = data.weight;
+        // 스테이지 정보를 로깅에 활용
+        console.log(`📊 현재 스토리 단계: ${stageName} (진행도: ${data.weight}%)`);
         break;
       }
     }

@@ -29,6 +29,12 @@ backup/
 .env.test
 .env.production
 
+# AI service configuration files
+.anthropic-api-key
+.gemini-api-key
+ai-config.json
+ai-config.local.json
+
 # IDE and editor settings
 .vscode/
 .idea/

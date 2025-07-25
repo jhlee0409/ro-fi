@@ -308,6 +308,14 @@ export class CreativityModeEngine {
 
     const { novel, chapter, emotionalStage } = context;
     const primaryTrigger = triggers[0]; // 가장 중요한 트리거
+    
+    // 컨텍스트 정보를 창의성 분석에 활용
+    const novelTitle = novel?.title || 'Unknown';
+    const chapterNum = chapter?.number || 0;
+    const emotionalLevel = emotionalStage || 'normal';
+    
+    console.log(`🎨 창의성 모드 활성화: ${novelTitle} 제${chapterNum}화 (감정수준: ${emotionalLevel})`);
+    console.log(`🎯 주요 트리거: ${primaryTrigger.type} - ${primaryTrigger.description}`);
 
     let creativeDirective = '';
 
