@@ -7,7 +7,6 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import fs from 'fs';
-import path from 'path';
 
 // API 키 확인
 const apiKey = process.env.ANTHROPIC_API_KEY;

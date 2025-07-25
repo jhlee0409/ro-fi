@@ -17,6 +17,7 @@ export default [
       'src/content/_generated/', // Auto-generated content
       '.astro/', // Astro generated files
       '**/*.astro', // Skip Astro files due to parser issues
+      'src/env.d.ts', // Astro type declarations
     ],
   },
 

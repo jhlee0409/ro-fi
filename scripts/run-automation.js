@@ -27,6 +27,10 @@ async function main() {
     const args = process.argv.slice(2);
     const isDryRun = args.includes('--dry-run');
     const isVerbose = args.includes('--verbose') || args.includes('-v');
+    
+    if (isVerbose) {
+      log('🔍 상세 모드로 실행합니다', 'info');
+    }
 
     if (isDryRun) {
       log('🔄 드라이런 모드로 실행합니다 (파일 생성 없음)', 'warning');
