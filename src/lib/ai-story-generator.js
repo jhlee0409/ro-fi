@@ -109,31 +109,46 @@ ${previousContext}
 ${characterContext}
 `;
 
-    // 토큰 효율성을 위한 압축된 프롬프트
+    // 3000자 충족을 위한 강화된 프롬프트
     const generationPrompt = `${contextPrompt}
 
-로맨스 판타지 작가로서 ${chapterNumber}챕터를 작성하세요.
+로맨스 판타지 전문 작가로서 ${chapterNumber}챕터를 작성하세요.
 
-🚨 **분량 필수 조건**: 최소 3,000자 (공백 제외)
+🚨 **절대 분량 요구사항**: 정확히 3,500~4,000자 (공백 제외) 작성
 
-📖 **구조 요구사항**:
-1. 5개 장면 × 600자 = 3,000자 구성
-2. 대화: 각 3-5번 주고받기
-3. 내적 독백: 5회 이상 심리 묘사
-4. 감각 묘사: 5감 활용 환경 서술
-5. 회상/배경: 자연스러운 설정 설명
+📚 **상세 구조 지침**:
+1. **장면 구성**: 7개 장면 × 500자 = 3,500자
+   - 도입부 (500자): 상황 설정 + 감정 묘사
+   - 전개부 5장면 (각 500자): 갈등 발전 + 대화 + 심리
+   - 마무리 (500자): 감정 변화 + 다음 화 연결
 
-✍️ **확장 기법**:
-- 장면별 상세 묘사 (시작-전개-절정-마무리)
-- 대화 + 행동/표정 묘사 교차
-- 환경과 분위기의 생생한 표현
-- 갈등의 점진적 고조
+2. **대화 요구사항**: 
+   - 장면당 최소 3회 대화 교환 (총 21회 이상)
+   - 대화마다 행동/표정 묘사 필수 (50자 이상)
 
-🎯 **검증 조건**: 3,000자 + 5장면 + 충분한 대화/심리
+3. **내적 독백**: 
+   - 장면당 최소 2회 심리 묘사 (총 14회 이상)
+   - 각 내적 독백 최소 30자 이상
+
+4. **환경/감각 묘사**:
+   - 5감 활용한 배경 서술 (시각, 청각, 촉각, 후각, 미각)
+   - 장면당 최소 100자 환경 묘사
+
+5. **회상/설정 설명**:
+   - 자연스러운 배경 정보 삽입
+   - 캐릭터 과거사 또는 세계관 설명
+
+✍️ **작성 전략**:
+- 각 문장을 풍부하게 확장 (단순 문장 금지)
+- 감정 변화를 세밀하게 표현
+- 긴장감과 로맨틱 요소 균형 유지
+- 시간의 흐름과 장소 변화 상세 묘사
+
+🎯 **품질 기준**: 3,500자 이상 + 7장면 + 21회 대화 + 14회 심리묘사
 
 **출력 형식**:
 **챕터 제목:** [제목]
-**본문:** [3,000자 이상 마크다운 스토리]`;
+**본문:** [3,500자 이상 풍부한 마크다운 스토리]`;
 
     let bestResult = null;
     let bestScore = 0;
@@ -158,8 +173,8 @@ ${characterContext}
           chapterNumber
         );
 
-        // 토큰 효율성을 위한 동적 max_tokens 조정
-        const dynamicMaxTokens = attempts === 1 ? 8192 : Math.min(8192, 6000 + (attempts * 1000));
+        // 3000자 충족을 위한 최대 토큰 할당
+        const dynamicMaxTokens = 8192; // Claude Sonnet 최대 토큰으로 고정
 
         const response = await this.anthropic.messages.create({
           model: 'claude-3-5-sonnet-20241022',
@@ -236,9 +251,10 @@ ${characterContext}
         }
 
         // 분량 부족 분석 및 로깅
-        if (wordCount < 3000) {
-          const percentage = Math.round((wordCount / 3000) * 100);
+        if (wordCount < 3500) {
+          const percentage = Math.round((wordCount / 3500) * 100);
           console.log(`⚠️ 분량 미달: ${wordCount}자 (목표의 ${percentage}%) - 재시도 필요`);
+          console.log(`📈 부족분: ${3500 - wordCount}자 추가 확장 필요`);
         }
 
         // 문제점 로깅 (상위 3개만)
@@ -268,15 +284,9 @@ ${characterContext}
       return bestResult;
     }
 
-    // bestResult가 null인 경우를 방지하기 위한 안전장치
-    console.error('❌ 모든 시도에서 결과 생성 실패 - 최소한의 콘텐츠라도 생성하여 반환');
-    
-    // 최소한의 기본 콘텐츠 생성
-    const fallbackContent = this.generateFallbackContent(chapterNumber);
-    return {
-      title: `${chapterNumber}화`,
-      content: fallbackContent
-    };
+    // bestResult가 null인 경우 실패로 처리
+    console.error('❌ 모든 시도에서 콘텐츠 생성 실패');
+    throw new Error(`챕터 ${chapterNumber} 생성 실패: 모든 시도에서 품질 기준을 충족하지 못함`);
   }
 
   /**
@@ -293,22 +303,34 @@ ${characterContext}
     // 이전 결과가 있는 경우 증분 개선 요청
     if (bestResult) {
       const previousWordCount = bestResult.content.replace(/\s+/g, '').length;
-      const targetIncrease = Math.max(3000 - previousWordCount, previousWordCount * 0.5);
+      const targetIncrease = Math.max(4000 - previousWordCount, previousWordCount * 0.8);
       
-      enhancedPrompt += `\n\n🔄 **증분 개선 ${attempts}차** (${previousWordCount}→3,000자):
+      enhancedPrompt += `\n\n🔄 **증분 개선 ${attempts}차** (${previousWordCount}→4,000자):
 
-🚨 **필수**: ${3000 - previousWordCount}자 추가 확장 필요
+🚨 **절대 필수**: ${4000 - previousWordCount}자 추가 확장 필요
 
-🎯 **확장 전략**:
-1. 장면 분할: 기존→3-5개 장면×600자
-2. 대화 확장: 1줄→5-7번 주고받기  
-3. 심리 묘사: 감정 변화마다 2-3문장
-4. 환경 서술: 5감 활용 배경 묘사
-5. 회상 추가: 과거 사건 자연 삽입
+🎯 **강화 확장 전략**:
+1. **장면 세분화**: 기존 장면을 7개로 분할 (각 500자)
+2. **대화 대폭 확장**: 
+   - 기존 대화를 3배 확장 (행동 묘사 포함)
+   - 대화 사이사이 감정 변화 상세 서술
+3. **심리 묘사 강화**: 
+   - 각 감정마다 3-4문장 내적 독백
+   - 과거 기억과 연결된 복합 감정 표현
+4. **환경 서술 확대**: 
+   - 5감 모두 활용한 장면 묘사 (각 100자 이상)
+   - 시간대별 분위기 변화 상세 표현
+5. **회상/배경 추가**: 
+   - 캐릭터 과거사 자연스럽게 삽입
+   - 세계관 설정 상세 설명
 
-⚡ **실행**: 장면별 4단계 구성 + 대화/행동 교차 + 점진적 긴장감 고조
+⚡ **구체적 실행**:
+- 단순 문장을 복합 문장으로 확장
+- 모든 행동에 감정적 맥락 추가
+- 대화 전후 상황 상세 묘사
+- 장면 전환시 시공간적 연결고리 강화
 
-💯 **목표**: ${previousWordCount + Math.round(targetIncrease)}자 이상`;
+💯 **목표**: 최소 ${Math.max(4000, previousWordCount + Math.round(targetIncrease))}자 달성`;
     }
 
     // 캐시된 성공 패턴 활용
@@ -358,42 +380,6 @@ ${characterContext}
     return patterns;
   }
 
-  /**
-   * 폴백 콘텐츠 생성 (최후의 안전장치)
-   */
-  generateFallbackContent(chapterNumber) {
-    return `# ${chapterNumber}화
-
-안전장치로 생성된 기본 콘텐츠입니다.
-
-**주인공**은 복잡한 상황에 처해 있었다. 마음속 깊은 곳에서는 여러 감정이 교차하고 있었다.
-
-> *'이 상황을 어떻게 해결해야 할까?'*
-
-**주인공**이 생각에 잠겼다.
-
-> "이제 어떻게 해야 하지?"
-
-**주인공**이 중얼거렸다. 주변의 분위기는 긴장감으로 가득했다.
-
-[장면이 천천히 전개되었다]
-
-**남주**가 나타났다. 두 사람 사이에는 미묘한 긴장감이 흘렀다.
-
-> "예상했던 일이야."
-
-**남주**가 차분하게 말했다.
-
-> *'그의 말투에서 뭔가 다른 감정이 느껴진다.'*
-
-**주인공**은 그를 바라보며 생각했다.
-
-대화가 이어지며 두 사람 사이의 관계가 조금씩 변화하기 시작했다. 이것은 앞으로 펼쳐질 이야기의 중요한 전환점이 될 것이었다.
-
-**다음 화에서 계속...**
-
-(이 콘텐츠는 AI 생성 실패 시 제공되는 기본 콘텐츠입니다. 실제 서비스에서는 고품질 샘플로 대체됩니다.)`;
-  }
 
   /**
    * PLAN.md의 전략 3: 재귀적 자가 개선 (Recursive Self-Improvement)
