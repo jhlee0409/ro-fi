@@ -13,6 +13,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: 🛒 체크아웃 코드
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: 🔧 Node.js + pnpm 환경 설정
         uses: ./.github/actions/setup-node-pnpm
         with:

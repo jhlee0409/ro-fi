@@ -19,6 +19,12 @@ jobs:
       NODE_ENV: production
     
     steps:
+    - name: 🛒 체크아웃 코드
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        fetch-depth: 0
+    
     - name: 🔧 Node.js + pnpm 환경 설정
       uses: ./.github/actions/setup-node-pnpm
       with:

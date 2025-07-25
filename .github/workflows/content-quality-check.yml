@@ -19,6 +19,11 @@ jobs:
       pull-requests: write
 
     steps:
+      - name: 🛒 체크아웃 코드
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
       - name: 🔧 Node.js + pnpm 환경 설정
         uses: ./.github/actions/setup-node-pnpm
         with:

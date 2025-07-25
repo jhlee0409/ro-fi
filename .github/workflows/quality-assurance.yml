@@ -28,6 +28,11 @@ jobs:
       issues: write
 
     steps:
+      - name: 🛒 체크아웃 코드
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # 최신 2개 커밋 비교
+
       - name: 🔧 Node.js + pnpm 환경 설정
         uses: ./.github/actions/setup-node-pnpm
         with:
@@ -135,6 +140,12 @@ jobs:
             ## 실행 명령
             위 기준으로 최근 추가/수정된 로맨스 판타지 챕터들을 지금 검증하세요.
             각 챕터별로 상세한 점수와 평가 이유를 제공하고, 필요시 개선 사항을 구체적으로 제안하세요.
+
+      - name: 🛒 체크아웃 코드 (폴백용)
+        if: steps.claude_review.outcome == 'failure'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
 
       - name: 🔧 Node.js 환경 설정 (폴백용)
         if: steps.claude_review.outcome == 'failure'
