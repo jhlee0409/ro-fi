@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { QualityAssuranceEngine } from './quality-assurance-engine.js';
 
 // PLAN.md에 정의된 로맨스 판타지 트렌드 매트릭스
 const TROPE_PROMPTS = {
@@ -22,29 +23,30 @@ const TROPE_PROMPTS = {
   }
 };
 
-interface StoryGenerationOptions {
-  title: string;
-  tropes: string[];
-  chapterNumber?: number;
-  previousContext?: string;
-  characterContext?: string;
-  plotOutline?: string;
-}
+// StoryGenerationOptions 인터페이스를 JSDoc으로 변환
+/**
+ * @typedef {Object} StoryGenerationOptions
+ * @property {string} title
+ * @property {string[]} tropes
+ * @property {number} [chapterNumber]
+ * @property {string} [previousContext]
+ * @property {string} [characterContext]
+ * @property {string} [plotOutline]
+ */
 
 export class AIStoryGenerator {
-  private anthropic: Anthropic;
-
-  constructor(apiKey: string) {
+  constructor(apiKey) {
     this.anthropic = new Anthropic({
       apiKey: apiKey,
     });
+    this.qualityEngine = new QualityAssuranceEngine();
   }
 
   /**
    * PLAN.md의 전략 1: Chain-of-Thought를 활용한 플롯 구성
    */
-  async generatePlotOutline(title: string, tropes: string[]): Promise<string> {
-    const tropeDetails = tropes.map(trope => TROPE_PROMPTS[trope as keyof typeof TROPE_PROMPTS]).filter(Boolean);
+  async generatePlotOutline(title, tropes) {
+    const tropeDetails = tropes.map(trope => TROPE_PROMPTS[trope]).filter(Boolean);
     
     const prompt = `당신은 로맨스 판타지 전문 작가입니다. 단계별로 생각해서 작성해주세요.
 
@@ -81,8 +83,10 @@ ${tropes[i]}:
 
   /**
    * PLAN.md의 전략 2: 컨텍스트 주입과 역할 부여
+   * @param {StoryGenerationOptions} options
+   * @returns {Promise<{title: string, content: string}>}
    */
-  async generateChapter(options: StoryGenerationOptions): Promise<{ title: string; content: string }> {
+  async generateChapter(options) {
     const { title, tropes, chapterNumber = 1, previousContext = '', characterContext = '', plotOutline = '' } = options;
     
     const contextPrompt = `
@@ -106,11 +110,14 @@ ${characterContext}
 당신은 숙련된 로맨스 판타지 작가입니다. 위의 컨텍스트를 바탕으로 ${chapterNumber}챕터를 작성하세요.
 
 요구사항:
-1. 약 2,500단어 분량으로 작성하세요
+1. 약 3,000-5,000자 분량으로 작성하세요 (디지털 소울메이트 수준)
 2. 캐릭터의 감정과 내적 갈등을 세밀하게 묘사하세요
 3. 적용된 트렌드의 특성을 자연스럽게 드러내세요
 4. 독자의 몰입도를 높이는 생생한 장면 묘사를 포함하세요
 5. 다음 챕터로 이어지는 훅(Hook)을 남기세요
+6. 최고 품질의 한국어 문법과 자연스러운 문체를 사용하세요
+7. 대화 비율을 30% 이상 포함하세요
+8. 감정적 몰입도를 극대화하는 표현을 사용하세요
 
 출력 형식:
 **챕터 제목:** [흥미진진한 제목]
@@ -118,28 +125,93 @@ ${characterContext}
 **본문:**
 [마크다운 형식의 스토리 본문]`;
 
-    const response = await this.anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 4000,
-      messages: [{ role: 'user', content: generationPrompt }]
-    });
+    let bestResult = null;
+    let bestScore = 0;
+    let attempts = 0;
+    const maxAttempts = 3;
 
-    const fullResponse = response.content[0].type === 'text' ? response.content[0].text : '';
-    
-    // 제목과 본문 분리
-    const titleMatch = fullResponse.match(/\*\*챕터 제목:\*\*\s*(.+)/);
-    const contentMatch = fullResponse.match(/\*\*본문:\*\*\s*([\s\S]+)/);
-    
-    return {
-      title: titleMatch ? titleMatch[1].trim() : `제${chapterNumber}장`,
-      content: contentMatch ? contentMatch[1].trim() : fullResponse
-    };
+    // 품질 보장을 위한 재시도 로직
+    while (attempts < maxAttempts) {
+      attempts++;
+      
+      try {
+        const response = await this.anthropic.messages.create({
+          model: 'claude-3-5-sonnet-20241022',
+          max_tokens: 4000,
+          messages: [{ role: 'user', content: generationPrompt }]
+        });
+
+        const fullResponse = response.content[0].type === 'text' ? response.content[0].text : '';
+        
+        // 제목과 본문 분리
+        const titleMatch = fullResponse.match(/\*\*챕터 제목:\*\*\s*(.+)/);
+        const contentMatch = fullResponse.match(/\*\*본문:\*\*\s*([\s\S]+)/);
+        
+        const result = {
+          title: titleMatch ? titleMatch[1].trim() : `제${chapterNumber}장`,
+          content: contentMatch ? contentMatch[1].trim() : fullResponse
+        };
+
+        // 품질 검사
+        const qualityAssessment = await this.qualityEngine.assessQuality(result.content, {
+          title: result.title,
+          chapterNumber,
+          expectedLength: 3000
+        });
+
+        console.log(`\n🔍 챕터 ${chapterNumber} 품질 평가 (시도 ${attempts}/${maxAttempts}):`);
+        console.log(`📊 점수: ${qualityAssessment.score}/100`);
+        console.log(`📋 상태: ${qualityAssessment.status}`);
+
+        // 품질 기준 충족 시 즉시 반환
+        if (qualityAssessment.score >= this.qualityEngine.qualityStandards.qualityThreshold) {
+          console.log(`✅ 품질 기준 충족! 챕터 생성 완료`);
+          return result;
+        }
+
+        // 최고 점수 기록 업데이트
+        if (qualityAssessment.score > bestScore) {
+          bestScore = qualityAssessment.score;
+          bestResult = result;
+          
+          // 개선이 필요한 경우 자동 개선 시도
+          if (qualityAssessment.status === 'needs_minor_improvement') {
+            console.log(`🔧 소폭 개선 시도 중...`);
+            const improvedContent = await this.qualityEngine.improveContent(result.content, qualityAssessment);
+            bestResult.content = improvedContent;
+          }
+        }
+
+        // 문제점 로깅
+        if (qualityAssessment.issues.length > 0) {
+          console.log(`⚠️ 발견된 문제점:`);
+          qualityAssessment.issues.forEach((issue, index) => {
+            console.log(`   ${index + 1}. ${issue}`);
+          });
+        }
+
+      } catch (error) {
+        console.error(`❌ 챕터 생성 시도 ${attempts} 실패:`, error);
+        
+        if (attempts === maxAttempts) {
+          throw new Error(`챕터 생성 실패: ${error.message}`);
+        }
+      }
+    }
+
+    // 모든 시도가 품질 기준에 미달한 경우 최고 점수 결과 반환
+    if (bestResult) {
+      console.log(`⚠️ 품질 기준 미달이지만 최고 점수(${bestScore}/100) 결과 반환`);
+      return bestResult;
+    }
+
+    throw new Error('챕터 생성에 완전히 실패했습니다.');
   }
 
   /**
    * PLAN.md의 전략 3: 재귀적 자가 개선 (Recursive Self-Improvement)
    */
-  async improveChapter(originalChapter: string, improvementCriteria: string[]): Promise<string> {
+  async improveChapter(originalChapter, improvementCriteria) {
     const critiquePlot = `다음 챕터를 비평적으로 평가하세요:
 
 ${originalChapter}
@@ -182,7 +254,7 @@ ${critique}
   /**
    * 캐릭터 설정 생성
    */
-  async generateCharacterProfiles(title: string, tropes: string[]): Promise<string> {
+  async generateCharacterProfiles(title, tropes) {
     const prompt = `"${title}"이라는 로맨스 판타지 소설의 주요 인물들을 설정해주세요.
 
 적용 트렌드: ${tropes.join(', ')}
@@ -209,8 +281,8 @@ ${critique}
 }
 
 // 환경 변수에서 API 키를 가져오는 헬퍼 함수
-export function createStoryGenerator(): AIStoryGenerator | null {
-  const apiKey = import.meta.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY;
+export function createStoryGenerator() {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
   
   if (!apiKey) {
     console.warn('ANTHROPIC_API_KEY not found in environment variables');

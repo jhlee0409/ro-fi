@@ -10,15 +10,13 @@ describe('NovelDetector', () => {
   let testNovelsDir: string;
   let testChaptersDir: string;
   
-  beforeEach(() => {
+  beforeEach(async () => {
     // 각 테스트마다 고유한 디렉토리 사용하여 완전한 격리 보장
     const testId = Math.random().toString(36).substring(7);
     testContentDir = join(process.cwd(), `src/test/fixtures/novel-detector-${testId}`);
     testNovelsDir = join(testContentDir, 'novels');
     testChaptersDir = join(testContentDir, 'chapters');
-  });
-
-  beforeEach(async () => {
+    
     // 이전 테스트의 영향을 제거하기 위해 디렉토리 초기화
     try {
       await fs.rm(testContentDir, { recursive: true, force: true });
@@ -26,7 +24,9 @@ describe('NovelDetector', () => {
       // 디렉토리가 없으면 무시
     }
     
-    // 디렉토리 다시 생성
+    // 디렉토리 다시 생성 - fixtures 디렉토리도 확인
+    const fixturesDir = join(process.cwd(), 'src/test/fixtures');
+    await fs.mkdir(fixturesDir, { recursive: true });
     await fs.mkdir(testContentDir, { recursive: true });
     await fs.mkdir(testNovelsDir, { recursive: true });
     await fs.mkdir(testChaptersDir, { recursive: true });
@@ -36,6 +36,15 @@ describe('NovelDetector', () => {
 
   // 테스트 데이터 생성 헬퍼 함수
   async function createTestData() {
+    // 디렉토리가 존재하는지 확인하고 생성 - 에러 처리 개선
+    try {
+      await fs.mkdir(testNovelsDir, { recursive: true });
+      await fs.mkdir(testChaptersDir, { recursive: true });
+    } catch (error) {
+      console.error('Directory creation failed:', error);
+      throw error;
+    }
+    
     // 테스트용 소설 파일 생성
     await fs.writeFile(
       join(testNovelsDir, 'active-novel.md'),
@@ -89,11 +98,14 @@ rating: 0
   }
 
   afterEach(async () => {
-    // 테스트 후 정리
+    // 테스트 후 정리 - 개별 테스트 디렉토리만 정리
     try {
-      await fs.rm(testContentDir, { recursive: true, force: true });
-    } catch {
-      // 정리 실패해도 무시
+      if (testContentDir && testContentDir.includes('novel-detector-')) {
+        await fs.rm(testContentDir, { recursive: true, force: true });
+      }
+    } catch (error) {
+      // 정리 실패해도 무시 (다른 테스트에서 이미 삭제했을 수 있음)
+      console.warn('Test cleanup warning:', error.message);
     }
   });
 

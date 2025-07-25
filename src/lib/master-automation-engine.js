@@ -5,7 +5,9 @@ import { CompletionCriteriaEngine } from './completion-criteria-engine.js';
 import { CreativityModeEngine } from './creativity-mode-engine.js';
 import { ReaderAnalyticsEngine } from './reader-analytics-engine.js';
 import { TokenBalancingEngine } from './token-balancing-engine.js';
-import { createStoryGenerator } from './ai-story-generator.ts';
+import { QualityAssuranceEngine } from './quality-assurance-engine.js';
+import { createStoryGenerator } from './ai-story-generator.js';
+import { getQualitySample } from './high-quality-samples.js';
 import { promises as fs } from 'fs';
 import { join } from 'path';
 
@@ -20,6 +22,7 @@ export class MasterAutomationEngine {
     this.storyEngine = new StoryDiversityEngine();
     this.emotionEngine = new EmotionalDepthEngine();
     this.completionEngine = new CompletionCriteriaEngine();
+    this.qualityEngine = new QualityAssuranceEngine();
 
     // v2.1 창의성 우선 모드 엔진들
     this.creativityEngine = new CreativityModeEngine();
@@ -296,7 +299,7 @@ export class MasterAutomationEngine {
     // AI 생성기 확인
     if (!this.aiGenerator) {
       console.warn('⚠️ AI 생성기 없음, 샘플 콘텐츠 사용');
-      return this.generateSampleChapter(novelSlug, chapterNumber, concept, emotionStage);
+      return await this.generateSampleChapter(novelSlug, chapterNumber, concept, emotionStage);
     }
 
     try {
@@ -352,67 +355,41 @@ export class MasterAutomationEngine {
     } catch (error) {
       console.error('❌ AI 챕터 생성 실패:', error);
       console.log('🔄 샘플 콘텐츠로 대체');
-      return this.generateSampleChapter(novelSlug, chapterNumber, concept, emotionStage);
+      return await this.generateSampleChapter(novelSlug, chapterNumber, concept, emotionStage);
     }
   }
 
-  // 샘플 챕터 생성 (AI 실패시 백업)
-  generateSampleChapter(novelSlug, chapterNumber, concept, emotionStage) {
-    const emotionalElements = {
-      internalConflict: this.emotionEngine.generateInternalConflict('감정의 부정', '엘리아나'),
-      microExpression: this.emotionEngine.generateMicroExpression('attraction', '카엘'),
-      sensoryDetail: this.emotionEngine.generateSensoryDescription('설렘', '도서관')
-    };
+  // 샘플 챕터 생성 (AI 실패시 백업) - 품질 보장됨
+  async generateSampleChapter(novelSlug, chapterNumber, concept, emotionStage) {
+    console.log(`🔧 고품질 샘플 챕터 생성 중: ${novelSlug} ${chapterNumber}화`);
+    
+    // 고품질 샘플 가져오기
+    const { content: sampleContent } = getQualitySample(chapterNumber, emotionStage);
 
-    const samples = [
-      `달빛이 창가로 스며들던 그 밤, **엘리아나**는 **마법서**의 마지막 페이지를 넘기고 있었다.
+    // 품질 검사 및 개선
+    let content = sampleContent;
+    try {
+      const qualityAssessment = await this.qualityEngine.assessQuality(content, {
+        title: `${chapterNumber}화`,
+        chapterNumber,
+        expectedLength: 3000
+      });
 
-> *'${emotionalElements.internalConflict}'*
+      console.log(`📊 샘플 챕터 품질 점수: ${qualityAssessment.score}/100`);
 
-> [문이 열리며 카엘이 들어왔다]
+      // 품질이 기준에 미달하는 경우 자동 개선
+      if (qualityAssessment.score < this.qualityEngine.qualityStandards.qualityThreshold) {
+        console.log(`🔧 샘플 챕터 품질 개선 중...`);
+        content = await this.qualityEngine.improveContent(content, qualityAssessment);
+        
+        // 재평가
+        const improvedAssessment = await this.qualityEngine.assessQuality(content);
+        console.log(`✨ 개선 후 품질 점수: ${improvedAssessment.score}/100`);
+      }
 
-**카엘**의 ${emotionalElements.microExpression}
-
-> "멈춰, 엘리아나. 아직 준비가 되지 않았어."
-
-**카엘**이 낮은 목소리로 말했다.
-
-> "준비?"
-
-**엘리아나**가 뒤돌아보며 웃었다.
-
-> "나는 이미 충분히 기다렸어요."
-
-${emotionalElements.sensoryDetail}에서 두 사람의 시선이 마주쳤다.
-
-> [긴장감이 흐르는 정적이 이어졌다]
-
-${emotionStage ? `**${emotionStage.stage}**의 단계로 접어들고 있었다.` : ''}`,
-
-      `**마법진**의 빛이 더욱 강해지며 두 사람을 감쌌다.
-
-> *'이 순간이 올 줄 알았어...'*
-
-**엘리아나**가 속으로 생각했다.
-
-> "만약 내가 살아돌아온다면..."
-
-**엘리아나**가 조심스럽게 말했다.
-
-> [카엘의 손이 그녀의 뺨을 부드럽게 어루만졌다]
-
-**카엘**은 ${emotionalElements.microExpression}
-
-> *'${emotionalElements.internalConflict}'*
-
-> "나는 너를 잃을 수 없어."
-
-**카엘**의 목소리가 속삭임으로 바뀌었다.
-
-${emotionalElements.sensoryDetail}이 두 사람을 감쌌다.`
-    ];
-
-    const content = samples[chapterNumber % samples.length];
+    } catch (error) {
+      console.warn('⚠️ 샘플 챕터 품질 검사 실패, 원본 사용:', error.message);
+    }
 
     return {
       frontmatter: {
@@ -427,60 +404,11 @@ ${emotionalElements.sensoryDetail}이 두 사람을 감쌌다.`
     };
   }
 
-  // v2.1 프리미엄 콘텐츠 생성 (창의성 모드)
+  // v2.1 프리미엄 콘텐츠 생성 (창의성 모드) - 현재 미사용
   generatePremiumContent(emotionalElements, creativePrompt, chapterNumber) {
-    // 창의성 모드에서만 사용되는 고품질 콘텐츠
-    const premiumSamples = [
-      `**크리스털 첨탑**에서 흘러내리는 달빛이 **엘리아나**의 은빛 머리칼을 물들였다. 그녀의 손끝에서 **루미나의 마법서**가 마지막 장을 넘기며 신비로운 빛을 발산했다.
-
-> *'${emotionalElements.enhancedConflict || emotionalElements.internalConflict}'*
-
-**엘리아나**의 가슴속에서 운명의 실이 떨리고 있었다.
-
-> [거대한 문이 소리 없이 열리며, 그림자 속에서 카엘이 나타났다]
-
-**카엘**의 ${emotionalElements.intenseMicroExpression || emotionalElements.microExpression}이 달빛 아래에서 더욱 선명해졌다. 그의 깊은 눈동자에는 천년의 고독과 한순간의 희망이 교차하고 있었다.
-
-> "엘리아나... 그 책을 내려놓아."
-
-**카엘**의 목소리는 벨벳처럼 부드러우면서도 강철처럼 단단했다.
-
-> *'왜 내 심장이 이렇게 뛰는 거지? 그는... 그는 나의 운명인가?'*
-
-> "당신이 누구든, 이미 늦었어요."
-
-**엘리아나**가 떨리는 목소리로 대답했다. 그녀의 손에서 **마법서**가 황금빛으로 타오르기 시작했다.
-
-> [순간, 두 사람 사이의 공간이 일그러지며 운명의 실이 보이기 시작했다]
-
-${emotionalElements.poeticImagery || emotionalElements.sensoryDetail}에서 그들의 영혼이 처음으로 공명했다.
-
-**이것이 천년을 기다린 운명적 만남의 순간**이었다.`,
-
-      `**시공의 균열**이 **대마법진** 중앙에서 벌어지고 있었다. **엘리아나**와 **카엘**은 서로를 바라보며, 이번이 마지막 기회임을 알고 있었다.
-
-> *'만약 이 선택이 틀렸다면... 모든 것이 끝나는 거야.'*
-
-**엘리아나**의 마음속에서 수천 가지 가능성들이 스쳐 지나갔다.
-
-> "엘리아나, 나를 믿어줘."
-
-**카엘**이 그녀의 손을 잡으며 간절히 말했다. 그의 손에서 전해지는 온기가 그녀의 모든 불안을 잠재웠다.
-
-> [마법진의 빛이 두 사람을 하나로 감싸며, 과거와 현재, 미래가 하나로 수렴하기 시작했다]
-
-> "함께라면... 함께라면 할 수 있을 거예요."
-
-**엘리아나**가 미소를 지으며 대답했다. 그 순간 그녀의 눈동자에서 **운명의 빛**이 타올랐다.
-
-> *'${emotionalElements.enhancedConflict || emotionalElements.internalConflict}... 하지만 이제는 두렵지 않아. 그가 함께 있으니까.'*
-
-${emotionalElements.poeticImagery || emotionalElements.sensoryDetail}이 두 사람의 사랑을 축복하듯 춤추고 있었다.
-
-**새로운 전설이 지금 여기서 시작되고 있었다.**`
-    ];
-
-    return premiumSamples[chapterNumber % premiumSamples.length];
+    // 향후 확장용 프리미엄 콘텐츠 생성 함수
+    console.log('프리미엄 콘텐츠 생성 기능은 현재 개발 중입니다.');
+    return null;
   }
 
   // 플롯 단계 결정
@@ -710,58 +638,3 @@ export async function runFullAutomation(dryRun = false) {
 
   return await engine.executeAutomation();
 }
-    try {
-      const novelPath = join(this.novelsDir, `${novelSlug}.md`);
-      const content = await fs.readFile(novelPath, 'utf-8');
-      const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
-      if (frontmatterMatch) {
-        const frontmatter = frontmatterMatch[1];
-        const titleMatch = frontmatter.match(/title:\s*"([^"]+)"/);
-        return {
-          title: titleMatch ? titleMatch[1] : '로맨스 판타지',
-          content
-        };
-      }
-    } catch (error) {
-      console.warn(`소설 데이터 로드 실패: ${novelSlug}`);
-    }
-    return { title: '로맨스 판타지' };
-  }
-
-  async getPreviousChapterContext(novelSlug, currentChapter) {
-    if (currentChapter <= 1) return '';
-
-    try {
-      const prevChapterPath = join(this.chaptersDir, `${novelSlug}-ch${(currentChapter - 1).toString().padStart(2, '0')}.md`);
-      const content = await fs.readFile(prevChapterPath, 'utf-8');
-      // 마지막 500자만 컨텍스트로 사용
-      return content.slice(-500);
-    } catch (error) {
-      console.warn(`이전 챕터 컨텍스트 로드 실패: ${novelSlug}-ch${currentChapter - 1}`);
-      return '';
-    }
-  }
-
-  generateCharacterContext(characters) {
-    if (!characters) return '주인공과 남주의 로맨스 스토리';
-
-    return `
-주인공: ${characters.protagonist?.background || '신비로운 배경'}, ${characters.protagonist?.personality || '매력적인 성격'}
-남주: ${characters.male_lead?.archetype || '강력한 존재'}, ${characters.male_lead?.personality || '복잡한 내면'}
-`;
-  }
-
-  generatePlotContext(concept, chapterNumber) {
-    const stage = this.determinePlotStage(chapterNumber);
-    return `
-장르: ${concept.genre || '로맨스 판타지'}
-주요 트로프: ${concept.main || 'enemies-to-lovers'} + ${concept.sub || 'fated-mates'}
-현재 단계: ${stage} (${chapterNumber}화)
-갈등: ${concept.conflict || '운명적 만남과 갈등'}
-`;
-  }
-
-  calculateWordCount(content) {
-    // 한국어 특성을 고려한 글자 수 계산
-    return content.replace(/\s+/g, '').length;
-  }
