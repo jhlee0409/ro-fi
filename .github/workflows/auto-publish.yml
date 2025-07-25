@@ -114,7 +114,6 @@ jobs:
       if: success()
       run: |
         git add src/content/
-        git add logs/
 
         # 변경사항이 있는지 확인
         if git diff --staged --quiet; then
@@ -124,7 +123,12 @@ jobs:
 
         # 커밋 메시지 생성
         TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S KST')
-        AUTOMATION_LOG=$(tail -n 20 logs/automation-report-$(date '+%Y-%m-%d').json | grep -o '"summary":[^}]*}' | head -1 || echo '"summary": {"activeNovels": "N/A"}')
+        # logs 디렉토리가 있으면 로그 정보 추출, 없으면 기본값 사용
+        if [ -f "logs/automation-report-$(date '+%Y-%m-%d').json" ]; then
+          AUTOMATION_LOG=$(tail -n 20 logs/automation-report-$(date '+%Y-%m-%d').json | grep -o '"summary":[^}]*}' | head -1 || echo '"summary": {"activeNovels": "N/A"}')
+        else
+          AUTOMATION_LOG='"summary": {"activeNovels": "N/A"}'
+        fi
 
         git commit -m "🤖 자동 연재 업데이트 - $TIMESTAMP
 
