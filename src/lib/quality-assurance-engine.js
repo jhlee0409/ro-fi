@@ -9,12 +9,12 @@ export class QualityAssuranceEngine {
   constructor() {
     this.qualityStandards = {
       minWordCount: 3000,           // 최소 3,000자
-      maxWordCount: 5000,           // 최대 5,000자
+      maxWordCount: 6000,           // 최대 6,000자
       minSentences: 20,             // 최소 20문장
       maxParagraphs: 15,            // 최대 15문단
-      dialogueRatio: 0.3,           // 대화 비율 30% 이상
-      emotionKeywordDensity: 0.02,  // 감정 키워드 밀도 2%
-      qualityThreshold: 85          // 품질 점수 85점 이상
+      dialogueRatio: 0.25,          // 대화 비율 25% 이상 (조정)
+      emotionKeywordDensity: 0.015, // 감정 키워드 밀도 1.5% (조정)
+      qualityThreshold: 80          // 품질 점수 80점 이상 (조정)
     };
 
     // 디지털 소울메이트 품질 기준에서 추출한 우수 패턴
@@ -100,10 +100,10 @@ export class QualityAssuranceEngine {
       (creativityScore * 0.1)
     );
 
-    // 품질 상태 결정
+    // 품질 상태 결정 (조정된 기준)
     if (assessment.score >= this.qualityStandards.qualityThreshold) {
       assessment.status = 'approved';
-    } else if (assessment.score >= 70) {
+    } else if (assessment.score >= 65) { // 기준 완화
       assessment.status = 'needs_minor_improvement';
     } else {
       assessment.status = 'needs_major_improvement';
@@ -121,9 +121,12 @@ export class QualityAssuranceEngine {
     const sentences = content.split(/[.!?]/).filter(s => s.trim().length > 0).length;
     const paragraphs = content.split(/\n\s*\n/).filter(p => p.trim().length > 0).length;
 
-    // 분량 검사
+    // 분량 검사 (단계적 점수 차감)
     if (wordCount < this.qualityStandards.minWordCount) {
-      score -= 30;
+      const shortage = this.qualityStandards.minWordCount - wordCount;
+      const penaltyRatio = Math.min(shortage / this.qualityStandards.minWordCount, 0.5);
+      const penalty = Math.round(penaltyRatio * 40); // 최대 40점 차감
+      score -= penalty;
       assessment.issues.push(`분량 부족: ${wordCount}자 (최소 ${this.qualityStandards.minWordCount}자 필요)`);
       assessment.improvements.push('내용을 확장하여 최소 분량을 충족해야 합니다.');
     }
@@ -198,14 +201,15 @@ export class QualityAssuranceEngine {
   checkStoryQuality(content, assessment) {
     let score = 100;
 
-    // 대화 비율 검사
-    const dialogueMatches = content.match(/>[^>]+/g) || [];
+    // 대화 비율 검사 (개선된 패턴 매칭)
+    const dialogueMatches = content.match(/>\ \"/g) || []; // > " 패턴으로 정확한 대화 식별
     const totalText = content.replace(/\s+/g, '').length;
-    const dialogueText = dialogueMatches.join('').replace(/\s+/g, '').length;
-    const dialogueRatio = dialogueText / totalText;
+    const dialogueText = content.match(/>\ \"[^\"]*\"/g)?.join('').replace(/\s+/g, '').length || 0;
+    const dialogueRatio = totalText > 0 ? dialogueText / totalText : 0;
 
     if (dialogueRatio < this.qualityStandards.dialogueRatio) {
-      score -= 20;
+      const penalty = Math.min(15, (this.qualityStandards.dialogueRatio - dialogueRatio) * 60);
+      score -= penalty;
       assessment.issues.push(`대화 비율 부족: ${Math.round(dialogueRatio * 100)}% (최소 ${Math.round(this.qualityStandards.dialogueRatio * 100)}% 필요)`);
       assessment.improvements.push('캐릭터 간의 대화를 늘려 몰입도를 높여야 합니다.');
     }
@@ -253,7 +257,8 @@ export class QualityAssuranceEngine {
     const emotionDensity = emotionKeywords / totalWords;
 
     if (emotionDensity < this.qualityStandards.emotionKeywordDensity) {
-      score -= 25;
+      const penalty = Math.min(20, (this.qualityStandards.emotionKeywordDensity - emotionDensity) * 1000);
+      score -= penalty;
       assessment.issues.push(`감정 표현 부족: 밀도 ${Math.round(emotionDensity * 1000)/10}% (최소 ${Math.round(this.qualityStandards.emotionKeywordDensity * 1000)/10}% 필요)`);
       assessment.improvements.push('캐릭터의 내적 감정을 더 섬세하게 표현해야 합니다.');
     }

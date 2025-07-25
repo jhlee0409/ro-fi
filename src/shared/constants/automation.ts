@@ -9,7 +9,7 @@ export const AUTOMATION_CONFIG = {
   QUALITY_THRESHOLD: 80,
   AUTO_COMPLETE_ENABLED: true,
   AUTO_CREATE_NEW_ENABLED: true,
-  
+
   // 소설 완결 기준
   COMPLETION_THRESHOLDS: {
     PROGRESS_PERCENTAGE: 90,
@@ -18,7 +18,7 @@ export const AUTOMATION_CONFIG = {
     RELATIONSHIP_PROGRESS: 85,
     WORLD_BUILDING: 75,
   },
-  
+
   // 챕터 생성 설정
   CHAPTER_GENERATION: {
     MIN_WORD_COUNT: 800,
@@ -26,7 +26,7 @@ export const AUTOMATION_CONFIG = {
     TARGET_WORD_COUNT: 1500,
     MAX_RETRIES: 3,
   },
-  
+
   // 다양성 보장 설정
   DIVERSITY_SETTINGS: {
     MIN_DIVERSITY_SCORE: 70,
@@ -38,7 +38,7 @@ export const AUTOMATION_CONFIG = {
 
 export const EMOTION_STAGES = [
   '첫 만남',
-  '적대적 긴장', 
+  '적대적 긴장',
   '호감의 시작',
   '감정의 혼란',
   '갈등과 오해',
@@ -52,5 +52,5 @@ export const EMOTION_STAGES = [
 export const DEFAULT_NOVEL_SETTINGS = {
   TOTAL_CHAPTERS: 75,
   RATING: 0,
-  AUTHOR: 'Claude Sonnet AI',
+  AUTHOR: 'AI',
 } as const;

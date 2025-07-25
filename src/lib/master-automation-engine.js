@@ -32,7 +32,7 @@ export class MasterAutomationEngine {
 
     // 환경 정보 디버깅
     debugEnvironment();
-    
+
     // AI 스토리 생성기 초기화 - 의존성 주입 지원
     this.aiGenerator = dependencies.aiGenerator || this.createAIGenerator();
 
@@ -48,21 +48,23 @@ export class MasterAutomationEngine {
         enabled: true,
         autoActivation: true,
         budgetLimit: 1000, // 달러
-        qualityPriority: true
-      }
+        qualityPriority: true,
+      },
     };
   }
 
   // 환경별 AI 생성기 생성
   createAIGenerator() {
     const shouldMock = shouldMockAIService() || this.dryRun === true;
-    
+
     if (shouldMock) {
       const env = getEnvironmentInfo();
-      console.log(`🧪 모킹 모드: MockAIGenerator 사용 (환경: ${env.nodeEnv}, 모킹 필요: ${shouldMock})`);
+      console.log(
+        `🧪 모킹 모드: MockAIGenerator 사용 (환경: ${env.nodeEnv}, 모킹 필요: ${shouldMock})`
+      );
       return this.createMockAIGenerator();
     }
-    
+
     console.log('🤖 실제 AI 서비스 사용');
     return createStoryGenerator();
   }
@@ -70,18 +72,18 @@ export class MasterAutomationEngine {
   // 모킹된 AI 생성기 생성
   createMockAIGenerator() {
     return {
-      generateChapter: async (options) => {
+      generateChapter: async options => {
         const { chapterNumber, tropes = ['enemies-to-lovers'] } = options;
-        
+
         return {
           title: `${chapterNumber}화`,
-          content: this.generateMockChapterContent(tropes, chapterNumber)
+          content: this.generateMockChapterContent(tropes, chapterNumber),
         };
       },
-      
+
       improveChapter: async (content, criteria) => {
         return `개선된 ${content.substring(0, 100)}...`;
-      }
+      },
     };
   }
 
@@ -90,13 +92,13 @@ export class MasterAutomationEngine {
     const tropeElements = {
       'enemies-to-lovers': '적대적 긴장감 속에서도 서로에 대한 끌림',
       'fated-mates': '운명적 이끌림과 예언의 실현',
-      'regression': '과거의 기억과 미래에 대한 지식',
-      'bodyguard-romance': '보호자와 피보호자 사이의 금지된 감정'
+      regression: '과거의 기억과 미래에 대한 지식',
+      'bodyguard-romance': '보호자와 피보호자 사이의 금지된 감정',
     };
-    
+
     const mainTrope = tropes[0] || 'enemies-to-lovers';
     const tropeDescription = tropeElements[mainTrope] || '로맨틱한 긴장감';
-    
+
     return `# ${chapterNumber}화
 
 ## 테스트 챕터
@@ -139,14 +141,13 @@ export class MasterAutomationEngine {
         success: true,
         action: action.type,
         result,
-        situation
+        situation,
       };
-
     } catch (error) {
       console.error('❌ 자동화 실행 실패:', error);
       return {
         success: false,
-        error: error.message
+        error: error.message,
       };
     }
   }
@@ -162,13 +163,13 @@ export class MasterAutomationEngine {
         // 완결 가능성 체크
         const completionReport = this.completionEngine.generateCompletionReport({
           currentChapter: progress.latestChapter,
-          plotProgress: ["시작", "발전", "절정"],
-          relationshipStage: progress.progressPercentage > 80 ? "union" : "attraction",
-          openThreads: progress.progressPercentage > 90 ? [] : ["subplot1"],
+          plotProgress: ['시작', '발전', '절정'],
+          relationshipStage: progress.progressPercentage > 80 ? 'union' : 'attraction',
+          openThreads: progress.progressPercentage > 90 ? [] : ['subplot1'],
           characters: [
-            { name: "주인공", growthArc: progress.progressPercentage },
-            { name: "남주", growthArc: progress.progressPercentage - 5 }
-          ]
+            { name: '주인공', growthArc: progress.progressPercentage },
+            { name: '남주', growthArc: progress.progressPercentage - 5 },
+          ],
         });
 
         progress.completionAnalysis = completionReport;
@@ -181,8 +182,10 @@ export class MasterAutomationEngine {
       totalActiveCount: activeNovels.length,
       needsNewNovel: await this.novelDetector.needsNewNovel(),
       readyForCompletion: novelsWithProgress.filter(n => n.completionAnalysis.overallReadiness),
-      oldestUpdate: novelsWithProgress.length > 0 ?
-        Math.min(...novelsWithProgress.map(n => n.lastUpdate.getTime())) : Date.now()
+      oldestUpdate:
+        novelsWithProgress.length > 0
+          ? Math.min(...novelsWithProgress.map(n => n.lastUpdate.getTime()))
+          : Date.now(),
     };
   }
 
@@ -196,7 +199,7 @@ export class MasterAutomationEngine {
       return {
         type: 'COMPLETE_NOVEL',
         target: novelToComplete,
-        priority: 'highest'
+        priority: 'highest',
       };
     }
 
@@ -204,7 +207,7 @@ export class MasterAutomationEngine {
     if (situation.needsNewNovel) {
       return {
         type: 'CREATE_NEW_NOVEL',
-        priority: 'high'
+        priority: 'high',
       };
     }
 
@@ -217,14 +220,14 @@ export class MasterAutomationEngine {
       return {
         type: 'CONTINUE_CHAPTER',
         target: oldestNovel,
-        priority: 'normal'
+        priority: 'normal',
       };
     }
 
     // 4. 최후의 수단: 새 소설 생성
     return {
       type: 'CREATE_NEW_NOVEL',
-      priority: 'fallback'
+      priority: 'fallback',
     };
   }
 
@@ -251,12 +254,12 @@ export class MasterAutomationEngine {
 
     // 완결 시나리오 생성
     const endingScenario = this.completionEngine.generateEndingScenario({
-      relationshipStage: "union",
+      relationshipStage: 'union',
       openThreads: [],
       characters: [
-        { name: "주인공", growthArc: 95 },
-        { name: "남주", growthArc: 90 }
-      ]
+        { name: '주인공', growthArc: 95 },
+        { name: '남주', growthArc: 90 },
+      ],
     });
 
     // 완결 챕터들 생성
@@ -277,12 +280,12 @@ export class MasterAutomationEngine {
     }
 
     // 소설 상태를 "완결"로 변경
-    await this.updateNovelStatus(novel.slug, "완결");
+    await this.updateNovelStatus(novel.slug, '완결');
 
     return {
       completedNovel: novel.slug,
       finalChapters,
-      endingType: endingScenario.type
+      endingType: endingScenario.type,
     };
   }
 
@@ -294,7 +297,7 @@ export class MasterAutomationEngine {
     const existingCombinations = situation.activeNovels.map(novel => ({
       main: 'enemies-to-lovers', // 실제로는 소설 데이터에서 추출
       sub: 'regression',
-      conflict: 'political-intrigue'
+      conflict: 'political-intrigue',
     }));
 
     // 고유한 컨셉 생성
@@ -313,7 +316,7 @@ export class MasterAutomationEngine {
     await this.createNovelFile(slug, {
       title,
       concept: uniqueConcept,
-      characters
+      characters,
     });
 
     // 첫 번째 챕터 생성
@@ -324,7 +327,7 @@ export class MasterAutomationEngine {
       newNovel: slug,
       title,
       concept: uniqueConcept,
-      firstChapter: 1
+      firstChapter: 1,
     };
   }
 
@@ -335,7 +338,10 @@ export class MasterAutomationEngine {
     const nextChapterNumber = novel.latestChapter + 1;
 
     // 현재 진행도에 따른 감정 단계 결정
-    const currentStage = Math.max(1, Math.min(10, Math.floor((novel.progressPercentage / 100) * 10)));
+    const currentStage = Math.max(
+      1,
+      Math.min(10, Math.floor((novel.progressPercentage / 100) * 10))
+    );
     const emotionStage = this.emotionEngine.generateEmotionProgression(
       'enemies-to-lovers', // 실제로는 소설 데이터에서 추출
       currentStage,
@@ -357,12 +363,19 @@ export class MasterAutomationEngine {
     return {
       continuedNovel: novel.slug,
       newChapter: nextChapterNumber,
-      emotionStage: emotionStage.stage
+      emotionStage: emotionStage.stage,
     };
   }
 
   // 챕터 생성 (실제 AI 통합)
-  async generateChapter(novelSlug, chapterNumber, concept, characters, isFirst = false, emotionStage = null) {
+  async generateChapter(
+    novelSlug,
+    chapterNumber,
+    concept,
+    characters,
+    isFirst = false,
+    emotionStage = null
+  ) {
     console.log(`🤖 AI로 챕터 생성 중: ${novelSlug} ${chapterNumber}화`);
 
     // AI 생성기 확인
@@ -383,47 +396,116 @@ export class MasterAutomationEngine {
         { chapterNumber, progressPercentage: (chapterNumber / 75) * 100, plotStage: 'development' }
       );
 
-      // AI로 실제 챕터 생성
-      const aiResult = await this.aiGenerator.generateChapter({
-        title: novelData.title || '로맨스 판타지',
-        tropes: concept.main ? [concept.main, concept.sub] : ['enemies-to-lovers', 'fated-mates'],
-        chapterNumber,
-        previousContext,
-        characterContext: this.generateCharacterContext(characters),
-        plotOutline: this.generatePlotContext(concept, chapterNumber)
-      });
+      // 개선된 AI 생성 및 품질 검증 프로세스
+      let bestResult = null;
+      let bestScore = 0;
+      const maxRetries = 2; // 리트라이 수 감소로 효율성 증대
 
-      // 창의성 모드일 경우 품질 개선
-      let finalContent = aiResult.content;
-      if (creativityCheck.activate) {
-        console.log('🎨 창의성 모드 활성화 - 품질 개선 중...');
-        finalContent = await this.aiGenerator.improveChapter(aiResult.content, [
-          '감정적 깊이와 몰입도',
-          '캐릭터 개성과 대화의 자연스러움',
-          '로맨틱 긴장감과 설렘',
-          '장면 묘사의 생생함',
-          '다음 화 궁금증 유발'
-        ]);
+      for (let i = 0; i < maxRetries; i++) {
+        console.log(`🤖 AI 챕터 생성 시도 (${i + 1}/${maxRetries})...`);
+
+        try {
+          let aiResult;
+          
+          if (i === 0) {
+            // 첫 번째 시도: 표준 생성
+            aiResult = await this.aiGenerator.generateChapter({
+              title: novelData.title || '로맨스 판타지',
+              tropes: concept.main
+                ? [concept.main, concept.sub]
+                : ['enemies-to-lovers', 'fated-mates'],
+              chapterNumber,
+              previousContext,
+              characterContext: this.generateCharacterContext(characters),
+              plotOutline: this.generatePlotContext(concept, chapterNumber),
+            });
+          } else {
+            // 두 번째 시도: 이전 결과의 문제점을 바탕으로 개선
+            const previousAssessment = await this.qualityEngine.assessQuality(bestResult.content);
+            const mainIssues = previousAssessment.issues.slice(0, 2); // 주요 문제 2개만 집중
+            
+            console.log(`🔧 이전 결과 개선 중: ${mainIssues.join(', ')}`);
+            const improvedContent = await this.aiGenerator.improveChapter(bestResult.content, mainIssues);
+            
+            aiResult = {
+              title: bestResult.title,
+              content: improvedContent
+            };
+          }
+
+          // 기본 분량 체크
+          const wordCount = aiResult.content.replace(/\s+/g, '').length;
+          console.log(`📄 생성된 콘텐츠 분량: ${wordCount}자`);
+
+          // 상세 품질 검사
+          const qualityAssessment = await this.qualityEngine.assessQuality(aiResult.content, {
+            title: aiResult.title,
+            chapterNumber,
+            expectedLength: 3000
+          });
+
+          console.log(`📊 품질 점수: ${qualityAssessment.score}/100 (상태: ${qualityAssessment.status})`);
+
+          // 업데이트된 기준으로 승인 체크
+          if (qualityAssessment.score >= this.qualityEngine.qualityStandards.qualityThreshold) {
+            console.log(`✅ 품질 기준 통과! 대산 준비 완료`);
+            return {
+              frontmatter: {
+                title: aiResult.title || `${chapterNumber}화`,
+                novel: novelSlug,
+                chapterNumber,
+                publicationDate: new Date().toISOString().split('T')[0],
+                wordCount: this.calculateWordCount(aiResult.content),
+                rating: 0,
+              },
+              content: aiResult.content,
+            };
+          }
+
+          // 최고 점수 기록 업데이트
+          if (qualityAssessment.score > bestScore) {
+            bestScore = qualityAssessment.score;
+            bestResult = aiResult;
+          }
+
+          // 주요 문제점 로깅
+          if (qualityAssessment.issues.length > 0) {
+            console.log(`⚠️ 주요 문제점: ${qualityAssessment.issues.slice(0, 2).join(', ')}`);
+          }
+
+        } catch (error) {
+          console.error(`❌ 시도 ${i + 1} 실패:`, error.message);
+          if (i === maxRetries - 1) {
+            throw error;
+          }
+        }
       }
 
-      // 메타데이터 생성
-      const wordCount = this.calculateWordCount(finalContent);
+      // 모든 시도가 기준에 미달하는 경우 최고 점수 결과 반환
+      if (bestResult) {
+        console.log(`⚠️ 품질 기준 미달이지만 최고 점수(${bestScore}/100) 결과 반환`);
+        
+        const finalContent = bestResult.content;
+        
+        return {
+          frontmatter: {
+            title: bestResult.title || `${chapterNumber}화`,
+            novel: novelSlug,
+            chapterNumber,
+            publicationDate: new Date().toISOString().split('T')[0],
+            wordCount: this.calculateWordCount(finalContent),
+            rating: 0,
+          },
+          content: finalContent,
+        };
+      }
 
-      return {
-        frontmatter: {
-          title: aiResult.title,
-          novel: novelSlug,
-          chapterNumber,
-          publicationDate: new Date().toISOString().split('T')[0],
-          wordCount,
-          rating: 0
-        },
-        content: finalContent
-      };
-
+      // 여기에 도달하면 모든 시도가 실패한 경우
+      console.error(`❌ AI 생성 완전 실패 - 샘플 콘텐츠로 대체`);
+      throw new Error('AI generated content failed to meet minimum standards after all retries.');
     } catch (error) {
-      console.error('❌ AI 챕터 생성 실패:', error);
-      console.log('🔄 샘플 콘텐츠로 대체');
+      console.error('❌ AI 챕터 생성 실패:', error.message);
+      console.log('🔄 고품질 샘플 콘텐츠로 대체');
       return await this.generateSampleChapter(novelSlug, chapterNumber, concept, emotionStage);
     }
   }
@@ -431,7 +513,7 @@ export class MasterAutomationEngine {
   // 샘플 챕터 생성 (AI 실패시 백업) - 품질 보장됨
   async generateSampleChapter(novelSlug, chapterNumber, concept, emotionStage) {
     console.log(`🔧 고품질 샘플 챕터 생성 중: ${novelSlug} ${chapterNumber}화`);
-    
+
     // 고품질 샘플 가져오기
     const { content: sampleContent } = getQualitySample(chapterNumber, emotionStage);
 
@@ -441,7 +523,7 @@ export class MasterAutomationEngine {
       const qualityAssessment = await this.qualityEngine.assessQuality(content, {
         title: `${chapterNumber}화`,
         chapterNumber,
-        expectedLength: 3000
+        expectedLength: 3000,
       });
 
       console.log(`📊 샘플 챕터 품질 점수: ${qualityAssessment.score}/100`);
@@ -450,12 +532,11 @@ export class MasterAutomationEngine {
       if (qualityAssessment.score < this.qualityEngine.qualityStandards.qualityThreshold) {
         console.log(`🔧 샘플 챕터 품질 개선 중...`);
         content = await this.qualityEngine.improveContent(content, qualityAssessment);
-        
+
         // 재평가
         const improvedAssessment = await this.qualityEngine.assessQuality(content);
         console.log(`✨ 개선 후 품질 점수: ${improvedAssessment.score}/100`);
       }
-
     } catch (error) {
       console.warn('⚠️ 샘플 챕터 품질 검사 실패, 원본 사용:', error.message);
     }
@@ -467,9 +548,9 @@ export class MasterAutomationEngine {
         chapterNumber,
         publicationDate: new Date().toISOString().split('T')[0],
         wordCount: this.calculateWordCount(content),
-        rating: 0
+        rating: 0,
       },
-      content
+      content,
     };
   }
 
@@ -529,7 +610,7 @@ ${novelData.concept.world}에서 펼쳐지는 ${novelData.concept.mainConflict}�
 
   async saveChapter(novelSlug, chapterNumber, chapterData, isEpilogue = false) {
     const filename = `${novelSlug}-ch${chapterNumber.toString().padStart(2, '0')}.md`;
-    const title = isEpilogue ? "에필로그" : chapterData.frontmatter.title;
+    const title = isEpilogue ? '에필로그' : chapterData.frontmatter.title;
 
     const frontmatter = `---
 title: "${title}"
@@ -566,30 +647,36 @@ ${chapterData.content}`;
   }
 
   generateSlug(title) {
-    return title
-      .toLowerCase()
-      .replace(/[가-힣]/g, (char) => {
-        // 한글을 영문으로 간단 변환
-        const korean = "가나다라마바사아자차카타파하";
-        const english = "ganadarambasaajachakatapha";
-        const index = korean.indexOf(char);
-        return index !== -1 ? english[index] : char;
-      })
-      .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9-]/g, '')
-      .substring(0, 30)
-      + '-' + Date.now().toString().substring(-6);
+    return (
+      title
+        .toLowerCase()
+        .replace(/[가-힣]/g, char => {
+          // 한글을 영문으로 간단 변환
+          const korean = '가나다라마바사아자차카타파하';
+          const english = 'ganadarambasaajachakatapha';
+          const index = korean.indexOf(char);
+          return index !== -1 ? english[index] : char;
+        })
+        .replace(/\s+/g, '-')
+        .replace(/[^a-z0-9-]/g, '')
+        .substring(0, 30) +
+      '-' +
+      Date.now().toString().substring(-6)
+    );
   }
 
   async generateFinalChapter(novel, chapterNumber, scene, isEpilogue) {
     const emotionalElements = {
-      internalConflict: this.emotionEngine.generateInternalConflict('의무와 감정의 충돌', '엘리아나'),
+      internalConflict: this.emotionEngine.generateInternalConflict(
+        '의무와 감정의 충돌',
+        '엘리아나'
+      ),
       microExpression: this.emotionEngine.generateMicroExpression('longing', '카엘'),
-      sensoryDetail: this.emotionEngine.generateSensoryDescription('슬픔', '성당')
+      sensoryDetail: this.emotionEngine.generateSensoryDescription('슬픔', '성당'),
     };
 
-    const content = isEpilogue ?
-      `# 에필로그 - ${scene}
+    const content = isEpilogue
+      ? `# 에필로그 - ${scene}
 
 몇 년이 흘렀다. ${emotionalElements.sensoryDetail}에서 두 사람이 다시 만났다.
 
@@ -605,9 +692,8 @@ ${chapterData.content}`;
 
 **카엘**이 따뜻하게 답했다.
 
-**행복한 결말**이 그들을 기다리고 있었다.` :
-
-      `# ${chapterNumber}화 - ${scene}
+**행복한 결말**이 그들을 기다리고 있었다.`
+      : `# ${chapterNumber}화 - ${scene}
 
 **${scene}**의 순간이 드디어 왔다.
 
@@ -625,14 +711,14 @@ ${emotionalElements.sensoryDetail}에서 ${emotionalElements.microExpression}
 
     return {
       frontmatter: {
-        title: isEpilogue ? "에필로그" : `${chapterNumber}화`,
+        title: isEpilogue ? '에필로그' : `${chapterNumber}화`,
         novel: novel.slug,
         chapterNumber,
         publicationDate: new Date().toISOString().split('T')[0],
         wordCount: 1000 + Math.floor(Math.random() * 500),
-        rating: 0
+        rating: 0,
       },
-      content
+      content,
     };
   }
 
@@ -647,7 +733,7 @@ ${emotionalElements.sensoryDetail}에서 ${emotionalElements.microExpression}
         const titleMatch = frontmatter.match(/title:\s*"([^"]+)"/);
         return {
           title: titleMatch ? titleMatch[1] : '로맨스 판타지',
-          content
+          content,
         };
       }
     } catch (error) {
@@ -660,7 +746,10 @@ ${emotionalElements.sensoryDetail}에서 ${emotionalElements.microExpression}
     if (currentChapter <= 1) return '';
 
     try {
-      const prevChapterPath = join(this.chaptersDir, `${novelSlug}-ch${(currentChapter - 1).toString().padStart(2, '0')}.md`);
+      const prevChapterPath = join(
+        this.chaptersDir,
+        `${novelSlug}-ch${(currentChapter - 1).toString().padStart(2, '0')}.md`
+      );
       const content = await fs.readFile(prevChapterPath, 'utf-8');
       // 마지막 500자만 컨텍스트로 사용
       return content.slice(-500);

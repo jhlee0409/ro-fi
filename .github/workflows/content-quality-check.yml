@@ -74,8 +74,8 @@ jobs:
 
               # 2. 글자 수 확인
               char_count=$(wc -m < "$file" | tr -d '[:space:]')
-              if [[ $char_count -lt 2000 ]]; then
-                echo "❌ $file: 글자 수 부족 ($char_count < 2000)"
+              if [[ $char_count -lt 3000 ]]; then
+                echo "❌ $file: 글자 수 부족 ($char_count < 3000)"
                 failed_files+=("$file:글자수부족($char_count)")
                 continue
               fi

@@ -109,36 +109,60 @@ ${characterContext}
 
 당신은 숙련된 로맨스 판타지 작가입니다. 위의 컨텍스트를 바탕으로 ${chapterNumber}챕터를 작성하세요.
 
-요구사항:
-1. 약 3,000-5,000자 분량으로 작성하세요 (디지털 소울메이트 수준)
-2. 캐릭터의 감정과 내적 갈등을 세밀하게 묘사하세요
-3. 적용된 트렌드의 특성을 자연스럽게 드러내세요
-4. 독자의 몰입도를 높이는 생생한 장면 묘사를 포함하세요
-5. 다음 챕터로 이어지는 훅(Hook)을 남기세요
-6. 최고 품질의 한국어 문법과 자연스러운 문체를 사용하세요
-7. 대화 비율을 30% 이상 포함하세요
-8. 감정적 몰입도를 극대화하는 표현을 사용하세요
+⚠️ 중요 요구사항 (반드시 준수):
+1. **최소 3,000자 이상** 분량으로 작성하세요 (한글 기준, 공백 제외)
+2. **대화를 충분히 포함**하여 캐릭터 간의 상호작용을 풍부하게 표현하세요 (전체의 30% 이상)
+3. **감정 표현과 내적 독백**을 적극 활용하여 독자의 몰입도를 높이세요
+4. **장면 묘사와 분위기 연출**을 구체적이고 생생하게 작성하세요
+5. **갈등과 긴장감**을 통해 스토리의 흥미를 지속시키세요
+
+📝 작성 가이드라인:
+- 각 장면을 최소 300-500자로 상세히 묘사
+- 캐릭터의 대화는 개성과 감정이 드러나도록 작성
+- 내적 독백 형식: > *'생각 내용'* 을 적극 활용
+- 대화 형식: > "대화 내용" 을 충분히 포함
+- 행동 묘사: > [행동 설명] 으로 장면 전환
+- **굵은 글씨**로 중요 단어나 캐릭터 이름 강조
+- 감정과 분위기를 나타내는 형용사와 부사를 풍부하게 사용
+
+🎯 품질 목표:
+- 최소 3,000자 (필수)
+- 대화 비율 30% 이상
+- 감정 표현 키워드 2% 이상
+- 생생한 장면 묘사와 캐릭터 개발
+- 다음 챕터로 이어지는 훅 포함
 
 출력 형식:
 **챕터 제목:** [흥미진진한 제목]
 
 **본문:**
-[마크다운 형식의 스토리 본문]`;
+[마크다운 형식의 스토리 본문 - 최소 3,000자 이상]`;
 
     let bestResult = null;
     let bestScore = 0;
     let attempts = 0;
     const maxAttempts = 3;
 
-    // 품질 보장을 위한 재시도 로직
+    // 강화된 품질 보장 생성 프로세스
     while (attempts < maxAttempts) {
       attempts++;
       
       try {
+        // 첫 번째 시도는 표준 생성, 이후는 개선 요청 포함
+        let enhancedPrompt = generationPrompt;
+        
+        if (attempts > 1 && bestResult) {
+          // 이전 시도의 문제점을 바탕으로 프롬프트 강화
+          const previousAssessment = await this.qualityEngine.assessQuality(bestResult.content);
+          const issues = previousAssessment.issues.slice(0, 3); // 상위 3개 문제점만 포함
+          
+          enhancedPrompt += `\n\n⚡ 이전 시도에서 발견된 문제점을 반드시 해결하세요:\n${issues.map((issue, i) => `${i+1}. ${issue}`).join('\n')}\n\n특히 분량이 부족했다면 각 장면을 더 자세히 묘사하고, 대화와 내적 독백을 늘려주세요.`;
+        }
+
         const response = await this.anthropic.messages.create({
           model: 'claude-3-5-sonnet-20241022',
-          max_tokens: 4000,
-          messages: [{ role: 'user', content: generationPrompt }]
+          max_tokens: 5000, // 토큰 한도 증가
+          messages: [{ role: 'user', content: enhancedPrompt }]
         });
 
         const fullResponse = response.content[0].type === 'text' ? response.content[0].text : '';
@@ -147,12 +171,19 @@ ${characterContext}
         const titleMatch = fullResponse.match(/\*\*챕터 제목:\*\*\s*(.+)/);
         const contentMatch = fullResponse.match(/\*\*본문:\*\*\s*([\s\S]+)/);
         
-        const result = {
+        let result = {
           title: titleMatch ? titleMatch[1].trim() : `제${chapterNumber}장`,
           content: contentMatch ? contentMatch[1].trim() : fullResponse
         };
 
-        // 품질 검사
+        // 즉시 기본 검증 (분량 체크)
+        const wordCount = result.content.replace(/\s+/g, '').length;
+        if (wordCount < 2000) {
+          console.log(`⚠️ 시도 ${attempts}: 분량 부족 (${wordCount}자) - 재시도 중...`);
+          continue;
+        }
+
+        // 상세 품질 검사
         const qualityAssessment = await this.qualityEngine.assessQuality(result.content, {
           title: result.title,
           chapterNumber,
@@ -160,7 +191,7 @@ ${characterContext}
         });
 
         console.log(`\n🔍 챕터 ${chapterNumber} 품질 평가 (시도 ${attempts}/${maxAttempts}):`);
-        console.log(`📊 점수: ${qualityAssessment.score}/100`);
+        console.log(`📊 점수: ${qualityAssessment.score}/100 (분량: ${wordCount}자)`);
         console.log(`📋 상태: ${qualityAssessment.status}`);
 
         // 품질 기준 충족 시 즉시 반환
@@ -173,19 +204,12 @@ ${characterContext}
         if (qualityAssessment.score > bestScore) {
           bestScore = qualityAssessment.score;
           bestResult = result;
-          
-          // 개선이 필요한 경우 자동 개선 시도
-          if (qualityAssessment.status === 'needs_minor_improvement') {
-            console.log(`🔧 소폭 개선 시도 중...`);
-            const improvedContent = await this.qualityEngine.improveContent(result.content, qualityAssessment);
-            bestResult.content = improvedContent;
-          }
         }
 
-        // 문제점 로깅
+        // 문제점 로깅 (상위 3개만)
         if (qualityAssessment.issues.length > 0) {
-          console.log(`⚠️ 발견된 문제점:`);
-          qualityAssessment.issues.forEach((issue, index) => {
+          console.log(`⚠️ 주요 문제점:`);
+          qualityAssessment.issues.slice(0, 3).forEach((issue, index) => {
             console.log(`   ${index + 1}. ${issue}`);
           });
         }
