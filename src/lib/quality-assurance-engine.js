@@ -399,7 +399,7 @@ export class QualityAssuranceEngine {
    * 대화 품질을 향상시킵니다
    */
   improveDialogue(content) {
-    let improved = content;
+    const improved = content;
 
     // 대화 패턴 개선 - 기존 캐릭터 이름을 유지하면서 개선
     const dialogueMatches = [...content.matchAll(/> "(.+)"\s*\n\s*\n\s*\*\*(\w+)\*\*[가이]?\s+(.+)/g)];

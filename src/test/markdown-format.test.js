@@ -210,7 +210,7 @@ rating: 0
 다시 조용해졌다.`;
 
       const lines = wellFormattedContent.split('\n');
-      let previousLineEmpty = false;
+      const previousLineEmpty = false;
       
       lines.forEach((line, index) => {
         if (line.trim().startsWith('> ')) {

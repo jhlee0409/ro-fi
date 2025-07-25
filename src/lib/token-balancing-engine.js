@@ -779,7 +779,7 @@ export class TokenBalancingEngine {
     
     let recommendedStrategy = 'balanced';
     let confidence = 0.5;
-    let reasoning = [];
+    const reasoning = [];
     
     // 예산 상태에 따른 추천
     if (budgetStatus.pressure >= 0.8) {
