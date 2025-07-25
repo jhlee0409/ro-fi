@@ -176,7 +176,10 @@ export class HybridAIGenerator {
         console.log(`✅ Claude 감성 집필 완료: ${chapterContent?.content?.length || 0}자`);
       } catch (claudeError) {
         console.error('❌ Claude 감성 집필 실패:', claudeError.message);
-        throw new Error(`Claude 감성 집필 실패: ${claudeError.message}`);
+        
+        // Claude는 감성 전문가로 필수 - 폴백 없이 실패 처리
+        console.error('💔 Claude 감성 집필 필수 서비스 실패 - 하이브리드 모드 중단');
+        throw new Error(`감성 전문가(Claude) 서비스 실패: ${claudeError.message}`);
       }
 
       // 🔍 3단계: Gemini가 논리적 일관성 검증 및 수정 제안
@@ -222,7 +225,15 @@ export class HybridAIGenerator {
       return chapterContent;
 
     } catch (error) {
+      // Claude 필수 서비스 실패 시 - 재시도 후 최종 실패 처리
+      if (error.message.includes('감성 전문가(Claude)')) {
+        console.error('💔 감성 전문가 서비스 완전 실패 - 하이브리드 불가능');
+        throw error;
+      }
+      
+      // 다른 오류는 Claude 단독 모드로 폴백
       console.error('❌ 하이브리드 생성 실패, Claude 단독 모드로 전환:', error);
+      console.log('🎭 Claude 감성 중심 단독 생성 모드 활성화');
       return await this.claudeGenerator.generateChapter(options);
     }
   }
@@ -438,23 +449,38 @@ ${Array.isArray(logicalFramework.constraints) ?
  * 하이브리드 생성기 생성 헬퍼
  */
 export function createHybridGenerator(config = {}) {
+  console.log('🔧 하이브리드 생성기 초기화 중...');
+  
+  // API 키 상태 확인
+  const claudeApiKey = process.env.ANTHROPIC_API_KEY;
+  const geminiApiKey = process.env.GEMINI_API_KEY;
+  
+  console.log(`🔑 Claude API 키: ${claudeApiKey ? '✅ 설정됨' : '❌ 없음'}`);
+  console.log(`🔑 Gemini API 키: ${geminiApiKey ? '✅ 설정됨' : '❌ 없음'}`);
+  
   const claudeGenerator = createStoryGenerator();
   const geminiGenerator = createGeminiGenerator();
   
+  console.log(`🤖 Claude 생성기: ${claudeGenerator ? '✅ 사용 가능' : '❌ 초기화 실패'}`);
+  console.log(`🧠 Gemini 생성기: ${geminiGenerator ? '✅ 사용 가능' : '❌ 초기화 실패'}`);
+  
   if (!claudeGenerator && !geminiGenerator) {
     console.error('❌ Claude와 Gemini 모두 사용할 수 없습니다.');
-    return null;
+    throw new Error('하이브리드 생성기 초기화 실패: 모든 AI 서비스 사용 불가');
   }
   
   if (!geminiGenerator) {
     console.warn('⚠️ Gemini를 사용할 수 없습니다. Claude 단독 모드로 실행됩니다.');
+    console.warn('   GEMINI_API_KEY 환경변수를 확인해주세요.');
   }
   
   if (!claudeGenerator) {
     console.error('❌ Claude를 사용할 수 없습니다. Claude는 필수입니다.');
-    return null;
+    console.error('   ANTHROPIC_API_KEY 환경변수를 확인해주세요.');
+    throw new Error('하이브리드 생성기 초기화 실패: Claude 서비스 필수');
   }
   
+  console.log('✅ 하이브리드 생성기 초기화 완료');
   return new HybridAIGenerator({
     claudeGenerator,
     geminiGenerator,

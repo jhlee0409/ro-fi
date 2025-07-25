@@ -44,6 +44,73 @@ export class AIStoryGenerator {
     // 증분 개선을 위한 캐시 시스템
     this.improvementCache = new Map();
     this.wordCountHistory = [];
+    
+    // Anthropic API 사용량 모니터링
+    this.dailyUsage = {
+      requests: 0,
+      errors: 0,
+      overloadErrors: 0,
+      lastReset: new Date().toDateString()
+    };
+  }
+
+  /**
+   * Claude API 재시도 메커니즘 (Anthropic 529 에러 대응)
+   * 점진적 트래픽 증가 및 일관된 사용 패턴 유지
+   */
+  async anthropicWithRetry(params, currentAttempt = 1) {
+    const maxRetries = 5; // 재시도 횟수 증가
+    
+    // 점진적 백오프: 15s → 30s → 60s → 120s → 300s (최대 5분)
+    const getBackoffTime = (retryCount) => {
+      const baseDelay = 15000; // 15초 시작 (Anthropic 권장)
+      const maxDelay = 300000; // 최대 5분
+      return Math.min(baseDelay * Math.pow(2, retryCount), maxDelay);
+    };
+    
+    // 일일 사용량 리셋 체크
+    const today = new Date().toDateString();
+    if (this.dailyUsage.lastReset !== today) {
+      this.dailyUsage = { requests: 0, errors: 0, overloadErrors: 0, lastReset: today };
+    }
+
+    for (let retry = 0; retry < maxRetries; retry++) {
+      try {
+        console.log(`🔄 Claude API 호출 시도 ${retry + 1}/${maxRetries}...`);
+        this.dailyUsage.requests++;
+        
+        const response = await this.anthropic.messages.create(params);
+        console.log(`✅ Claude API 호출 성공 (일일 요청: ${this.dailyUsage.requests}회)`);
+        return response;
+        
+      } catch (error) {
+        const isOverloaded = error.status === 529 || 
+                           (error.error && error.error.type === 'overloaded_error');
+        
+        if (isOverloaded) {
+          this.dailyUsage.overloadErrors++;
+          const waitTime = getBackoffTime(retry);
+          console.log(`⏳ Anthropic API 전체 과부하 (529) - ${waitTime/1000}초 대기...`);
+          console.log(`📊 트래픽 관리: 점진적 백오프로 서비스 안정화 대기 중`);
+          console.log(`📈 일일 사용량: 요청 ${this.dailyUsage.requests}회, 과부하 ${this.dailyUsage.overloadErrors}회`);
+          
+          if (retry < maxRetries - 1) {
+            await new Promise(resolve => setTimeout(resolve, waitTime));
+            console.log(`🔄 재시도 준비 완료 (${retry + 2}/${maxRetries})`);
+            continue;
+          } else {
+            console.error(`❌ Anthropic API 장기간 과부하 - 서비스 일시 중단 필요`);
+            console.error(`📊 최종 통계: 요청 ${this.dailyUsage.requests}회, 과부하 ${this.dailyUsage.overloadErrors}회`);
+            console.error(`💡 권장: 몇 시간 후 재시도하거나 일일 사용량 분산 필요`);
+            throw new Error('Claude API overloaded - service temporarily unavailable');
+          }
+        } else {
+          this.dailyUsage.errors++;
+          console.error(`❌ Claude API 에러 (비과부하):`, error);
+          throw error;
+        }
+      }
+    }
   }
 
   /**
@@ -76,7 +143,7 @@ ${tropes[i]}:
 
 각 단계는 5챕터 정도의 분량으로 계획해주세요.`;
 
-    const response = await this.anthropic.messages.create({
+    const response = await this.anthropicWithRetry({
       model: 'claude-3-5-sonnet-20241022',
       max_tokens: 4000,
       messages: [{ role: 'user', content: prompt }]
@@ -176,13 +243,13 @@ ${characterContext}
         // 3000자 충족을 위한 최대 토큰 할당
         const dynamicMaxTokens = 8192; // Claude Sonnet 최대 토큰으로 고정
 
-        const response = await this.anthropic.messages.create({
+        const response = await this.anthropicWithRetry({
           model: 'claude-3-5-sonnet-20241022',
           max_tokens: dynamicMaxTokens, // 동적 토큰 할당
           messages: [{ role: 'user', content: enhancedPrompt }],
           temperature: 0.7, // 창의성과 일관성의 균형
           top_p: 0.9
-        });
+        }, attempts);
 
         const fullResponse = response.content[0].type === 'text' ? response.content[0].text : '';
         
@@ -394,7 +461,7 @@ ${improvementCriteria.map((criteria, i) => `${i + 1}. ${criteria}`).join('\n')}
 
 각 기준에 대해 구체적인 약점을 3가지씩 지적해주세요.`;
 
-    const critiqueResponse = await this.anthropic.messages.create({
+    const critiqueResponse = await this.anthropicWithRetry({
       model: 'claude-3-5-sonnet-20241022',
       max_tokens: 2000,
       messages: [{ role: 'user', content: critiquePlot }]
@@ -415,7 +482,7 @@ ${critique}
 
 개선된 버전을 제공해주세요.`;
 
-    const improvementResponse = await this.anthropic.messages.create({
+    const improvementResponse = await this.anthropicWithRetry({
       model: 'claude-3-5-sonnet-20241022',
       max_tokens: 4000,
       messages: [{ role: 'user', content: improvementPrompt }]
@@ -443,7 +510,7 @@ ${critique}
 
 최소 주인공 2명과 조연 2명을 만들어주세요.`;
 
-    const response = await this.anthropic.messages.create({
+    const response = await this.anthropicWithRetry({
       model: 'claude-3-5-sonnet-20241022',
       max_tokens: 3000,
       messages: [{ role: 'user', content: prompt }]

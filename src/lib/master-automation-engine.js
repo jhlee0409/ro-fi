@@ -477,7 +477,7 @@ export class MasterAutomationEngine {
               characterContext: this.generateCharacterContext(characters),
               plotOutline: this.generatePlotContext(concept, chapterNumber),
             });
-          } else {
+          } else if (bestResult && bestResult.content) {
             // 두 번째 시도: 이전 결과의 문제점을 바탕으로 개선
             const previousAssessment = await this.qualityEngine.assessQuality(bestResult.content);
             const mainIssues = previousAssessment.issues.slice(0, 2); // 주요 문제 2개만 집중
@@ -492,6 +492,25 @@ export class MasterAutomationEngine {
               title: bestResult.title,
               content: improvedContent,
             };
+          } else {
+            // bestResult가 null이거나 content가 없는 경우 새로 생성
+            console.log(`🆕 이전 결과가 없어 새로 생성 시도...`);
+            aiResult = await this.aiGenerator.generateChapter({
+              title: novelData.title || '로맨스 판타지',
+              tropes: concept.main
+                ? [concept.main, concept.sub]
+                : ['enemies-to-lovers', 'fated-mates'],
+              chapterNumber,
+              previousContext,
+              characterContext: this.generateCharacterContext(characters),
+              plotOutline: this.generatePlotContext(concept, chapterNumber),
+            });
+          }
+
+          // aiResult 유효성 검사
+          if (!aiResult || !aiResult.content) {
+            console.error(`❌ AI 생성 결과가 유효하지 않음:`, aiResult);
+            throw new Error(`AI 생성 결과가 null이거나 content가 없음`);
           }
 
           // 기본 분량 체크

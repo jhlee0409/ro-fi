@@ -3,9 +3,17 @@ name: AI Story Generation Pipeline
 
 on:
   schedule:
-    # 매일 새벽 2시 (KST 11시) 새 챕터 자동 생성 및 연재
-    - cron: '0 2 * * *' # 02:00 UTC (KST 11:00)
+    # Anthropic API 트래픽 분산: 시간대별 백업 실행
+    - cron: '0 1 * * *' # 01:00 UTC (KST 10:00) - 메인 시간
+    - cron: '30 2 * * *' # 02:30 UTC (KST 11:30) - 529 에러 시 백업
+    - cron: '0 4 * * *' # 04:00 UTC (KST 13:00) - 최종 백업
   workflow_dispatch: # 수동 실행 허용
+    inputs:
+      force_mode:
+        description: '강제 실행 모드 (529 에러 무시)'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   generate-and-publish:
@@ -26,12 +34,42 @@ jobs:
           install-deps: 'true'
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
 
+      - name: 📅 중복 실행 방지 체크
+        id: check_daily
+        run: |
+          today=$(date +%Y-%m-%d)
+          last_commit_date=$(git log -1 --format=%cd --date=short 2>/dev/null || echo "2000-01-01")
+
+          echo "오늘 날짜: $today"
+          echo "마지막 커밋 날짜: $last_commit_date"
+
+          if [ "$today" = "$last_commit_date" ]; then
+            echo "already_ran=true" >> $GITHUB_OUTPUT
+            echo "⏭️ 오늘 이미 실행됨 - 건너뛰기"
+          else
+            echo "already_ran=false" >> $GITHUB_OUTPUT
+            echo "✅ 오늘 첫 실행 - 계속 진행"
+          fi
+
       - name: 🚀 Execute Master Automation Engine
+        if: steps.check_daily.outputs.already_ran == 'false' || github.event.inputs.force_mode == 'true'
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          FORCE_MODE: ${{ github.event.inputs.force_mode }}
         run: |
           echo "📱 Starting Digital Soulmate Automation..."
-          node scripts/run-automation.js --verbose
+
+          # Anthropic API 사용량 분산을 위한 랜덤 지연
+          delay=$((RANDOM % 300 + 60)) # 1-5분 랜덤 지연
+          echo "⏳ API 트래픽 분산을 위해 ${delay}초 대기..."
+          sleep $delay
+
+          if [ "$FORCE_MODE" = "true" ]; then
+            echo "🚨 강제 모드: 529 에러 무시하고 계속 진행"
+            node scripts/run-automation.js --verbose --ignore-529
+          else
+            node scripts/run-automation.js --verbose
+          fi
 
       - name: AI Story Creation with Claude Code (Fallback)
         if: failure()
