@@ -176,46 +176,68 @@ ${previousContext}
 ${characterContext}
 `;
 
-    // 3000자 충족을 위한 강화된 프롬프트
+    // 4000자 이상 생성을 위한 강화된 프롬프트
     const generationPrompt = `${contextPrompt}
 
-로맨스 판타지 전문 작가로서 ${chapterNumber}챕터를 작성하세요.
+당신은 세계적으로 유명한 로맨스 판타지 전문 작가입니다. ${chapterNumber}챕터를 작성하세요.
 
-🚨 **절대 분량 요구사항**: 정확히 3,500~4,000자 (공백 제외) 작성
+🚨 **절대적 분량 요구사항**: 최소 4,000자 (공백 제외) 이상 작성 - 이것은 협상 불가능한 조건입니다
 
-📚 **상세 구조 지침**:
-1. **장면 구성**: 7개 장면 × 500자 = 3,500자
-   - 도입부 (500자): 상황 설정 + 감정 묘사
-   - 전개부 5장면 (각 500자): 갈등 발전 + 대화 + 심리
-   - 마무리 (500자): 감정 변화 + 다음 화 연결
+📖 **필수 구조 - 8개 장면 구성** (각 장면 500자 = 4,000자):
+1. **시작 장면** (500자): 상황 설정 + 캐릭터 등장 + 분위기 조성
+2. **갈등 도입** (500자): 문제 상황 발생 + 캐릭터 반응
+3. **감정 교류 1** (500자): 대화 중심 + 미묘한 감정 변화
+4. **행동 전개** (500자): 구체적 행동 + 환경 묘사
+5. **감정 교류 2** (500자): 더 깊은 대화 + 내적 갈등
+6. **절정 순간** (500자): 감정적 클라이맥스 + 중요한 깨달음
+7. **여운과 변화** (500자): 감정 정리 + 관계 변화
+8. **다음 연결** (500자): 다음 화 예고 + 남은 긴장감
 
-2. **대화 요구사항**: 
-   - 장면당 최소 3회 대화 교환 (총 21회 이상)
-   - 대화마다 행동/표정 묘사 필수 (50자 이상)
+💬 **대화 작성 필수사항** (총 32회 이상):
+- 각 장면마다 최소 4회의 대화 교환
+- 대화 전후에 반드시 행동/표정/몸짓 묘사 포함 (각 80자 이상)
+- "..." 말줄임표와 감정적 침묵도 효과적으로 활용
+- 대화 중간에 상대방 관찰이나 내적 반응 삽입
 
-3. **내적 독백**: 
-   - 장면당 최소 2회 심리 묘사 (총 14회 이상)
-   - 각 내적 독백 최소 30자 이상
+🧠 **내적 독백 필수사항** (총 16회 이상):
+- 각 장면마다 최소 2회의 심층적 내적 독백
+- 각 내적 독백 최소 60자 이상으로 상세하게
+- 과거 회상, 현재 감정, 미래 걱정을 균형있게 배치
+- *'...'* 형식으로 내적 목소리를 생생하게 표현
 
-4. **환경/감각 묘사**:
-   - 5감 활용한 배경 서술 (시각, 청각, 촉각, 후각, 미각)
-   - 장면당 최소 100자 환경 묘사
+🌟 **환경과 감각 묘사** (각 장면마다 200자 이상):
+- **시각**: 빛, 색깔, 움직임, 표정 변화 등
+- **청각**: 목소리 톤, 환경음, 침묵의 무게 등
+- **촉각**: 온도, 질감, 접촉의 감각 등
+- **후각**: 향기, 냄새를 통한 감정 연상
+- **미각**: 긴장감이나 감정과 연결된 맛의 표현
 
-5. **회상/설정 설명**:
-   - 자연스러운 배경 정보 삽입
-   - 캐릭터 과거사 또는 세계관 설명
+📚 **세계관과 설정 설명** (자연스럽게 800자 이상 분산):
+- 마법 시스템이나 특수 능력에 대한 구체적 설명
+- 캐릭터의 과거사와 상처에 대한 언급
+- 현재 상황의 배경과 정치적/사회적 맥락
+- 장소의 역사나 특별한 의미
 
-✍️ **작성 전략**:
-- 각 문장을 풍부하게 확장 (단순 문장 금지)
-- 감정 변화를 세밀하게 표현
-- 긴장감과 로맨틱 요소 균형 유지
-- 시간의 흐름과 장소 변화 상세 묘사
+✨ **문체와 표현 기법**:
+- 단순한 문장은 절대 금지 - 모든 문장을 풍부하고 섬세하게
+- 감정의 미묘한 변화를 세밀하게 포착하여 표현
+- 은유와 직유를 적절히 사용하여 시적 아름다움 추가
+- 문장 길이를 다양하게 조절하여 리듬감 생성
+- 로맨틱한 긴장감과 감정적 몰입도를 지속적으로 유지
 
-🎯 **품질 기준**: 3,500자 이상 + 7장면 + 21회 대화 + 14회 심리묘사
+⚡ **작성 시 체크리스트**:
+✓ 8개 장면 × 500자 = 4,000자 이상
+✓ 32회 이상의 대화 + 행동 묘사
+✓ 16회 이상의 내적 독백
+✓ 5감을 활용한 환경 묘사
+✓ 세계관 설정의 자연스러운 통합
+✓ 감정적 몰입도와 로맨틱 긴장감 유지
+
+🎯 **최종 목표**: 4,000자 이상 + 8장면 완성 + 풍부한 감정 표현
 
 **출력 형식**:
-**챕터 제목:** [제목]
-**본문:** [3,500자 이상 풍부한 마크다운 스토리]`;
+**챕터 제목:** [감성적이고 매력적인 제목]
+**본문:** [4,000자 이상의 완전하고 풍부한 마크다운 스토리]`;
 
     let bestResult = null;
     let bestScore = 0;
@@ -226,19 +248,24 @@ ${characterContext}
     const cacheKey = `${title}-${chapterNumber}`;
     const cachedHistory = this.improvementCache.get(cacheKey) || [];
 
-    // 강화된 품질 보장 생성 프로세스 - 증분 개선
+    // 단순화된 생성 프로세스 - 한 번에 완전한 챕터 생성
     while (attempts < maxAttempts) {
       attempts++;
       
       try {
-        // 증분 개선 프롬프트 생성
-        const enhancedPrompt = this.buildIncrementalPrompt(
-          generationPrompt, 
-          attempts, 
-          bestResult, 
-          cachedHistory,
-          chapterNumber
-        );
+        // 첫 시도는 완전한 프롬프트, 이후는 증분 개선
+        let enhancedPrompt;
+        if (attempts === 1) {
+          enhancedPrompt = generationPrompt;
+        } else {
+          enhancedPrompt = this.buildIncrementalPrompt(
+            generationPrompt, 
+            attempts, 
+            bestResult, 
+            cachedHistory,
+            chapterNumber
+          );
+        }
 
         // 4000자 이상 생성을 위한 충분한 토큰 할당
         const dynamicMaxTokens = 8192; // Claude Sonnet 최대 토큰으로 고정
@@ -303,17 +330,29 @@ ${characterContext}
           });
         }
 
-        // 동적 품질 기준 (분량 미달 시 기준을 점진적으로 조정)
+        // 첫 시도에서 4000자 이상 달성 시 즉시 반환, 아니면 재시도
+        if (attempts === 1 && wordCount >= 4000) {
+          console.log(`🎉 첫 시도 성공! 목표 분량 달성: ${wordCount}자`);
+          return result;
+        }
+        
+        // 동적 품질 기준 (분량을 더 중요하게 평가)
         const dynamicThreshold = Math.max(
-          70, // 최소 기준 강화 (50→70)
-          this.qualityEngine.qualityStandards.qualityThreshold - (attempts - 1) * 10 // 감소폭 축소 (15→10)
+          60, // 최소 기준 완화 (품질보다 분량 우선)
+          this.qualityEngine.qualityStandards.qualityThreshold - (attempts - 1) * 15
         );
         
         console.log(`🎯 동적 품질 기준: ${dynamicThreshold}점 (시도 ${attempts})`);
         
-        // 품질 기준 충족 시 즉시 반환
-        if (qualityAssessment.score >= dynamicThreshold) {
-          console.log(`✅ 품질 기준 충족! 챕터 생성 완료 (${qualityAssessment.score}≥${dynamicThreshold})`);
+        // 분량 우선 검사: 4000자 이상이면 품질과 무관하게 성공
+        if (wordCount >= 4000) {
+          console.log(`🎯 분량 목표 달성! 챕터 생성 완료: ${wordCount}자`);
+          return result;
+        }
+        
+        // 분량 미달이지만 품질 기준 충족 시에도 반환 (3000자 이상)
+        if (wordCount >= 3000 && qualityAssessment.score >= dynamicThreshold) {
+          console.log(`✅ 최소 분량 + 품질 기준 충족! 챕터 생성 완료 (${wordCount}자, ${qualityAssessment.score}≥${dynamicThreshold})`);
           return result;
         }
 
@@ -347,16 +386,23 @@ ${characterContext}
     // 캐시 저장
     this.improvementCache.set(cacheKey, cachedHistory);
     
-    // 모든 시도가 품질 기준에 미달한 경우 최고 점수 결과 반환
+    // 모든 시도가 실패한 경우에도 최고 점수 결과 반환 (실패보다는 부족한 결과라도)
     if (bestResult) {
-      console.log(`⚠️ 품질 기준 미달이지만 최고 점수(${bestScore}/100) 결과 반환`);
-      console.log(`💾 캐시 저장: ${cachedHistory.length}개 시도 기록`);
-      return bestResult;
+      const finalWordCount = bestResult.content.replace(/\s+/g, '').length;
+      
+      if (finalWordCount >= 2000) {
+        console.log(`⚠️ 목표 미달이지만 사용 가능한 결과 반환: ${finalWordCount}자 (최고 점수 ${bestScore}/100)`);
+        console.log(`💾 캐시 저장: ${cachedHistory.length}개 시도 기록`);
+        return bestResult;
+      } else {
+        console.error(`❌ 최고 결과도 너무 짧음: ${finalWordCount}자 (최소 2000자 필요)`);
+        throw new Error(`챕터 ${chapterNumber} 생성 실패: 최고 결과도 ${finalWordCount}자로 너무 짧음`);
+      }
     }
 
     // bestResult가 null인 경우 실패로 처리
     console.error('❌ 모든 시도에서 콘텐츠 생성 실패');
-    throw new Error(`챕터 ${chapterNumber} 생성 실패: 모든 시도에서 품질 기준을 충족하지 못함`);
+    throw new Error(`챕터 ${chapterNumber} 생성 실패: 모든 시도에서 유효한 콘텐츠 생성 불가`);
   }
 
   /**
