@@ -19,15 +19,10 @@ jobs:
       pull-requests: write
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      - name: 🔧 Node.js + pnpm 환경 설정
+        uses: ./.github/actions/setup-node-pnpm
         with:
-          fetch-depth: 2
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+          install-deps: 'false'
 
       - name: Check Content Files
         id: check_files

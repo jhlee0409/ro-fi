@@ -87,7 +87,7 @@ export class AutomationExecutionError extends DomainError {
 
 // 스토리지 관련 에러
 export class StorageError extends DomainError {
-  readonly httpStatus = 500;
+  readonly httpStatus: number = 500;
   
   constructor(operation: string, path: string, cause?: Error) {
     super('STORAGE_ERROR', `Storage operation '${operation}' failed for path '${path}'`, { 

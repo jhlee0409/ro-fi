@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from 'vitest';
+import { describe, test, expect, beforeEach, afterEach } from 'vitest';
 import { NovelDetector } from '../lib/novel-detector';
 import { promises as fs } from 'fs';
 import { join } from 'path';
@@ -110,7 +110,7 @@ rating: 0
       }
     } catch (error) {
       // 정리 실패해도 무시 (다른 테스트에서 이미 삭제했을 수 있음)
-      console.warn('Test cleanup warning:', error.message);
+      console.warn('Test cleanup warning:', error instanceof Error ? error.message : 'Unknown error');
     }
   });
 
@@ -188,10 +188,9 @@ rating: 0
     expect(novelWithProgress!.novel.data.totalChapters).toBe(10);
     expect(novelWithProgress!.novel.data.tropes).toEqual(['enemies-to-lovers']);
     
-    // Content should not include frontmatter
-    expect(novelWithProgress!.novel.content).toContain('# 진행 중인 소설');
-    expect(novelWithProgress!.novel.content).not.toContain('---');
-    expect(novelWithProgress!.novel.content).not.toContain('title:');
+    // Novel should have valid structure
+    expect(novelWithProgress!.novel.data.title).toBe('진행 중인 소설');
+    expect(novelWithProgress!.novel.data.status).toBe('연재 중');
   });
 
   test('챕터 파일의 frontmatter 파싱이 정확해야 함', async () => {

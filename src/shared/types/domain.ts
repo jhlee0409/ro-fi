@@ -103,7 +103,7 @@ export interface CompletionAnalysis {
 export interface AutomationResult {
   readonly success: boolean;
   readonly action: AutomationAction;
-  readonly result?: any;
+  readonly eventResult?: any;
   readonly error?: string;
   readonly situation: AutomationSituation;
 }

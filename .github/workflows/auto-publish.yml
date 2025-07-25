@@ -34,41 +34,11 @@ jobs:
       NODE_ENV: production
 
     steps:
-      - name: 🛒 체크아웃 코드
-        uses: actions/checkout@v4
+      - name: 🔧 Node.js + pnpm 환경 설정
+        uses: ./.github/actions/setup-node-pnpm
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          fetch-depth: 0
-
-      - name: 🔧 pnpm 설치
-        uses: pnpm/action-setup@v4
-        with:
-          version: latest
-
-      - name: 📦 Node.js 설정
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'pnpm'
-
-      - name: 📚 의존성 설치
-        run: |
-          echo "🔍 pnpm 버전 확인"
-          pnpm --version
-
-          echo "📦 의존성 설치 중..."
-          # 의존성 설치
-          pnpm install
-
-          echo "🔍 설치된 패키지 확인"
-          ls -la node_modules/.bin/ | grep -E "(vitest|playwright)" || echo "테스트 관련 바이너리 없음"
-
-          echo "📋 주요 패키지 확인"
-          pnpm list vitest || echo "vitest 패키지 설치되지 않음"
-          pnpm list @playwright/test || echo "playwright 패키지 설치되지 않음"
-
-          # PATH에 node_modules/.bin 추가
-          echo "$PWD/node_modules/.bin" >> $GITHUB_PATH
+          install-deps: 'true'
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
 
       - name: 🧪 테스트 실행
         run: |
@@ -158,26 +128,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 🛒 체크아웃 (최신 변경사항 포함)
-        uses: actions/checkout@v4
+      - name: 🔧 Node.js + pnpm 환경 설정 (배포용)
+        uses: ./.github/actions/setup-node-pnpm
         with:
-          ref: ${{ github.ref }}
-          fetch-depth: 0
-
-      - name: 🔧 pnpm 설치
-        uses: pnpm/action-setup@v4
-        with:
-          version: latest
-
-      - name: 📦 Node.js 설정
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'pnpm'
-
-      - name: 📚 의존성 설치
-        # Playwright가 브라우저 바이너리를 설치하려면 스크립트를 실행해야 하므로 --ignore-scripts를 제거합니다.
-        run: pnpm install
+          install-deps: 'true'
 
       - name: 🏗️ Astro 빌드
         run: pnpm build

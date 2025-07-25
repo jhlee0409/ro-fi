@@ -19,29 +19,11 @@ jobs:
       NODE_ENV: production
     
     steps:
-    - name: 🛒 체크아웃 코드
-      uses: actions/checkout@v4
+    - name: 🔧 Node.js + pnpm 환경 설정
+      uses: ./.github/actions/setup-node-pnpm
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        fetch-depth: 0
-    
-    - name: 🔧 pnpm 설치
-      uses: pnpm/action-setup@v4
-      with:
-        version: latest
-    
-    - name: 📦 Node.js 설정
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-        cache: 'pnpm'
-    
-    - name: 📚 의존성 설치
-      run: |
-        echo "📦 의존성 설치 중..."
-        # 의존성 설치
-        pnpm install
-        echo "✅ 의존성 설치 완료"
+        install-deps: 'true'
+        anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
     
     - name: 🏗️ 빌드 수행
       run: |

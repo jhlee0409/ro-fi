@@ -2,7 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-interface ShimmerButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface ShimmerButtonProps {
   shimmerColor?: string;
   shimmerSize?: string;
   borderRadius?: string;
@@ -10,6 +10,9 @@ interface ShimmerButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   background?: string;
   className?: string;
   children?: React.ReactNode;
+  onClick?: () => void;
+  disabled?: boolean;
+  type?: "button" | "submit" | "reset";
 }
 
 const ShimmerButton = React.forwardRef<HTMLButtonElement, ShimmerButtonProps>(
@@ -22,7 +25,9 @@ const ShimmerButton = React.forwardRef<HTMLButtonElement, ShimmerButtonProps>(
       background = "rgba(0, 0, 0, 1)",
       className,
       children,
-      ...props
+      onClick,
+      disabled = false,
+      type = "button"
     },
     ref,
   ) => {
@@ -44,7 +49,9 @@ const ShimmerButton = React.forwardRef<HTMLButtonElement, ShimmerButtonProps>(
           className,
         )}
         ref={ref}
-        {...props}
+        onClick={onClick}
+        disabled={disabled}
+        type={type}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
       >

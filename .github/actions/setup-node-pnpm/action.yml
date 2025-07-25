@@ -1,0 +1,105 @@
+# 재사용 가능한 Node.js + pnpm 환경 설정 Composite Action
+name: 'Setup Node.js with pnpm'
+description: 'Node.js 환경과 pnpm을 설정하고 선택적으로 의존성을 설치합니다'
+author: 'ro-fan automation team'
+
+inputs:
+  install-deps:
+    description: '의존성 설치 여부'
+    required: false
+    default: 'true'
+  
+  anthropic-api-key:
+    description: 'Anthropic API 키 (AI 서비스용)'
+    required: false
+    default: ''
+  
+  node-version:
+    description: 'Node.js 버전'
+    required: false
+    default: '20'
+  
+  pnpm-version:
+    description: 'pnpm 버전'
+    required: false
+    default: 'latest'
+
+outputs:
+  node-version:
+    description: '설치된 Node.js 버전'
+    value: ${{ steps.setup-node.outputs.node-version }}
+  
+  pnpm-version:
+    description: '설치된 pnpm 버전'
+    value: ${{ steps.setup-pnpm.outputs.version }}
+  
+  cache-hit:
+    description: 'pnpm 캐시 히트 여부'
+    value: ${{ steps.setup-node.outputs.cache-hit }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: 🛒 체크아웃 코드
+      uses: actions/checkout@v4
+      with:
+        token: ${{ github.token }}
+        fetch-depth: 0
+
+    - name: 🔧 pnpm 설치
+      id: setup-pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: ${{ inputs.pnpm-version }}
+
+    - name: 📦 Node.js 설정
+      id: setup-node
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: 'pnpm'
+
+    - name: 📚 의존성 설치
+      if: inputs.install-deps == 'true'
+      shell: bash
+      run: |
+        echo "🔍 pnpm 버전 확인"
+        pnpm --version
+
+        echo "📦 의존성 설치 중..."
+        pnpm install
+
+        echo "🔍 설치된 패키지 확인"
+        ls -la node_modules/.bin/ | grep -E "(vitest|playwright)" || echo "테스트 관련 바이너리 없음"
+
+        echo "📋 주요 패키지 확인"
+        pnpm list vitest || echo "vitest 패키지 설치되지 않음"
+        pnpm list @playwright/test || echo "playwright 패키지 설치되지 않음"
+
+        # PATH에 node_modules/.bin 추가
+        echo "$PWD/node_modules/.bin" >> $GITHUB_PATH
+        
+        echo "✅ 의존성 설치 완료"
+
+    - name: 🔐 환경 변수 설정
+      if: inputs.anthropic-api-key != ''
+      shell: bash
+      run: |
+        echo "ANTHROPIC_API_KEY=${{ inputs.anthropic-api-key }}" >> $GITHUB_ENV
+        echo "NODE_ENV=production" >> $GITHUB_ENV
+        echo "✅ AI 서비스 환경 변수 설정 완료"
+
+    - name: ✅ 설정 완료 요약
+      shell: bash
+      run: |
+        echo "📊 환경 설정 완료"
+        echo "==================="
+        echo "📦 Node.js: $(node --version)"
+        echo "🔧 pnpm: $(pnpm --version)"
+        echo "📚 의존성 설치: ${{ inputs.install-deps }}"
+        echo "🔐 AI API 키: ${{ inputs.anthropic-api-key != '' && '설정됨' || '미설정' }}"
+        echo "🎯 준비 완료!"
+
+branding:
+  icon: 'package'
+  color: 'green'

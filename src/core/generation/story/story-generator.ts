@@ -9,6 +9,7 @@ import type {
   CompletionResult,
   Character
 } from './story-generator-interface';
+import type { TropeId, ConflictType, GenreType } from '../../../shared/types/domain';
 import type { INovelRepository } from '../../content/novel/novel-repository-interface';
 import type { IChapterRepository } from '../../content/chapter/chapter-repository-interface';
 import type { 
@@ -219,10 +220,13 @@ export class StoryGenerator implements IStoryGenerator {
         const mainConflict = this.generateMainConflict(main, sub);
         
         concept = {
-          main,
-          sub,
+          main: main as TropeId,
+          sub: sub as TropeId,
+          conflict: 'political-intrigue' as ConflictType,
           world,
-          mainConflict
+          mainConflict,
+          magicSystem: '원소 마법',
+          genre: '궁중 로맨스' as GenreType
         };
         
         attempts++;
@@ -269,8 +273,11 @@ export class StoryGenerator implements IStoryGenerator {
     return {
       main: novel.data.tropes?.[0] || 'enemies-to-lovers',
       sub: novel.data.tropes?.[1] || 'regression',
+      conflict: 'political-intrigue' as ConflictType,
       world: '마법 아카데미', // 기본값
-      mainConflict: '정치적 음모'
+      mainConflict: '정치적 음모',
+      magicSystem: '원소 마법',
+      genre: '궁중 로맨스' as GenreType
     };
   }
 
