@@ -12,10 +12,10 @@ on:
         default: 'auto'
         type: choice
         options:
-        - auto
-        - new_novel_only
-        - continue_only
-        - complete_only
+          - auto
+          - new_novel_only
+          - continue_only
+          - complete_only
       verbose:
         description: '상세 로그 출력'
         required: false
@@ -34,125 +34,125 @@ jobs:
       NODE_ENV: production
 
     steps:
-    - name: 🛒 체크아웃 코드
-      uses: actions/checkout@v4
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        fetch-depth: 0
+      - name: 🛒 체크아웃 코드
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
-    - name: 🔧 pnpm 설치
-      uses: pnpm/action-setup@v4
-      with:
-        version: latest
+      - name: 🔧 pnpm 설치
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
 
-    - name: 📦 Node.js 설정
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-        cache: 'pnpm'
+      - name: 📦 Node.js 설정
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
 
-    - name: 📚 의존성 설치
-      run: |
-        echo "🔍 pnpm 버전 확인"
-        pnpm --version
+      - name: 📚 의존성 설치
+        run: |
+          echo "🔍 pnpm 버전 확인"
+          pnpm --version
 
-        echo "📦 의존성 설치 중..."
-        # 의존성 설치
-        pnpm install
+          echo "📦 의존성 설치 중..."
+          # 의존성 설치
+          pnpm install
 
-        echo "🔍 설치된 패키지 확인"
-        ls -la node_modules/.bin/ | grep -E "(vitest|playwright)" || echo "테스트 관련 바이너리 없음"
+          echo "🔍 설치된 패키지 확인"
+          ls -la node_modules/.bin/ | grep -E "(vitest|playwright)" || echo "테스트 관련 바이너리 없음"
 
-        echo "📋 주요 패키지 확인"
-        pnpm list vitest || echo "vitest 패키지 설치되지 않음"
-        pnpm list @playwright/test || echo "playwright 패키지 설치되지 않음"
+          echo "📋 주요 패키지 확인"
+          pnpm list vitest || echo "vitest 패키지 설치되지 않음"
+          pnpm list @playwright/test || echo "playwright 패키지 설치되지 않음"
 
-        # PATH에 node_modules/.bin 추가
-        echo "$PWD/node_modules/.bin" >> $GITHUB_PATH
+          # PATH에 node_modules/.bin 추가
+          echo "$PWD/node_modules/.bin" >> $GITHUB_PATH
 
-    - name: 🧪 테스트 실행
-      run: |
-        echo "🧪 테스트 시작..."
-        # pnpm adds node_modules/.bin to the PATH, so we can call vitest directly.
-        pnpm vitest --run
-      continue-on-error: false
+      - name: 🧪 테스트 실행
+        run: |
+          echo "🧪 테스트 시작..."
+          # pnpm adds node_modules/.bin to the PATH, so we can call vitest directly.
+          pnpm vitest --run
+        continue-on-error: false
 
-    - name: 🔍 보안 검사
-      run: |
-        pnpm run security:audit
-        pnpm run lint
-      continue-on-error: true
+      - name: 🔍 보안 검사
+        run: |
+          pnpm run security:audit
+          pnpm run lint
+        continue-on-error: true
 
-    - name: 🚀 자동화 실행
-      id: automation
-      run: |
-        if [[ "${{ github.event.inputs.verbose }}" == "true" ]]; then
-          node scripts/run-automation.js --verbose
-        else
-          node scripts/run-automation.js
-        fi
-      continue-on-error: false
+      - name: 🚀 자동화 실행
+        id: automation
+        run: |
+          if [[ "${{ github.event.inputs.verbose }}" == "true" ]]; then
+            node scripts/run-automation.js --verbose
+          else
+            node scripts/run-automation.js
+          fi
+        continue-on-error: false
 
-    - name: 📊 결과 업로드 (Artifacts)
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: automation-results-${{ github.run_number }}
-        path: |
-          logs/
-          src/content/
-          test-results/
-        retention-days: 30
+      - name: 📊 결과 업로드 (Artifacts)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: automation-results-${{ github.run_number }}
+          path: |
+            logs/
+            src/content/
+            test-results/
+          retention-days: 30
 
-    - name: 🎯 Git 설정
-      if: success()
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "로판 자동화 봇 🤖"
+      - name: 🎯 Git 설정
+        if: success()
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "로판 자동화 봇 🤖"
 
-    - name: 📝 변경사항 커밋
-      if: success()
-      run: |
-        git add src/content/
+      - name: 📝 변경사항 커밋
+        if: success()
+        run: |
+          git add src/content/
 
-        # 변경사항이 있는지 확인
-        if git diff --staged --quiet; then
-          echo "변경사항이 없습니다. 커밋을 건너뜁니다."
-          exit 0
-        fi
+          # 변경사항이 있는지 확인
+          if git diff --staged --quiet; then
+            echo "변경사항이 없습니다. 커밋을 건너뜁니다."
+            exit 0
+          fi
 
-        # 커밋 메시지 생성
-        TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S KST')
-        # logs 디렉토리가 있으면 로그 정보 추출, 없으면 기본값 사용
-        if [ -f "logs/automation-report-$(date '+%Y-%m-%d').json" ]; then
-          AUTOMATION_LOG=$(tail -n 20 logs/automation-report-$(date '+%Y-%m-%d').json | grep -o '"summary":[^}]*}' | head -1 || echo '"summary": {"activeNovels": "N/A"}')
-        else
-          AUTOMATION_LOG='"summary": {"activeNovels": "N/A"}'
-        fi
+          # 커밋 메시지 생성
+          TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S KST')
+          # logs 디렉토리가 있으면 로그 정보 추출, 없으면 기본값 사용
+          if [ -f "logs/automation-report-$(date '+%Y-%m-%d').json" ]; then
+            AUTOMATION_LOG=$(tail -n 20 logs/automation-report-$(date '+%Y-%m-%d').json | grep -o '"summary":[^}]*}' | head -1 || echo '"summary": {"activeNovels": "N/A"}')
+          else
+            AUTOMATION_LOG='"summary": {"activeNovels": "N/A"}'
+          fi
 
-        git commit -m "🤖 자동 연재 업데이트 - $TIMESTAMP
+          git commit -m "🤖 자동 연재 업데이트 - $TIMESTAMP
 
-        $AUTOMATION_LOG
+          $AUTOMATION_LOG
 
-        🤖 Generated with Claude AI Automation System
-        Co-Authored-By: Claude <noreply@anthropic.com>"
+          🤖 Generated with Claude AI Automation System
+          Co-Authored-By: Claude <noreply@anthropic.com>"
 
-    - name: 📤 GitHub에 푸시
-      if: success()
-      uses: ad-m/github-push-action@v0.8.0
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        branch: ${{ github.ref }}
+      - name: 📤 GitHub에 푸시
+        if: success()
+        uses: ad-m/github-push-action@v0.8.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
 
-    - name: 🔔 알림 (성공시)
-      if: success()
-      run: |
-        echo "::notice title=자동화 성공::로맨스 판타지 자동 연재가 성공적으로 완료되었습니다! 🎉"
+      - name: 🔔 알림 (성공시)
+        if: success()
+        run: |
+          echo "::notice title=자동화 성공::로맨스 판타지 자동 연재가 성공적으로 완료되었습니다! 🎉"
 
-    - name: ❌ 알림 (실패시)
-      if: failure()
-      run: |
-        echo "::error title=자동화 실패::로맨스 판타지 자동 연재 중 오류가 발생했습니다. 로그를 확인해주세요."
+      - name: ❌ 알림 (실패시)
+        if: failure()
+        run: |
+          echo "::error title=자동화 실패::로맨스 판타지 자동 연재 중 오류가 발생했습니다. 로그를 확인해주세요."
 
   deploy:
     needs: automation
@@ -160,52 +160,46 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: 🛒 체크아웃 (최신 변경사항 포함)
-      uses: actions/checkout@v4
-      with:
-        ref: ${{ github.ref }}
-        fetch-depth: 0
+      - name: 🛒 체크아웃 (최신 변경사항 포함)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 0
 
-    - name: 🔧 pnpm 설치
-      uses: pnpm/action-setup@v4
-      with:
-        version: latest
+      - name: 🔧 pnpm 설치
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
 
-    - name: 📦 Node.js 설정
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-        cache: 'pnpm'
+      - name: 📦 Node.js 설정
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
 
-    - name: 📚 의존성 설치
-      # Playwright가 브라우저 바이너리를 설치하려면 스크립트를 실행해야 하므로 --ignore-scripts를 제거합니다.
-      run: pnpm install
+      - name: 📚 의존성 설치
+        # Playwright가 브라우저 바이너리를 설치하려면 스크립트를 실행해야 하므로 --ignore-scripts를 제거합니다.
+        run: pnpm install
 
-    - name: 🎭 E2E 테스트 실행 (배포 전 최종 검증)
-      run: |
-        echo "🔬 배포 전 E2E 테스트를 실행하여 사이트의 안정성을 최종 검증합니다."
-        pnpm test:e2e --reporter=list
-      # E2E 테스트 실패 시 배포를 중단하도록 continue-on-error를 제거합니다.
+      - name: 🏗️ Astro 빌드
+        run: pnpm build
+        env:
+          NODE_ENV: production
 
-    - name: 🏗️ Astro 빌드
-      run: pnpm build
-      env:
-        NODE_ENV: production
+      - name: 🚀 Vercel 배포
+        if: github.ref == 'refs/heads/main'
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+          working-directory: .
 
-    - name: 🚀 Vercel 배포
-      if: github.ref == 'refs/heads/main'
-      uses: amondnet/vercel-action@v25
-      with:
-        vercel-token: ${{ secrets.VERCEL_TOKEN }}
-        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-        vercel-args: '--prod'
-        working-directory: .
-
-    - name: 🎉 배포 완료 알림
-      if: success()
-      run: |
-        echo "::notice title=배포 완료::새로운 콘텐츠가 라이브 사이트에 배포되었습니다! ✨"
+      - name: 🎉 배포 완료 알림
+        if: success()
+        run: |
+          echo "::notice title=배포 완료::새로운 콘텐츠가 라이브 사이트에 배포되었습니다! ✨"
 
   health_check:
     needs: [automation, deploy]
@@ -213,15 +207,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: 🏥 시스템 상태 체크
-      run: |
-        if [[ "${{ needs.automation.result }}" == "success" && "${{ needs.deploy.result }}" == "success" ]]; then
-          echo "::notice title=시스템 정상::모든 자동화 프로세스가 정상적으로 완료되었습니다! 🟢"
-        elif [[ "${{ needs.automation.result }}" == "failure" ]]; then
-          echo "::error title=자동화 실패::콘텐츠 생성 프로세스에서 오류가 발생했습니다. 🔴"
-          exit 1
-        elif [[ "${{ needs.deploy.result }}" == "failure" ]]; then
-          echo "::warning title=배포 실패::콘텐츠는 생성되었으나 배포에서 오류가 발생했습니다. 🟡"
-        else
-          echo "::warning title=부분 성공::일부 프로세스가 완료되지 않았습니다. 🟡"
-        fi
+      - name: 🏥 시스템 상태 체크
+        run: |
+          if [[ "${{ needs.automation.result }}" == "success" && "${{ needs.deploy.result }}" == "success" ]]; then
+            echo "::notice title=시스템 정상::모든 자동화 프로세스가 정상적으로 완료되었습니다! 🟢"
+          elif [[ "${{ needs.automation.result }}" == "failure" ]]; then
+            echo "::error title=자동화 실패::콘텐츠 생성 프로세스에서 오류가 발생했습니다. 🔴"
+            exit 1
+          elif [[ "${{ needs.deploy.result }}" == "failure" ]]; then
+            echo "::warning title=배포 실패::콘텐츠는 생성되었으나 배포에서 오류가 발생했습니다. 🟡"
+          else
+            echo "::warning title=부분 성공::일부 프로세스가 완료되지 않았습니다. 🟡"
+          fi

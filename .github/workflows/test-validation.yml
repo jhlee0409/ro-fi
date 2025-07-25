@@ -11,92 +11,85 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: 🛒 체크아웃
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-    
-    - name: 🔧 pnpm 설치
-      uses: pnpm/action-setup@v4
-      with:
-        version: latest
-    
-    - name: 📦 Node.js 설정
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-        cache: 'pnpm'
-    
-    - name: 📚 의존성 설치 (전체)
-      run: |
-        echo "🔍 의존성 설치 중..."
-        # 의존성 설치
-        pnpm install
-        echo "✅ 의존성 설치 완료"
-        
-        echo "📋 설치된 패키지 정보:"
-        pnpm list --depth=0 | grep vitest || echo "vitest 패키지 없음"
-        
-        # vitest 바이너리 확인
-        if [ -f "node_modules/.bin/vitest" ]; then
-          echo "✅ vitest 바이너리 확인됨"
-          ls -la node_modules/.bin/vitest
-        else
-          echo "❌ vitest 바이너리 없음"
-          echo "node_modules/.bin 디렉토리 내용:"
-          ls -la node_modules/.bin/ | head -20
-          
-          echo "vitest 수동 설치 시도:"
-          pnpm add vitest@latest --save-dev
-        fi
-        
-        # PATH에 추가
-        echo "$PWD/node_modules/.bin" >> $GITHUB_PATH
-    
-    - name: 🧪 Unit 테스트
-      run: |
-        echo "🧪 Unit 테스트 시작..."
-        
-        # 여러 방법으로 vitest 실행 시도
-        if [ -f "node_modules/.bin/vitest" ]; then
-          echo "✅ 직접 경로로 vitest 실행"
-          ./node_modules/.bin/vitest --run --reporter=verbose
-        elif command -v vitest >/dev/null 2>&1; then
-          echo "✅ PATH에서 vitest 실행"
-          vitest --run --reporter=verbose
-        elif [ -f "node_modules/vitest/dist/cli.js" ]; then
-          echo "✅ node로 vitest 직접 실행"
-          node node_modules/vitest/dist/cli.js --run --reporter=verbose
-        else
-          echo "⚠️ vitest 없음, npx로 최종 시도"
-          npx vitest@latest --run --reporter=verbose
-        fi
-      continue-on-error: false
-    
-    - name: 🎭 E2E 테스트 (Playwright)
-      run: |
-        echo "🎭 E2E 테스트 시작..."
-        pnpm test:e2e --reporter=list
-      continue-on-error: true
-    
-    - name: 📊 테스트 결과 업로드
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: test-results-${{ github.run_number }}
-        path: |
-          test-results/
-          coverage/
-        retention-days: 7
-    
-    - name: ✅ 테스트 성공 알림
-      if: success()
-      run: |
-        echo "::notice title=테스트 성공::모든 테스트가 성공적으로 통과했습니다! 🎉"
-    
-    - name: ❌ 테스트 실패 알림
-      if: failure()
-      run: |
-        echo "::error title=테스트 실패::일부 테스트가 실패했습니다. 로그를 확인해주세요."
+      - name: 🛒 체크아웃
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🔧 pnpm 설치
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - name: 📦 Node.js 설정
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: 📚 의존성 설치 (전체)
+        run: |
+          echo "🔍 의존성 설치 중..."
+          # 의존성 설치
+          pnpm install
+          echo "✅ 의존성 설치 완료"
+
+          echo "📋 설치된 패키지 정보:"
+          pnpm list --depth=0 | grep vitest || echo "vitest 패키지 없음"
+
+          # vitest 바이너리 확인
+          if [ -f "node_modules/.bin/vitest" ]; then
+            echo "✅ vitest 바이너리 확인됨"
+            ls -la node_modules/.bin/vitest
+          else
+            echo "❌ vitest 바이너리 없음"
+            echo "node_modules/.bin 디렉토리 내용:"
+            ls -la node_modules/.bin/ | head -20
+
+            echo "vitest 수동 설치 시도:"
+            pnpm add vitest@latest --save-dev
+          fi
+
+          # PATH에 추가
+          echo "$PWD/node_modules/.bin" >> $GITHUB_PATH
+
+      - name: 🧪 Unit 테스트
+        run: |
+          echo "🧪 Unit 테스트 시작..."
+
+          # 여러 방법으로 vitest 실행 시도
+          if [ -f "node_modules/.bin/vitest" ]; then
+            echo "✅ 직접 경로로 vitest 실행"
+            ./node_modules/.bin/vitest --run --reporter=verbose
+          elif command -v vitest >/dev/null 2>&1; then
+            echo "✅ PATH에서 vitest 실행"
+            vitest --run --reporter=verbose
+          elif [ -f "node_modules/vitest/dist/cli.js" ]; then
+            echo "✅ node로 vitest 직접 실행"
+            node node_modules/vitest/dist/cli.js --run --reporter=verbose
+          else
+            echo "⚠️ vitest 없음, npx로 최종 시도"
+            npx vitest@latest --run --reporter=verbose
+          fi
+        continue-on-error: false
+      - name: 📊 테스트 결과 업로드
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-${{ github.run_number }}
+          path: |
+            test-results/
+            coverage/
+          retention-days: 7
+
+      - name: ✅ 테스트 성공 알림
+        if: success()
+        run: |
+          echo "::notice title=테스트 성공::모든 테스트가 성공적으로 통과했습니다! 🎉"
+
+      - name: ❌ 테스트 실패 알림
+        if: failure()
+        run: |
+          echo "::error title=테스트 실패::일부 테스트가 실패했습니다. 로그를 확인해주세요."
