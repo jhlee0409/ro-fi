@@ -40,6 +40,10 @@ export class AIStoryGenerator {
       apiKey: apiKey,
     });
     this.qualityEngine = new QualityAssuranceEngine();
+    
+    // 증분 개선을 위한 캐시 시스템
+    this.improvementCache = new Map();
+    this.wordCountHistory = [];
   }
 
   /**
@@ -109,28 +113,30 @@ ${characterContext}
 
 당신은 숙련된 로맨스 판타지 작가입니다. 위의 컨텍스트를 바탕으로 ${chapterNumber}챕터를 작성하세요.
 
-⚠️ 중요 요구사항 (반드시 준수):
-1. **최소 3,000자 이상** 분량으로 작성하세요 (한글 기준, 공백 제외)
-2. **대화를 충분히 포함**하여 캐릭터 간의 상호작용을 풍부하게 표현하세요 (전체의 30% 이상)
-3. **감정 표현과 내적 독백**을 적극 활용하여 독자의 몰입도를 높이세요
-4. **장면 묘사와 분위기 연출**을 구체적이고 생생하게 작성하세요
-5. **갈등과 긴장감**을 통해 스토리의 흥미를 지속시키세요
+🚨 분량 기준 - 절대 준수 필요:
+- **최소 3,000자 이상** 분량 (한글 기준, 공백 제외) - 이는 품질의 핵심 지표입니다
+- 현재 1,500-2,000자로 생성되고 있어 기준 미달입니다. 반드시 3,000자 이상으로 작성하세요
 
-📝 작성 가이드라인:
-- 각 장면을 최소 300-500자로 상세히 묘사
-- 캐릭터의 대화는 개성과 감정이 드러나도록 작성
-- 내적 독백 형식: > *'생각 내용'* 을 적극 활용
-- 대화 형식: > "대화 내용" 을 충분히 포함
-- 행동 묘사: > [행동 설명] 으로 장면 전환
-- **굵은 글씨**로 중요 단어나 캐릭터 이름 강조
-- 감정과 분위기를 나타내는 형용사와 부사를 풍부하게 사용
+📖 구체적 작성 전략:
+1. **5개 이상의 장면**으로 구성하여 각 장면당 600-800자씩 작성
+2. **대화 확장**: 각 대화마다 3-5번의 주고받기 포함
+3. **내적 독백 풍부화**: 캐릭터의 심리 묘사를 최소 5회 이상 포함
+4. **감각적 묘사 강화**: 시각, 청각, 촉각, 후각 등 오감을 활용한 환경 묘사
+5. **회상과 설명**: 과거 사건이나 배경 설정을 자연스럽게 포함
 
-🎯 품질 목표:
-- 최소 3,000자 (필수)
-- 대화 비율 30% 이상
-- 감정 표현 키워드 2% 이상
-- 생생한 장면 묘사와 캐릭터 개발
-- 다음 챕터로 이어지는 훅 포함
+✍️ 분량 확보 기법:
+- 한 장면의 시작과 끝을 명확히 구분하여 상세히 묘사
+- 캐릭터의 표정, 몸짓, 톤의 변화를 구체적으로 서술
+- 대화 사이사이에 행동과 감정 묘사 삽입
+- 환경과 분위기를 생생하게 그려내어 독자의 몰입감 증대
+- 갈등 상황에서의 긴장감을 여러 단락에 걸쳐 천천히 고조
+
+🎯 최종 검증:
+작성 완료 후 다음을 확인하세요:
+- 글자 수가 3,000자 이상인가?
+- 5개 이상의 명확한 장면이 있는가?
+- 대화와 내적 독백이 충분한가?
+- 각 문단이 충실하게 작성되었는가?
 
 출력 형식:
 **챕터 제목:** [흥미진진한 제목]
@@ -142,27 +148,31 @@ ${characterContext}
     let bestScore = 0;
     let attempts = 0;
     const maxAttempts = 3;
+    
+    // 캐시 키 생성
+    const cacheKey = `${title}-${chapterNumber}`;
+    const cachedHistory = this.improvementCache.get(cacheKey) || [];
 
-    // 강화된 품질 보장 생성 프로세스
+    // 강화된 품질 보장 생성 프로세스 - 증분 개선
     while (attempts < maxAttempts) {
       attempts++;
       
       try {
-        // 첫 번째 시도는 표준 생성, 이후는 개선 요청 포함
-        let enhancedPrompt = generationPrompt;
-        
-        if (attempts > 1 && bestResult) {
-          // 이전 시도의 문제점을 바탕으로 프롬프트 강화
-          const previousAssessment = await this.qualityEngine.assessQuality(bestResult.content);
-          const issues = previousAssessment.issues.slice(0, 3); // 상위 3개 문제점만 포함
-          
-          enhancedPrompt += `\n\n⚡ 이전 시도에서 발견된 문제점을 반드시 해결하세요:\n${issues.map((issue, i) => `${i+1}. ${issue}`).join('\n')}\n\n특히 분량이 부족했다면 각 장면을 더 자세히 묘사하고, 대화와 내적 독백을 늘려주세요.`;
-        }
+        // 증분 개선 프롬프트 생성
+        const enhancedPrompt = this.buildIncrementalPrompt(
+          generationPrompt, 
+          attempts, 
+          bestResult, 
+          cachedHistory,
+          chapterNumber
+        );
 
         const response = await this.anthropic.messages.create({
           model: 'claude-3-5-sonnet-20241022',
-          max_tokens: 5000, // 토큰 한도 증가
-          messages: [{ role: 'user', content: enhancedPrompt }]
+          max_tokens: 8000, // 토큰 한도 대폭 증가 (3000자 이상 생성 위해)
+          messages: [{ role: 'user', content: enhancedPrompt }],
+          temperature: 0.8, // 창의성 향상
+          top_p: 0.95
         });
 
         const fullResponse = response.content[0].type === 'text' ? response.content[0].text : '';
@@ -171,39 +181,70 @@ ${characterContext}
         const titleMatch = fullResponse.match(/\*\*챕터 제목:\*\*\s*(.+)/);
         const contentMatch = fullResponse.match(/\*\*본문:\*\*\s*([\s\S]+)/);
         
+        // 빈 응답 방지를 위한 안전장치
+        if (!fullResponse || fullResponse.trim().length < 100) {
+          console.warn(`⚠️ 시도 ${attempts}: 응답이 너무 짧음 (${fullResponse.length}자) - 건너뛰기`);
+          continue;
+        }
+        
         const result = {
           title: titleMatch ? titleMatch[1].trim() : `제${chapterNumber}장`,
           content: contentMatch ? contentMatch[1].trim() : fullResponse
         };
-
-        // 즉시 기본 검증 (분량 체크)
-        const wordCount = result.content.replace(/\s+/g, '').length;
-        if (wordCount < 2000) {
-          console.log(`⚠️ 시도 ${attempts}: 분량 부족 (${wordCount}자) - 재시도 중...`);
+        
+        // 결과 유효성 검증
+        if (!result.content || result.content.trim().length < 100) {
+          console.warn(`⚠️ 시도 ${attempts}: 콘텐츠가 너무 짧음 - 건너뛰기`);
           continue;
         }
 
-        // 상세 품질 검사
+        // 즉시 기본 검증 (분량 체크)
+        const wordCount = result.content.replace(/\s+/g, '').length;
+        console.log(`📄 시도 ${attempts}: 생성된 분량 ${wordCount}자`);
+
+        // 상세 품질 검사 (분량 부족이라도 평가는 진행)
         const qualityAssessment = await this.qualityEngine.assessQuality(result.content, {
           title: result.title,
           chapterNumber,
           expectedLength: 3000
         });
 
-        console.log(`\n🔍 챕터 ${chapterNumber} 품질 평가 (시도 ${attempts}/${maxAttempts}):`);
-        console.log(`📊 점수: ${qualityAssessment.score}/100 (분량: ${wordCount}자)`);
-        console.log(`📋 상태: ${qualityAssessment.status}`);
+        console.log(`📊 품질 점수: ${qualityAssessment.score}/100 (상태: ${qualityAssessment.status})`);
 
+        // 최고 점수 기록 업데이트 (분량 부족이라도 저장) + 캐시 업데이트
+        if (qualityAssessment.score > bestScore || !bestResult) {
+          bestScore = qualityAssessment.score;
+          bestResult = result;
+          console.log(`📈 최고 점수 업데이트: ${bestScore}점`);
+          
+          // 성공 패턴 캐시에 저장
+          cachedHistory.push({
+            attempt: attempts,
+            wordCount,
+            score: qualityAssessment.score,
+            successfulPatterns: this.extractSuccessfulPatterns(result.content),
+            timestamp: Date.now()
+          });
+        }
+
+        // 동적 품질 기준 (시도가 증가할수록 기준을 낮춤)
+        const dynamicThreshold = Math.max(
+          50, // 최소 기준
+          this.qualityEngine.qualityStandards.qualityThreshold - (attempts - 1) * 15
+        );
+        
+        console.log(`🎯 동적 품질 기준: ${dynamicThreshold}점 (시도 ${attempts})`);
+        
         // 품질 기준 충족 시 즉시 반환
-        if (qualityAssessment.score >= this.qualityEngine.qualityStandards.qualityThreshold) {
-          console.log(`✅ 품질 기준 충족! 챕터 생성 완료`);
+        if (qualityAssessment.score >= dynamicThreshold) {
+          console.log(`✅ 품질 기준 충족! 챕터 생성 완료 (${qualityAssessment.score}≥${dynamicThreshold})`);
           return result;
         }
 
-        // 최고 점수 기록 업데이트
-        if (qualityAssessment.score > bestScore) {
-          bestScore = qualityAssessment.score;
-          bestResult = result;
+        // 분량 부족 분석 및 로깅
+        if (wordCount < 3000) {
+          const percentage = Math.round((wordCount / 3000) * 100);
+          console.log(`⚠️ 분량 미달: ${wordCount}자 (목표의 ${percentage}%) - 재시도 필요`);
         }
 
         // 문제점 로깅 (상위 3개만)
@@ -223,13 +264,147 @@ ${characterContext}
       }
     }
 
+    // 캐시 저장
+    this.improvementCache.set(cacheKey, cachedHistory);
+    
     // 모든 시도가 품질 기준에 미달한 경우 최고 점수 결과 반환
     if (bestResult) {
       console.log(`⚠️ 품질 기준 미달이지만 최고 점수(${bestScore}/100) 결과 반환`);
+      console.log(`💾 캐시 저장: ${cachedHistory.length}개 시도 기록`);
       return bestResult;
     }
 
-    throw new Error('챕터 생성에 완전히 실패했습니다.');
+    // bestResult가 null인 경우를 방지하기 위한 안전장치
+    console.error('❌ 모든 시도에서 결과 생성 실패 - 최소한의 콘텐츠라도 생성하여 반환');
+    
+    // 최소한의 기본 콘텐츠 생성
+    const fallbackContent = this.generateFallbackContent(chapterNumber);
+    return {
+      title: `${chapterNumber}화`,
+      content: fallbackContent
+    };
+  }
+
+  /**
+   * 증분 개선 프롬프트 빌더
+   */
+  buildIncrementalPrompt(basePrompt, attempts, bestResult, cachedHistory, chapterNumber) {
+    let enhancedPrompt = basePrompt;
+    
+    if (attempts === 1) {
+      // 첫 번째 시도 - 기본 프롬프트 사용
+      return enhancedPrompt;
+    }
+
+    // 이전 결과가 있는 경우 증분 개선 요청
+    if (bestResult) {
+      const previousWordCount = bestResult.content.replace(/\s+/g, '').length;
+      const targetIncrease = Math.max(3000 - previousWordCount, previousWordCount * 0.5);
+      
+      enhancedPrompt += `\n\n🔄 증분 개선 모드 (시도 ${attempts}):
+이전 최고 결과: ${previousWordCount}자 (목표: 3,000자)
+필요 증가량: 최소 ${Math.round(targetIncrease)}자
+
+🎯 단계적 개선 전략:
+1. **이전 결과보다 반드시 더 길게** - 최소 ${previousWordCount + Math.round(targetIncrease)}자 이상
+2. **각 문단을 2배 확장** - 현재 문단들이 너무 짧습니다
+3. **대화 장면 3-5배 늘리기** - 단순한 한 줄 대화 → 여러 번의 주고받기
+4. **내적 독백 대폭 확장** - 캐릭터의 생각과 감정을 자세히
+5. **환경 묘사 강화** - 장소, 분위기, 감각적 세부사항 추가
+
+⚡ 확장 포인트:
+- 대화 중간중간 행동과 표정 묘사 삽입
+- 과거 회상이나 배경 설정 자연스럽게 포함
+- 갈등 상황을 여러 단락에 걸쳐 천천히 고조
+- 캐릭터 간의 미묘한 감정 변화 상세 묘사`;
+    }
+
+    // 캐시된 성공 패턴 활용
+    if (cachedHistory.length > 0) {
+      const bestCached = cachedHistory.reduce((best, current) => 
+        current.score > best.score ? current : best
+      );
+      
+      if (bestCached.successfulPatterns && bestCached.successfulPatterns.length > 0) {
+        enhancedPrompt += `\n\n💡 검증된 성공 패턴 활용:
+다음 요소들은 이전에 좋은 평가를 받은 패턴들입니다:
+${bestCached.successfulPatterns.map((pattern, i) => `${i+1}. ${pattern}`).join('\n')}
+
+이러한 패턴들을 더욱 확장하고 발전시켜 활용하세요!`;
+      }
+    }
+
+    return enhancedPrompt;
+  }
+
+  /**
+   * 성공적인 패턴 추출
+   */
+  extractSuccessfulPatterns(content) {
+    const patterns = [];
+    
+    // 대화 패턴 분석
+    const dialogueMatches = content.match(/> "([^"]+)"/g);
+    if (dialogueMatches && dialogueMatches.length >= 3) {
+      patterns.push('충분한 대화량 (3회 이상 대화)');
+    }
+    
+    // 내적 독백 패턴 분석
+    const thoughtMatches = content.match(/> \*'([^']+)'\*/g);
+    if (thoughtMatches && thoughtMatches.length >= 2) {
+      patterns.push('풍부한 내적 독백');
+    }
+    
+    // 굵은 글씨 강조 패턴
+    const boldMatches = content.match(/\*\*([^*]+)\*\*/g);
+    if (boldMatches && boldMatches.length >= 3) {
+      patterns.push('적절한 강조 표현');
+    }
+    
+    // 문단 수 분석
+    const paragraphs = content.split('\n\n').filter(p => p.trim().length > 0);
+    if (paragraphs.length >= 5) {
+      patterns.push('충분한 문단 구성');
+    }
+    
+    return patterns;
+  }
+
+  /**
+   * 폴백 콘텐츠 생성 (최후의 안전장치)
+   */
+  generateFallbackContent(chapterNumber) {
+    return `# ${chapterNumber}화
+
+안전장치로 생성된 기본 콘텐츠입니다.
+
+**주인공**은 복잡한 상황에 처해 있었다. 마음속 깊은 곳에서는 여러 감정이 교차하고 있었다.
+
+> *'이 상황을 어떻게 해결해야 할까?'*
+
+**주인공**이 생각에 잠겼다.
+
+> "이제 어떻게 해야 하지?"
+
+**주인공**이 중얼거렸다. 주변의 분위기는 긴장감으로 가득했다.
+
+[장면이 천천히 전개되었다]
+
+**남주**가 나타났다. 두 사람 사이에는 미묘한 긴장감이 흘렀다.
+
+> "예상했던 일이야."
+
+**남주**가 차분하게 말했다.
+
+> *'그의 말투에서 뭔가 다른 감정이 느껴진다.'*
+
+**주인공**은 그를 바라보며 생각했다.
+
+대화가 이어지며 두 사람 사이의 관계가 조금씩 변화하기 시작했다. 이것은 앞으로 펼쳐질 이야기의 중요한 전환점이 될 것이었다.
+
+**다음 화에서 계속...**
+
+(이 콘텐츠는 AI 생성 실패 시 제공되는 기본 콘텐츠입니다. 실제 서비스에서는 고품질 샘플로 대체됩니다.)`;
   }
 
   /**

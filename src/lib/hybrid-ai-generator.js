@@ -145,23 +145,32 @@ export class HybridAIGenerator {
       let chapterContent;
       const isHighEmotionalChapter = this.isEmotionallyIntenseChapter(chapterNumber);
       
-      if (isHighEmotionalChapter || emotionalIntensity === 'high') {
-        console.log('💝 Claude로 감정 집중 챕터 생성...');
-        chapterContent = await this.claudeGenerator.generateChapter({
-          ...options,
-          chapterOutline,
-          worldSettings,
-          characterContext,
-          focusOnEmotion: true
-        });
-      } else {
-        // 일반 챕터는 Claude가 기본 생성
-        chapterContent = await this.claudeGenerator.generateChapter({
-          ...options,
-          chapterOutline,
-          worldSettings,
-          characterContext
-        });
+      // 2단계: 감정적 장면 작성 (Claude) - 에러 핸들링 강화
+      try {
+        if (isHighEmotionalChapter || emotionalIntensity === 'high') {
+          console.log('💝 Claude로 감정 집중 챕터 생성...');
+          chapterContent = await this.claudeGenerator.generateChapter({
+            ...options,
+            chapterOutline,
+            worldSettings,
+            characterContext,
+            focusOnEmotion: true
+          });
+        } else {
+          // 일반 챕터는 Claude가 기본 생성
+          console.log('📝 Claude로 일반 챕터 생성...');
+          chapterContent = await this.claudeGenerator.generateChapter({
+            ...options,
+            chapterOutline,
+            worldSettings,
+            characterContext
+          });
+        }
+        
+        console.log(`✅ Claude 생성 성공: ${chapterContent?.content?.length || 0}자`);
+      } catch (claudeError) {
+        console.error('❌ Claude 생성 실패:', claudeError.message);
+        throw new Error(`Claude 챕터 생성 실패: ${claudeError.message}`);
       }
 
       // 3단계: 일관성 검증 (Gemini가 있으면 검증)
