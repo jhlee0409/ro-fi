@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { QualityAssuranceEngine } from './quality-assurance-engine.js';
+import { StoryPacingEngine } from './story-pacing-engine.js';
 
 // PLAN.md에 정의된 로맨스 판타지 트렌드 매트릭스
 const TROPE_PROMPTS = {
@@ -40,6 +41,7 @@ export class AIStoryGenerator {
       apiKey: apiKey,
     });
     this.qualityEngine = new QualityAssuranceEngine();
+    this.pacingEngine = new StoryPacingEngine();
     
     // 증분 개선을 위한 캐시 시스템
     this.improvementCache = new Map();
@@ -133,15 +135,37 @@ ${tropes[i]}:
 - 캐릭터 B 동기: ${detail.motivationB}
 `).join('\n')}
 
-다음 단계로 50챕터 분량 소설의 10단계 플롯 개요를 생성하세요:
+다음 단계로 75챕터 분량 장편 소설의 15단계 플롯 개요를 생성하세요:
 
-1. 먼저 주인공들의 기본 설정과 배경을 정하세요
-2. 각 트렌드가 어떻게 서로 연결될지 분석하세요  
-3. 로맨스 발전 단계를 계획하세요
-4. 갈등의 고조와 해결 과정을 설계하세요
-5. 10단계로 나누어 각 단계별 핵심 사건을 정리하세요
+**장편 스토리 아크 구조 (75챕터)**:
 
-각 단계는 5챕터 정도의 분량으로 계획해주세요.`;
+【1부: 도입부 (1-15챕터)】
+- 1-5: 인물 소개와 세계관 설정
+- 6-10: 첫 만남과 초기 갈등
+- 11-15: 관계의 첫 변화
+
+【2부: 발전부 (16-35챕터)】
+- 16-20: 서브플롯 도입
+- 21-25: 감정의 깊어짐과 내적 갈등
+- 26-30: 외부 위협/장애물 등장
+- 31-35: 첫 번째 위기와 극복
+
+【3부: 절정부 (36-55챕터)】
+- 36-40: 관계의 전환점
+- 41-45: 최대 갈등과 오해
+- 46-50: 비밀의 폭로
+- 51-55: 이별/위기의 정점
+
+【4부: 해결부 (56-75챕터)】
+- 56-60: 진실의 발견
+- 61-65: 재회와 화해
+- 66-70: 최종 시련
+- 71-75: 해피엔딩과 에필로그
+
+**중요**: 
+- 로맨스는 점진적으로 발전 (급격한 전환 금지)
+- 각 부마다 서브플롯으로 긴장감 유지
+- 감정선의 롤러코스터 구현`;
 
     const response = await this.anthropicWithRetry({
       model: 'claude-3-5-sonnet-20241022',
@@ -158,13 +182,32 @@ ${tropes[i]}:
    * @returns {Promise<{title: string, content: string}>}
    */
   async generateChapter(options) {
-    const { title, tropes, chapterNumber = 1, previousContext = '', characterContext = '', plotOutline = '' } = options;
+    const { title, tropes, chapterNumber = 1, previousContext = '', characterContext = '', plotOutline = '', currentRomanceLevel = null } = options;
+    
+    // 페이싱 가이드라인 생성
+    const pacingGuideline = this.pacingEngine.generateChapterGuideline(
+      chapterNumber, 
+      { 
+        romanceLevel: currentRomanceLevel,
+        tropes: tropes 
+      }
+    );
     
     const contextPrompt = `
 **소설 정보:**
 - 제목: ${title}
 - 적용 트렌드: ${tropes.join(', ')}
-- 챕터 번호: ${chapterNumber}
+- 챕터 번호: ${chapterNumber} / 75챕터
+
+**스토리 진행 가이드라인:**
+- 현재 단계: ${pacingGuideline.stage} - ${pacingGuideline.romanceGuideline.description}
+- 로맨스 목표 레벨: ${pacingGuideline.romanceGuideline.targetLevel}% 
+- 핵심 요소: ${pacingGuideline.romanceGuideline.keyElements.join(', ')}
+- 감정 톤: ${pacingGuideline.emotionalTone}
+- 긴장감 레벨: ${pacingGuideline.tensionLevel}/100
+
+**서브플롯 가이드:**
+- 추천 서브플롯: ${pacingGuideline.subplotGuideline.recommended.join(', ')}
 
 **플롯 개요:**
 ${plotOutline}
@@ -181,19 +224,25 @@ ${characterContext}
 
 로맨스 판타지 전문 작가로서 ${chapterNumber}챕터를 작성해주세요.
 
-**분량**: 최소 3,000자 (공백 제외) - 반드시 달성해야 합니다
+**분량**: 1,500-2,000자 (공백 제외) - 일관된 분량 유지
 
 **구성**: 
-- 6-8개 장면으로 구성하여 각 장면을 충분히 길게 작성 (각 400-500자)
+- 4-5개 장면으로 구성하여 각 장면을 충분히 길게 작성 (각 350-400자)
 - 대화와 행동 묘사를 풍부하게 포함
 - 내적 독백으로 캐릭터의 심리를 깊이 있게 표현
 - 환경과 분위기를 5감을 활용해 생생하게 묘사
 
 **중요**: 짧게 요약하지 말고, 각 장면을 충분히 길고 상세하게 작성해주세요!
 
+**챕터 제목 요구사항**:
+- 해당 챕터의 핵심 내용을 반영한 매력적인 제목
+- 독자의 호기심을 자극하는 구체적이고 감성적인 표현
+- 단순한 "제X장" 형식 사용 금지
+- 예시: "빗속의 고백", "운명의 첫 만남", "금지된 마음의 시작" 등
+
 **출력 형식**:
-**챕터 제목:** [제목]
-**본문:** [3,000자 이상의 완전한 스토리]`;
+**챕터 제목:** [매력적이고 구체적인 제목]
+**본문:** [1,500-2,000자의 완전한 스토리]`;
 
     let bestResult = null;
     let bestScore = 0;
@@ -265,7 +314,7 @@ ${characterContext}
         const qualityAssessment = await this.qualityEngine.assessQuality(result.content, {
           title: result.title,
           chapterNumber,
-          expectedLength: 4000
+          expectedLength: 1750
         });
 
         console.log(`📊 품질 점수: ${qualityAssessment.score}/100 (상태: ${qualityAssessment.status})`);
@@ -286,8 +335,8 @@ ${characterContext}
           });
         }
 
-        // 첫 시도에서 4000자 이상 달성 시 즉시 반환, 아니면 재시도
-        if (attempts === 1 && wordCount >= 4000) {
+        // 첫 시도에서 목표 분량 달성 시 즉시 반환
+        if (attempts === 1 && wordCount >= 1500 && wordCount <= 2000) {
           console.log(`🎉 첫 시도 성공! 목표 분량 달성: ${wordCount}자`);
           return result;
         }
@@ -300,28 +349,29 @@ ${characterContext}
         
         console.log(`🎯 동적 품질 기준: ${dynamicThreshold}점 (시도 ${attempts})`);
         
-        // 3000자 이상이면 즐시 성공 처리
-        if (wordCount >= 3000) {
+        // 목표 범위 내면 즉시 성공 처리
+        if (wordCount >= 1500 && wordCount <= 2000) {
           console.log(`🎉 목표 분량 달성! 챕터 생성 완료: ${wordCount}자`);
           return result;
         }
         
-        // 2000자 이상 + 품질 기준 충족
-        if (wordCount >= 2000 && qualityAssessment.score >= dynamicThreshold) {
+        // 허용 범위 (±200자) + 품질 기준 충족
+        if (wordCount >= 1300 && wordCount <= 2200 && qualityAssessment.score >= dynamicThreshold) {
           console.log(`✅ 성공! 챕터 생성 완료: ${wordCount}자 (품질: ${qualityAssessment.score}점)`);
           return result;
         }
         
-        // 최종 시도에서는 1500자 이상이면 성공
-        if (attempts === maxAttempts && wordCount >= 1500) {
+        // 최종 시도에서는 1200자 이상이면 성공
+        if (attempts === maxAttempts && wordCount >= 1200) {
           console.log(`✅ 최종 시도 성공: ${wordCount}자`);
           return result;
         }
 
         // 분량 체크
-        if (wordCount < 3000) {
-          const percentage = Math.round((wordCount / 3000) * 100);
-          console.log(`⚠️ 분량 미달: ${wordCount}자 (목표의 ${percentage}%)`);
+        if (wordCount < 1500 || wordCount > 2000) {
+          const targetWords = 1750;
+          const percentage = Math.round((wordCount / targetWords) * 100);
+          console.log(`⚠️ 분량 범위 벗어남: ${wordCount}자 (목표의 ${percentage}%)`);
         } else {
           console.log(`✅ 분량 충족: ${wordCount}자`);
         }
@@ -371,14 +421,14 @@ ${characterContext}
     let enhancedPrompt = basePrompt;
     
     if (attempts === 1) {
-      // 첫 번째 시도 - 3000자 목표를 더 명확히 지시
+      // 첫 번째 시도 - 목표 분량 명확히 지시
       enhancedPrompt = enhancedPrompt.replace(
-        '🚨 **절대 분량 요구사항**: 정확히 3,500~4,000자 (공백 제외) 작성',
-        `🚨 **절대 분량 요구사항**: 정확히 4,000자 이상 (공백 제외) 작성
+        '🚨 **절대 분량 요구사항**: 정확히 1,500~2,000자 (공백 제외) 작성',
+        `🚨 **절대 분량 요구사항**: 정확히 1,500~2,000자 (공백 제외) 작성
 
 ⚡ **첫 시도 특별 지침**:
-- 7개 장면 × 600자 = 4,200자 목표
-- 각 장면을 충분히 상세하게 확장하여 작성
+- 4-5개 장면 × 400자 = 1,600~2,000자 목표
+- 각 장면을 충분히 상세하게 작성
 - 대화, 행동, 심리, 환경 묘사를 풍부하게 포함
 - 절대 요약이나 압축하지 말고 완전한 서술로 작성`
       );
@@ -388,7 +438,7 @@ ${characterContext}
     // 이전 결과가 있는 경우 - 컨텍스트 주입 방식으로 변경
     if (bestResult) {
       const previousWordCount = bestResult.content.replace(/\s+/g, '').length;
-      const targetIncrease = Math.max(4000 - previousWordCount, 1000);
+      const targetIncrease = Math.max(1750 - previousWordCount, 250);
       
       // 기존 내용을 컨텍스트로 제공하고 확장 요청
       enhancedPrompt = `🔄 **컨텍스트 인식 확장 모드 ${attempts}차**
@@ -404,7 +454,7 @@ ${bestResult.content}
 🚨 **핵심 요구사항**:
 1. 기존 스토리의 **모든 중요 요소들을 보존**하면서 확장
 2. 캐릭터, 대화, 상황, 감정의 **연속성과 일관성** 유지
-3. 목표 분량: **4,000자 이상** (현재 ${previousWordCount}자에서 ${targetIncrease}자 이상 확장)
+3. 목표 분량: **1,500-2,000자** (현재 ${previousWordCount}자에서 조정)
 4. 기존 장면들을 더 **세밀하고 풍부하게** 재구성
 
 📝 **확장 전략**:
@@ -415,8 +465,8 @@ ${bestResult.content}
 - 로맨틱 긴장감과 스토리의 몰입도 강화
 
 ⚡ **출력 형식**:
-**챕터 제목:** [기존 제목 또는 개선된 제목]
-**본문:** [기존 내용을 모두 포함하되 4,000자 이상으로 풍부하게 확장된 완전한 챕터]
+**챕터 제목:** [챕터의 핵심 내용을 반영한 매력적이고 구체적인 제목 - "제X장" 형식 금지]
+**본문:** [기존 내용을 조정하여 1,500-2,000자로 완성된 챕터]
 
 💡 **중요**: 기존 스토리를 요약하거나 생략하지 말고, 모든 요소를 포함하면서 더 풍부하게 확장해주세요.`;
     }
@@ -491,7 +541,7 @@ ${improvementCriteria.map((criteria, i) => `${i + 1}. ${criteria}`).join('\n')}
     const critique = critiqueResponse.content[0].type === 'text' ? critiqueResponse.content[0].text : '';
 
     const currentWordCount = originalChapter.replace(/\s+/g, '').length;
-    const targetWordCount = Math.max(4000, currentWordCount + 1000); // 최소 1000자 확장
+    const targetWordCount = 1750; // 목표 1,750자
     
     const improvementPrompt = `🔧 **CRITICAL: 기존 챕터 확장 작업** - 삭제/수정 절대 금지
 

@@ -8,13 +8,14 @@
 export class QualityAssuranceEngine {
   constructor() {
     this.qualityStandards = {
-      minWordCount: 3000,           // 최소 3,000자
-      maxWordCount: 6000,           // 최대 6,000자
-      minSentences: 20,             // 최소 20문장
-      maxParagraphs: 15,            // 최대 15문단
-      dialogueRatio: 0.25,          // 대화 비율 25% 이상 (조정)
-      emotionKeywordDensity: 0.015, // 감정 키워드 밀도 1.5% (조정)
-      qualityThreshold: 80          // 품질 점수 80점 이상 (조정)
+      minWordCount: 1500,           // 최소 1,500자 (권장사항 반영)
+      maxWordCount: 2000,           // 최대 2,000자 (권장사항 반영)
+      targetWordCount: 1750,        // 목표 1,750자 (중간값)
+      minSentences: 15,             // 최소 15문장 (비례 조정)
+      maxParagraphs: 10,            // 최대 10문단 (비례 조정)
+      dialogueRatio: 0.25,          // 대화 비율 25% 이상
+      emotionKeywordDensity: 0.02,  // 감정 키워드 밀도 2% (증가)
+      qualityThreshold: 85          // 품질 점수 85점 이상 (상향)
     };
 
     // 디지털 소울메이트 품질 기준에서 추출한 우수 패턴

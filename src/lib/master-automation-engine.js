@@ -43,6 +43,10 @@ export class MasterAutomationEngine {
       qualityThreshold: 80,
       autoComplete: true,
       autoCreateNew: true,
+      
+      // 일일 챕터 생성 제한 (권장사항 반영)
+      dailyChapterLimit: 2, // 일일 최대 2개 챕터 (기존 2-4개에서 감소)
+      priorityQualityOverQuantity: true, // 품질 > 양 우선순위
 
       // v2.1 창의성 모드 설정
       creativityMode: {
@@ -52,8 +56,36 @@ export class MasterAutomationEngine {
         qualityPriority: true,
       },
     };
+    
+    // 일일 생성 추적
+    this.dailyGeneration = {
+      date: new Date().toDateString(),
+      chaptersGenerated: 0,
+      novels: new Set()
+    };
   }
 
+  // 일일 제한 체크 및 리셋
+  checkAndResetDailyLimit() {
+    const today = new Date().toDateString();
+    if (this.dailyGeneration.date !== today) {
+      // 날짜가 바뀌면 카운터 리셋
+      this.dailyGeneration = {
+        date: today,
+        chaptersGenerated: 0,
+        novels: new Set()
+      };
+      console.log('📅 새로운 날: 일일 챕터 생성 카운터 리셋');
+    }
+  }
+  
+  // 챕터 생성 카운트 증가
+  incrementDailyCount(novelSlug) {
+    this.dailyGeneration.chaptersGenerated++;
+    this.dailyGeneration.novels.add(novelSlug);
+    console.log(`📊 일일 생성 현황: ${this.dailyGeneration.chaptersGenerated}/${this.automationConfig.dailyChapterLimit} 챕터`);
+  }
+  
   // 환경별 AI 생성기 생성
   createAIGenerator() {
     const shouldMock = shouldMockAIService() || this.dryRun === true;
@@ -134,6 +166,18 @@ export class MasterAutomationEngine {
     console.log('🚀 마스터 자동화 엔진 시작...');
 
     try {
+      // 일일 제한 체크
+      this.checkAndResetDailyLimit();
+      
+      if (this.dailyGeneration.chaptersGenerated >= this.automationConfig.dailyChapterLimit) {
+        console.log(`⚠️ 일일 챕터 생성 제한 도달: ${this.dailyGeneration.chaptersGenerated}/${this.automationConfig.dailyChapterLimit}`);
+        return {
+          success: true,
+          action: 'daily_limit_reached',
+          message: `오늘의 챕터 생성 제한(${this.automationConfig.dailyChapterLimit}개)에 도달했습니다.`
+        };
+      }
+      
       // 1단계: 현재 상황 분석
       const situation = await this.analyzeSituation();
 
@@ -568,6 +612,9 @@ export class MasterAutomationEngine {
 
         const finalContent = bestResult.content;
 
+        // 일일 생성 카운트 증가
+        this.incrementDailyCount(novelSlug);
+        
         return {
           frontmatter: {
             title: bestResult.title || `${chapterNumber}화`,
