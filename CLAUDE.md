@@ -10,6 +10,8 @@ Prompt enhancement: If user's prompt starts with "EP:", read PROMPT_ENHANCER.md 
 
 Token optimization: For complex tasks, consider using `gemini -p "{prompt content}"` for initial task organization to save tokens.
 
+항상 기능을 구현하기 전에 테스트코드를 완벽하게 짜고 레드-그린 테스트 진행해줘
+
 ## Project Overview
 
 ro-fan is an AI-powered romance fantasy novel platform that combines modern web technologies with sophisticated AI automation for fully automated story creation and publishing.

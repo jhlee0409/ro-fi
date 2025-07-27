@@ -8,7 +8,7 @@ import { TokenBalancingEngine } from './token-balancing-engine.js';
 import { QualityAssuranceEngine } from './quality-assurance-engine.js';
 import { createStoryGenerator } from './ai-story-generator.js';
 import { createHybridGenerator } from './hybrid-ai-generator.js';
-// import { getQualitySample } from './high-quality-samples.js'; // 잘못된 장르 문제로 비활성화
+import { PlatformConfigEngine, printPlatformSummary } from './platform-config-engine.js';
 import { shouldMockAIService, debugEnvironment, getEnvironmentInfo } from './environment.js';
 import { promises as fs } from 'fs';
 import { join } from 'path';
@@ -20,11 +20,18 @@ export class MasterAutomationEngine {
     this.chaptersDir = join(contentDir, 'chapters');
     this.dryRun = false; // 드라이런 모드 플래그
 
+    // 플랫폼 설정 초기화
+    this.platformConfig = new PlatformConfigEngine();
+    const platform = process.env.PLATFORM_MODE || 'default';
+    if (platform !== 'default') {
+      this.platformConfig.setPlatform(platform);
+    }
+
     this.novelDetector = new NovelDetector(this.novelsDir, this.chaptersDir);
     this.storyEngine = new StoryDiversityEngine();
     this.emotionEngine = new EmotionalDepthEngine();
     this.completionEngine = new CompletionCriteriaEngine();
-    this.qualityEngine = new QualityAssuranceEngine();
+    this.qualityEngine = new QualityAssuranceEngine(platform);
 
     // v2.1 창의성 우선 모드 엔진들
     this.creativityEngine = new CreativityModeEngine();

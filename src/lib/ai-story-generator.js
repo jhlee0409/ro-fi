@@ -1,6 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { QualityAssuranceEngine } from './quality-assurance-engine.js';
 import { StoryPacingEngine } from './story-pacing-engine.js';
+import { CharacterVoiceEngine } from './character-voice-engine.js';
+import { PlatformConfigEngine } from './platform-config-engine.js';
 
 // PLAN.md에 정의된 로맨스 판타지 트렌드 매트릭스
 const TROPE_PROMPTS = {
@@ -36,12 +38,21 @@ const TROPE_PROMPTS = {
  */
 
 export class AIStoryGenerator {
-  constructor(apiKey) {
+  constructor(apiKey, platform = null) {
     this.anthropic = new Anthropic({
       apiKey: apiKey,
     });
-    this.qualityEngine = new QualityAssuranceEngine();
+    
+    // 플랫폼 설정 초기화
+    this.platformConfig = new PlatformConfigEngine();
+    if (platform) {
+      this.platformConfig.setPlatform(platform);
+    }
+    
+    // 플랫폼별 엔진 초기화
+    this.qualityEngine = new QualityAssuranceEngine(platform);
     this.pacingEngine = new StoryPacingEngine();
+    this.voiceEngine = new CharacterVoiceEngine();
     
     // 증분 개선을 위한 캐시 시스템
     this.improvementCache = new Map();
@@ -193,6 +204,10 @@ ${tropes[i]}:
       }
     );
     
+    // 캐릭터 보이스 가이드라인 생성
+    const romanceLevel = currentRomanceLevel || pacingGuideline.romanceGuideline.targetLevel;
+    const voiceGuideline = this.voiceEngine.generateVoiceGuideline(romanceLevel, chapterNumber);
+    
     const contextPrompt = `
 **소설 정보:**
 - 제목: ${title}
@@ -209,6 +224,23 @@ ${tropes[i]}:
 **서브플롯 가이드:**
 - 추천 서브플롯: ${pacingGuideline.subplotGuideline.recommended.join(', ')}
 
+**캐릭터 보이스 가이드라인:**
+- 관계 단계: ${voiceGuideline.relationshipStage} (로맨스 ${romanceLevel}%)
+- 라이아 말투: ${voiceGuideline.characters.protagonist.voice.tone}
+  * 호칭: ${voiceGuideline.characters.protagonist.voice.pronouns}
+  * 어미: ${voiceGuideline.characters.protagonist.voice.endings}
+  * 핵심 어휘: ${voiceGuideline.characters.protagonist.voice.vocabulary.join(', ')}
+- 카이런 말투: ${voiceGuideline.characters.male_lead.voice.tone}
+  * 호칭: ${voiceGuideline.characters.male_lead.voice.pronouns}
+  * 어미: ${voiceGuideline.characters.male_lead.voice.endings}
+  * 핵심 어휘: ${voiceGuideline.characters.male_lead.voice.vocabulary.join(', ')}
+- 상호작용 스타일: ${voiceGuideline.interactionGuidelines.style}
+
+**중요 - 캐릭터 일관성 규칙:**
+- 이름: 라이아(주인공), 카이런(남주) - 절대 변경 금지
+- 허용 톤: ${voiceGuideline.interactionGuidelines.allowedTones.join(', ')}
+- 금지 요소: ${voiceGuideline.interactionGuidelines.forbiddenElements.join(', ')}
+
 **플롯 개요:**
 ${plotOutline}
 
@@ -219,20 +251,31 @@ ${previousContext}
 ${characterContext}
 `;
 
-    // 간단하고 명확한 프롬프트
+    // 플랫폼별 프롬프트 가이드라인 생성
+    const platformGuidelines = this.platformConfig.generatePromptGuidelines();
+    const platformMetadata = this.platformConfig.generateMetadata();
+    
+    // 플랫폼 최적화된 프롬프트
     const generationPrompt = `${contextPrompt}
 
 로맨스 판타지 전문 작가로서 ${chapterNumber}챕터를 작성해주세요.
 
-**분량**: 1,500-2,000자 (공백 제외) - 일관된 분량 유지
+**🎯 플랫폼 최적화**: ${platformMetadata.platformName}
+${platformGuidelines.platformNote}
 
-**구성**: 
-- 4-5개 장면으로 구성하여 각 장면을 충분히 길게 작성 (각 350-400자)
+**📏 분량 요구사항**: ${platformGuidelines.wordCountGuideline}
+
+**🎨 구성 가이드**: 
+${platformGuidelines.structureGuideline}
 - 대화와 행동 묘사를 풍부하게 포함
 - 내적 독백으로 캐릭터의 심리를 깊이 있게 표현
 - 환경과 분위기를 5감을 활용해 생생하게 묘사
 
-**중요**: 짧게 요약하지 말고, 각 장면을 충분히 길고 상세하게 작성해주세요!
+**✨ 스타일 지침**: ${platformGuidelines.styleGuideline}
+
+**🏆 품질 기준**: ${platformGuidelines.qualityGuideline}
+
+**중요**: ${this.getPlatformSpecificInstructions(platformMetadata.platform)}
 
 **챕터 제목 요구사항**:
 - 해당 챕터의 핵심 내용을 반영한 매력적인 제목
@@ -584,6 +627,42 @@ ${originalChapter}
   }
 
   /**
+   * 플랫폼별 특별 지침 생성
+   */
+  getPlatformSpecificInstructions(platform) {
+    const instructions = {
+      default: "모바일 독자를 위한 읽기 편한 구성으로 각 장면을 충분히 길고 상세하게 작성하세요.",
+      
+      naver: "감정적 몰입도를 극대화하고 다음 화에 대한 강한 기대감을 조성하세요. 20-40대 여성 독자가 공감할 수 있는 섬세한 감정 표현을 중시하세요.",
+      
+      munpia: "소설 애호가들을 위한 깊이 있는 묘사와 세밀한 심리 분석을 포함하세요. 세계관과 캐릭터의 복잡성을 충분히 탐구하며 상세한 환경 묘사를 강화하세요.",
+      
+      ridibooks: "프리미엄 독자를 위한 완성도 높은 서술과 세련된 표현을 사용하세요. 편집 품질과 일관성을 최우선으로 하며 균형잡힌 스토리텔링을 구현하세요."
+    };
+    
+    return instructions[platform] || instructions.default;
+  }
+  
+  /**
+   * 플랫폼 설정 변경
+   */
+  setPlatform(platform) {
+    if (this.platformConfig.setPlatform(platform)) {
+      // 품질 엔진도 플랫폼에 맞게 재설정
+      this.qualityEngine = new QualityAssuranceEngine(platform);
+      return true;
+    }
+    return false;
+  }
+  
+  /**
+   * 현재 플랫폼 정보 조회
+   */
+  getPlatformInfo() {
+    return this.platformConfig.generateMetadata();
+  }
+
+  /**
    * 캐릭터 설정 생성
    */
   async generateCharacterProfiles(title, tropes) {
@@ -612,14 +691,24 @@ ${originalChapter}
   }
 }
 
-// 환경 변수에서 API 키를 가져오는 헬퍼 함수
+// 환경 변수에서 API 키와 플랫폼을 가져오는 헬퍼 함수
 export function createStoryGenerator() {
   const apiKey = process.env.ANTHROPIC_API_KEY;
+  const platform = process.env.PLATFORM_MODE || 'default';
   
   if (!apiKey) {
     console.warn('ANTHROPIC_API_KEY not found in environment variables');
     return null;
   }
   
-  return new AIStoryGenerator(apiKey);
+  const generator = new AIStoryGenerator(apiKey, platform);
+  
+  // 플랫폼 정보 출력
+  if (platform !== 'default') {
+    const platformInfo = generator.getPlatformInfo();
+    console.log(`🎯 플랫폼 모드: ${platformInfo.platformName}`);
+    console.log(`📏 목표 분량: ${platformInfo.targetWordCount}자 (공백 제외)`);
+  }
+  
+  return generator;
 }

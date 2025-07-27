@@ -1,0 +1,230 @@
+# Cypress E2E Testing Workflow
+name: Cypress E2E Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch: # 수동 실행 허용
+    inputs:
+      browser:
+        description: 'Browser to run tests in'
+        required: false
+        default: 'chrome'
+        type: choice
+        options:
+          - chrome
+          - firefox
+          - edge
+      spec:
+        description: 'Specific spec file to run (optional)'
+        required: false
+        type: string
+
+jobs:
+  cypress-e2e:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        browser: [chrome, firefox]
+        # 병렬 실행을 위한 스펙 분할 (선택적)
+        spec-group: [1, 2]
+    
+    steps:
+      - name: 🛒 체크아웃 코드
+        uses: actions/checkout@v4
+
+      - name: 🔧 Node.js + pnpm 환경 설정
+        uses: ./.github/actions/setup-node-pnpm
+        with:
+          install-deps: 'true'
+
+      - name: 📦 Cypress 바이너리 캐시
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/Cypress
+          key: cypress-${{ runner.os }}-${{ hashFiles('package.json') }}
+          restore-keys: |
+            cypress-${{ runner.os }}-
+
+      - name: 🏗️ Astro 프로젝트 빌드
+        run: pnpm build
+
+      - name: 🚀 Astro 개발 서버 시작 (백그라운드)
+        run: |
+          pnpm dev &
+          sleep 30 # 서버 시작 대기
+        env:
+          NODE_ENV: test
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: 🔍 서버 상태 확인
+        run: |
+          curl --retry 10 --retry-delay 3 --retry-connrefused http://localhost:4321
+          echo "✅ Astro 서버가 정상적으로 시작되었습니다"
+
+      - name: 🧪 Cypress E2E 테스트 실행
+        uses: cypress-io/github-action@v6
+        with:
+          browser: ${{ matrix.browser }}
+          spec: |
+            ${{ github.event.inputs.spec || 
+                (matrix.spec-group == 1 && 'cypress/e2e/homepage.cy.ts,cypress/e2e/novels.cy.ts' ||
+                 'cypress/e2e/novel-detail.cy.ts,cypress/e2e/automation-workflow.cy.ts,cypress/e2e/platform-optimization.cy.ts') }}
+          config: baseUrl=http://localhost:4321
+          wait-on: 'http://localhost:4321'
+          wait-on-timeout: 120
+          install: false # 이미 설치됨
+        env:
+          # Cypress 환경 변수
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+          CYPRESS_PROJECT_ID: ${{ secrets.CYPRESS_PROJECT_ID }}
+          # 애플리케이션 환경 변수
+          NODE_ENV: test
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          # 테스트 설정
+          CYPRESS_MOCK_AI: true
+          CYPRESS_PLATFORM_MODE: default
+
+      - name: 📊 테스트 결과 업로드
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-screenshots-videos-${{ matrix.browser }}-${{ matrix.spec-group }}
+          path: |
+            cypress/screenshots
+            cypress/videos
+          retention-days: 7
+
+      - name: 📈 커버리지 리포트 업로드
+        uses: codecov/codecov-action@v4
+        if: matrix.browser == 'chrome' && matrix.spec-group == 1
+        with:
+          files: ./coverage/lcov.info
+          flags: e2e
+          name: cypress-e2e-coverage
+          fail_ci_if_error: false
+
+  cypress-component:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 🛒 체크아웃 코드
+        uses: actions/checkout@v4
+
+      - name: 🔧 Node.js + pnpm 환경 설정
+        uses: ./.github/actions/setup-node-pnpm
+        with:
+          install-deps: 'true'
+
+      - name: 🧪 Cypress 컴포넌트 테스트 실행
+        uses: cypress-io/github-action@v6
+        with:
+          component: true
+          browser: chrome
+          install: false
+        env:
+          NODE_ENV: test
+
+      - name: 📊 컴포넌트 테스트 결과 업로드
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-component-screenshots
+          path: cypress/screenshots
+          retention-days: 7
+
+  accessibility-tests:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 🛒 체크아웃 코드
+        uses: actions/checkout@v4
+
+      - name: 🔧 Node.js + pnpm 환경 설정
+        uses: ./.github/actions/setup-node-pnpm
+        with:
+          install-deps: 'true'
+
+      - name: 🏗️ Astro 프로젝트 빌드
+        run: pnpm build
+
+      - name: 🚀 Astro 개발 서버 시작
+        run: |
+          pnpm dev &
+          sleep 30
+
+      - name: ♿ 접근성 테스트 실행
+        uses: cypress-io/github-action@v6
+        with:
+          browser: chrome
+          spec: cypress/e2e/**/*.cy.ts
+          config: |
+            baseUrl=http://localhost:4321,
+            env: {
+              accessibility_test_only: true
+            }
+          install: false
+        env:
+          NODE_ENV: test
+          CYPRESS_ACCESSIBILITY_ONLY: true
+
+      - name: 📊 접근성 리포트 생성
+        run: |
+          echo "접근성 테스트 완료" > accessibility-report.txt
+          echo "위반 사항: ${{ steps.cypress.outputs.violations || '0' }}" >> accessibility-report.txt
+
+      - name: 📈 접근성 리포트 업로드
+        uses: actions/upload-artifact@v4
+        with:
+          name: accessibility-report
+          path: accessibility-report.txt
+
+  test-summary:
+    runs-on: ubuntu-latest
+    needs: [cypress-e2e, cypress-component, accessibility-tests]
+    if: always()
+    
+    steps:
+      - name: 📋 테스트 결과 요약
+        run: |
+          echo "## 🧪 Cypress E2E 테스트 결과" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| 테스트 유형 | 상태 |" >> $GITHUB_STEP_SUMMARY
+          echo "|------------|------|" >> $GITHUB_STEP_SUMMARY
+          echo "| E2E 테스트 | ${{ needs.cypress-e2e.result == 'success' && '✅ 성공' || '❌ 실패' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 컴포넌트 테스트 | ${{ needs.cypress-component.result == 'success' && '✅ 성공' || '❌ 실패' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 접근성 테스트 | ${{ needs.accessibility-tests.result == 'success' && '✅ 성공' || '❌ 실패' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ needs.cypress-e2e.result }}" == "success" && 
+                "${{ needs.cypress-component.result }}" == "success" && 
+                "${{ needs.accessibility-tests.result }}" == "success" ]]; then
+            echo "🎉 모든 Cypress 테스트가 성공적으로 완료되었습니다!" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ 일부 테스트가 실패했습니다. 로그를 확인해주세요." >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: 💬 PR 코멘트 (실패 시)
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 🧪 Cypress E2E 테스트 실패
+              
+              일부 E2E 테스트가 실패했습니다. 자세한 내용은 [Actions 탭](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})에서 확인해주세요.
+              
+              ### 실패한 테스트:
+              - E2E 테스트: ${{ needs.cypress-e2e.result }}
+              - 컴포넌트 테스트: ${{ needs.cypress-component.result }}
+              - 접근성 테스트: ${{ needs.accessibility-tests.result }}
+              
+              스크린샷과 비디오는 아티팩트에서 다운로드할 수 있습니다.`
+            })

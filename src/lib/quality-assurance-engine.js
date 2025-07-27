@@ -5,18 +5,24 @@
  * 일관되게 고품질 결과물을 보장합니다.
  */
 
+import { CharacterVoiceEngine } from './character-voice-engine.js';
+import { PlatformConfigEngine } from './platform-config-engine.js';
+
 export class QualityAssuranceEngine {
-  constructor() {
-    this.qualityStandards = {
-      minWordCount: 1500,           // 최소 1,500자 (권장사항 반영)
-      maxWordCount: 2000,           // 최대 2,000자 (권장사항 반영)
-      targetWordCount: 1750,        // 목표 1,750자 (중간값)
-      minSentences: 15,             // 최소 15문장 (비례 조정)
-      maxParagraphs: 10,            // 최대 10문단 (비례 조정)
-      dialogueRatio: 0.25,          // 대화 비율 25% 이상
-      emotionKeywordDensity: 0.02,  // 감정 키워드 밀도 2% (증가)
-      qualityThreshold: 85          // 품질 점수 85점 이상 (상향)
-    };
+  constructor(platform = null) {
+    // 플랫폼 설정 엔진 초기화
+    this.platformConfig = new PlatformConfigEngine();
+    if (platform) {
+      this.platformConfig.setPlatform(platform);
+    }
+    
+    // 플랫폼별 품질 기준 적용
+    this.qualityStandards = this.platformConfig.getQualityStandards();
+    
+    // 기본 품질 패턴은 유지 (플랫폼 공통)
+    
+    // 캐릭터 보이스 엔진 초기화
+    this.voiceEngine = new CharacterVoiceEngine();
 
     // 디지털 소울메이트 품질 기준에서 추출한 우수 패턴
     this.qualityPatterns = {
@@ -91,14 +97,18 @@ export class QualityAssuranceEngine {
     
     // 5. 창의성 검사
     const creativityScore = this.checkCreativity(content, assessment);
+    
+    // 6. 캐릭터 일관성 검사 (신규 추가)
+    const characterScore = await this.checkCharacterConsistency(content, metadata, assessment);
 
-    // 종합 점수 계산 (가중 평균)
+    // 종합 점수 계산 (가중 평균, 캐릭터 일관성 추가)
     assessment.score = Math.round(
-      (structureScore * 0.2) +
-      (languageScore * 0.3) +
+      (structureScore * 0.15) +
+      (languageScore * 0.25) +
       (storyScore * 0.2) +
-      (emotionScore * 0.2) +
-      (creativityScore * 0.1)
+      (emotionScore * 0.15) +
+      (creativityScore * 0.1) +
+      (characterScore * 0.15)  // 캐릭터 일관성 15% 비중
     );
 
     // 품질 상태 결정 (조정된 기준)
@@ -111,6 +121,67 @@ export class QualityAssuranceEngine {
     }
 
     return assessment;
+  }
+  
+  /**
+   * 캐릭터 일관성 검사 (신규 추가)
+   */
+  async checkCharacterConsistency(content, metadata, assessment) {
+    let score = 100;
+    
+    try {
+      // 로맨스 레벨과 챕터 번호에서 캐릭터 보이스 가이드라인 생성
+      const romanceLevel = metadata.romanceLevel || this.estimateRomanceLevel(metadata.chapterNumber || 1);
+      const chapterNumber = metadata.chapterNumber || 1;
+      
+      const voiceGuideline = this.voiceEngine.generateVoiceGuideline(romanceLevel, chapterNumber);
+      const consistencyCheck = this.voiceEngine.checkVoiceConsistency(content, voiceGuideline);
+      
+      // 일관성 점수 적용
+      score = consistencyCheck.score;
+      
+      // 발견된 문제점들을 assessment에 추가
+      consistencyCheck.issues.forEach(issue => {
+        assessment.issues.push(`[캐릭터 일관성] ${issue.message}`);
+      });
+      
+      // 개선 제안 추가
+      consistencyCheck.suggestions.forEach(suggestion => {
+        assessment.suggestions.push(`[캐릭터 보이스] ${suggestion}`);
+      });
+      
+      // 심각한 일관성 문제가 있는 경우
+      if (score < this.qualityStandards.characterConsistencyThreshold) {
+        assessment.improvements.push('캐릭터 말투와 톤의 일관성을 개선해야 합니다.');
+      }
+      
+      // 상세 분석 결과 저장
+      assessment.characterAnalysis = {
+        romanceLevel,
+        relationshipStage: voiceGuideline.relationshipStage,
+        consistencyScore: score,
+        guidelines: voiceGuideline,
+        issues: consistencyCheck.issues
+      };
+      
+    } catch (error) {
+      console.warn('캐릭터 일관성 검사 중 오류:', error.message);
+      assessment.issues.push('[캐릭터 일관성] 검사 중 오류가 발생했습니다.');
+      score = 80; // 기본 점수
+    }
+    
+    return score;
+  }
+  
+  /**
+   * 챕터 번호로부터 로맨스 레벨 추정
+   */
+  estimateRomanceLevel(chapterNumber) {
+    // 75챕터 기준으로 로맨스 진행도 추정
+    if (chapterNumber <= 15) return Math.round(chapterNumber * 1); // 0-15%
+    else if (chapterNumber <= 35) return 15 + Math.round((chapterNumber - 15) * 1.25); // 15-40%
+    else if (chapterNumber <= 55) return 40 + Math.round((chapterNumber - 35) * 1.5); // 40-70%
+    else return 70 + Math.round((chapterNumber - 55) * 1.5); // 70-100%
   }
 
   /**

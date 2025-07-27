@@ -1,0 +1,117 @@
+{
+  "novels": {
+    "sample": {
+      "title": "테스트 로맨스 소설",
+      "slug": "test-romance-novel",
+      "author": "Cypress 테스터",
+      "summary": "이것은 Cypress E2E 테스트를 위한 샘플 로맨스 소설입니다. 주인공들의 운명적인 만남과 사랑 이야기를 다룹니다.",
+      "status": "연재 중",
+      "tropes": ["enemies-to-lovers", "fated-mates"],
+      "totalChapters": 5,
+      "rating": 4.5
+    },
+    "completed": {
+      "title": "완결된 판타지 로맨스",
+      "slug": "completed-fantasy-romance",
+      "author": "AI 작가",
+      "summary": "완결된 판타지 로맨스 소설로 테스트용입니다.",
+      "status": "완결",
+      "tropes": ["regression", "royal-romance"],
+      "totalChapters": 50,
+      "rating": 4.8
+    }
+  },
+  "chapters": {
+    "sample": [
+      {
+        "title": "1화 - 운명의 시작",
+        "chapterNumber": 1,
+        "content": "# 1화 - 운명의 시작\n\n\"이게 정말 운명인가요?\"\n\n주인공은 운명적인 만남을 맞이합니다.\n\n> \"당신을 기다리고 있었어요.\"\n\n그들의 사랑 이야기가 시작됩니다.",
+        "wordCount": 150,
+        "summary": "주인공들의 첫 만남"
+      },
+      {
+        "title": "2화 - 갈등의 시작",
+        "chapterNumber": 2,
+        "content": "# 2화 - 갈등의 시작\n\n하지만 모든 사랑에는 시련이 따르는 법.\n\n> *'이 감정이 진짜일까?'*\n\n주인공은 혼란스러워합니다.\n\n> [둘 사이에 긴장감이 흐른다]",
+        "wordCount": 180,
+        "summary": "감정적 갈등의 시작"
+      }
+    ]
+  },
+  "tropes": [
+    {
+      "name": "enemies-to-lovers",
+      "slug": "enemies-to-lovers",
+      "description": "적대관계에서 시작해 사랑으로 발전하는 관계"
+    },
+    {
+      "name": "fated-mates",
+      "slug": "fated-mates", 
+      "description": "운명적으로 맺어진 짝"
+    },
+    {
+      "name": "regression",
+      "slug": "regression",
+      "description": "과거로 돌아가는 이야기"
+    }
+  ],
+  "users": {
+    "admin": {
+      "username": "admin",
+      "password": "test123",
+      "role": "admin"
+    },
+    "reader": {
+      "username": "reader",
+      "password": "test123", 
+      "role": "reader"
+    }
+  },
+  "automation": {
+    "mockResponses": {
+      "generateChapter": {
+        "success": true,
+        "data": {
+          "title": "AI 생성 챕터",
+          "content": "# AI 생성 챕터\n\n이것은 AI가 생성한 테스트 챕터입니다.\n\n> \"안녕하세요, 이것은 테스트입니다.\"\n\n스토리가 계속됩니다.",
+          "chapterNumber": 3,
+          "wordCount": 200,
+          "emotionStage": "development",
+          "qualityScore": 85
+        }
+      },
+      "runAutomation": {
+        "success": true,
+        "action": "CONTINUE_CHAPTER",
+        "result": {
+          "novelSlug": "test-romance-novel",
+          "newChapter": 3,
+          "emotionStage": "development"
+        },
+        "situation": {
+          "activeNovels": 3,
+          "needsNewNovel": false,
+          "readyForCompletion": []
+        }
+      }
+    }
+  },
+  "platforms": {
+    "naver": {
+      "name": "네이버 시리즈/카카오페이지",
+      "targetWordCount": 2800,
+      "style": "감정적 몰입도 중시"
+    },
+    "munpia": {
+      "name": "문피아/조아라",
+      "targetWordCount": 3600,
+      "style": "상세한 묘사와 깊이"
+    },
+    "ridibooks": {
+      "name": "리디북스",
+      "targetWordCount": 3200,
+      "style": "편집 품질과 완성도"
+    }
+  }
+}
