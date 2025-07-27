@@ -83,6 +83,12 @@ JSON 형식으로 응답:
       }
     } catch (error) {
       console.error('❌ 동적 캐릭터 이름 생성 실패:', error.message);
+      console.error('🔧 디버그 정보:', {
+        hasAIGenerator: !!this.aiGenerator,
+        aiGeneratorType: this.aiGenerator?.constructor?.name,
+        shouldMock: shouldMockAIService(),
+        errorType: error.constructor.name
+      });
     }
 
     // 폴백: 기본 생성
@@ -131,6 +137,12 @@ JSON 형식으로 응답:
       }
     } catch (error) {
       console.error('❌ 동적 세계관 생성 실패:', error.message);
+      console.error('🔧 디버그 정보:', {
+        hasAIGenerator: !!this.aiGenerator,
+        aiGeneratorType: this.aiGenerator?.constructor?.name,
+        shouldMock: shouldMockAIService(),
+        errorType: error.constructor.name
+      });
     }
 
     return this.generateMockWorldSetting(baseGenre);
@@ -192,6 +204,12 @@ JSON 형식으로 응답:
       }
     } catch (error) {
       console.error('❌ 동적 트로프 생성 실패:', error.message);
+      console.error('🔧 디버그 정보:', {
+        hasAIGenerator: !!this.aiGenerator,
+        aiGeneratorType: this.aiGenerator?.constructor?.name,
+        shouldMock: shouldMockAIService(),
+        errorType: error.constructor.name
+      });
     }
 
     return this.generateMockTropeCombination();
@@ -260,6 +278,12 @@ JSON 형식으로 응답:
       return this.parseJSONResponse(response.content);
     } catch (error) {
       console.error('❌ 동적 플롯 구조 생성 실패:', error.message);
+      console.error('🔧 디버그 정보:', {
+        hasAIGenerator: !!this.aiGenerator,
+        aiGeneratorType: this.aiGenerator?.constructor?.name,
+        shouldMock: shouldMockAIService(),
+        errorType: error.constructor.name
+      });
       return this.generateMockPlotStructure();
     }
   }
@@ -304,6 +328,12 @@ JSON 형식으로 응답:
       return this.parseJSONResponse(response.content);
     } catch (error) {
       console.error('❌ 동적 메타데이터 생성 실패:', error.message);
+      console.error('🔧 디버그 정보:', {
+        hasAIGenerator: !!this.aiGenerator,
+        aiGeneratorType: this.aiGenerator?.constructor?.name,
+        shouldMock: shouldMockAIService(),
+        errorType: error.constructor.name
+      });
       return this.generateMockMetadata(characters);
     }
   }
@@ -341,6 +371,12 @@ JSON 형식으로 응답:
       return title || `${chapterNumber}화`;
     } catch (error) {
       console.error('❌ 동적 챕터 제목 생성 실패:', error.message);
+      console.error('🔧 디버그 정보:', {
+        hasAIGenerator: !!this.aiGenerator,
+        aiGeneratorType: this.aiGenerator?.constructor?.name,
+        shouldMock: shouldMockAIService(),
+        errorType: error.constructor.name
+      });
       return `${chapterNumber}화`;
     }
   }

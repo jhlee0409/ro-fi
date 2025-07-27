@@ -45,3 +45,7 @@ ai-config.local.json
 .DS_Store
 Thumbs.db
 *.tmp
+
+
+# vercel
+.vercel

@@ -443,6 +443,81 @@ ${Array.isArray(logicalFramework.constraints) ?
       claudeFocus: true
     });
   }
+
+  /**
+   * 범용 콘텐츠 생성 인터페이스
+   * DynamicContentGenerator와의 호환성을 위한 표준 메서드
+   */
+  async generateContent(request) {
+    const { prompt, maxTokens = 2000, type = 'general', ...options } = request;
+    
+    try {
+      // 콘텐츠 타입에 따른 적절한 생성기 선택
+      switch (type) {
+        case 'emotional':
+        case 'dialogue':
+        case 'character':
+        case 'romance':
+          // Claude 전담: 감정적 콘텐츠
+          if (this.claudeGenerator) {
+            return await this.claudeGenerator.generateContent(prompt, maxTokens);
+          }
+          break;
+          
+        case 'worldbuilding':
+        case 'structure':
+        case 'logic':
+        case 'setting':
+          // Gemini 전담: 논리적 콘텐츠
+          if (this.geminiGenerator) {
+            return await this.geminiGenerator.generateContent(prompt, maxTokens);
+          }
+          break;
+          
+        case 'general':
+        default:
+          // 기본: Claude 우선, Gemini fallback
+          if (this.claudeGenerator) {
+            return await this.claudeGenerator.generateContent(prompt, maxTokens);
+          } else if (this.geminiGenerator) {
+            return await this.geminiGenerator.generateContent(prompt, maxTokens);
+          }
+          break;
+      }
+      
+      // 선택된 생성기가 없을 경우 fallback
+      if (this.claudeGenerator) {
+        return await this.claudeGenerator.generateContent(prompt, maxTokens);
+      } else if (this.geminiGenerator) {
+        return await this.geminiGenerator.generateContent(prompt, maxTokens);
+      } else {
+        throw new Error('사용 가능한 AI 생성기가 없습니다');
+      }
+      
+    } catch (error) {
+      console.error(`❌ ${type} 콘텐츠 생성 실패:`, error.message);
+      
+      // 에러 발생시 대안 생성기 시도
+      try {
+        if (type !== 'general' && this.claudeGenerator) {
+          console.log('🔄 Claude 생성기로 재시도...');
+          return await this.claudeGenerator.generateContent(prompt, maxTokens);
+        } else if (this.geminiGenerator) {
+          console.log('🔄 Gemini 생성기로 재시도...');
+          return await this.geminiGenerator.generateContent(prompt, maxTokens);
+        }
+      } catch (fallbackError) {
+        console.error('❌ 대안 생성기도 실패:', fallbackError.message);
+      }
+      
+      // 모든 시도 실패시 mock 응답 반환
+      return {
+        content: `[${type} 콘텐츠 생성 실패 - 기본값 사용]`,
+        usage: { totalTokens: 0 },
+        model: 'fallback'
+      };
+    }
+  }
 }
 
 /**
