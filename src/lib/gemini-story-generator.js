@@ -1,6 +1,35 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 /**
+ * Helper function for retrying API calls with exponential backoff.
+ * @param {() => Promise<any>} fn The async function to retry.
+ * @param {number} retries Maximum number of retries.
+ * @param {number} delay Initial delay in ms.
+ * @returns {Promise<any>}
+ */
+async function withRetry(fn, retries = 3, delay = 2000) {
+  let lastError;
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      // Retry only on 5xx server errors
+      if (error.status && error.status >= 500 && error.status < 600) {
+        const backoff = delay * Math.pow(2, i);
+        console.warn(
+          `Gemini API 5xx error. Retrying in ${backoff}ms... (Attempt ${i + 1}/${retries})`
+        );
+        await new Promise(res => setTimeout(res, backoff));
+      } else {
+        // Don't retry on client errors (4xx) or other issues
+        throw error;
+      }
+    }
+  }
+  throw lastError;
+}
+/**
  * Gemini 2.5 Flash 기반 스토리 생성기
  * 복잡한 세계관 구축, 논리적 일관성, 설정 관리에 특화
  */
@@ -30,6 +59,17 @@ export class GeminiStoryGenerator {
     };
   }
 
+  /**
+   * Private helper to wrap generateContent with retry logic.
+   * @param {string} prompt The prompt to send to the API.
+   * @returns {Promise<import('@google/generative-ai').EnhancedGenerateContentResponse>}
+   */
+  async _generateContentWithRetry(prompt) {
+    return withRetry(async () => {
+      const result = await this.model.generateContent(prompt);
+      return result.response;
+    });
+  }
   /**
    * 세계관 및 설정 구축 (Gemini의 강점)
    */
@@ -72,8 +112,7 @@ export class GeminiStoryGenerator {
 각 설정은 서로 유기적으로 연결되어야 하며, 스토리 전개에 활용할 수 있는 갈등 요소를 포함해주세요.`;
 
     try {
-      const result = await this.model.generateContent(prompt);
-      const response = result.response;
+      const response = await this._generateContentWithRetry(prompt);
       return response.text();
     } catch (error) {
       console.error('Gemini 세계관 생성 실패:', error);
@@ -123,8 +162,7 @@ export class GeminiStoryGenerator {
 각 요소가 논리적으로 연결되고, 독자가 예측하지 못할 반전을 포함해주세요.`;
 
     try {
-      const result = await this.model.generateContent(prompt);
-      const response = result.response;
+      const response = await this._generateContentWithRetry(prompt);
       return response.text();
     } catch (error) {
       console.error('Gemini 플롯 설계 실패:', error);
@@ -166,8 +204,7 @@ export class GeminiStoryGenerator {
 JSON 형식으로 구조화하여 응답해주세요.`;
 
     try {
-      const result = await this.model.generateContent(prompt);
-      const response = result.response;
+      const response = await this._generateContentWithRetry(prompt);
       const text = response.text();
 
       // JSON 파싱 시도
@@ -245,8 +282,7 @@ JSON 형식으로 구조화하여 응답해주세요.`;
 **본문:** [3,500자 이상 풍부한 마크다운 스토리]`;
 
     try {
-      const result = await this.model.generateContent(prompt);
-      const response = result.response;
+      const response = await this._generateContentWithRetry(prompt);
       const fullResponse = response.text();
 
       // 제목과 본문 분리
@@ -282,8 +318,8 @@ JSON 형식으로 구조화하여 응답해주세요.`;
 관계의 복잡성과 깊이를 고려하여 흥미로운 다이나믹을 만들어주세요.`;
 
     try {
-      const result = await this.model.generateContent(prompt);
-      return result.response.text();
+      const response = await this._generateContentWithRetry(prompt);
+      return response.text();
     } catch (error) {
       console.error('Gemini 관계도 생성 실패:', error);
       throw error;
