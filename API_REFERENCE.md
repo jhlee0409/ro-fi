@@ -495,7 +495,33 @@ const enhanced = emotion.enhanceEmotionalExpression(content, {
 const progression = emotion.analyzeRelationshipProgression(chapterArray);
 ```
 
-### StoryDiversityEngine
+### DynamicContentGenerator ⭐ NEW
+100% AI-powered content generation system.
+```javascript
+import { DynamicContentGenerator } from './src/lib/dynamic-content-generator.js';
+const generator = new DynamicContentGenerator();
+```
+
+#### generateTropeCombination(existingNovels)
+AI-generated unique trope combinations.
+```javascript
+const tropes = await generator.generateTropeCombination(existingNovelArray);
+```
+
+#### generateCharacterNames(genre, worldSetting, concept)
+Dynamic AI character name generation.
+```javascript
+const characters = await generator.generateCharacterNames('로맨스 판타지', worldSetting, concept);
+```
+
+#### generateWorldSetting(baseGenre)
+Complete AI world creation.
+```javascript
+const world = await generator.generateWorldSetting('로맨스 판타지');
+```
+
+### ~~StoryDiversityEngine~~ ❌ DEPRECATED
+**DEPRECATED:** Use DynamicContentGenerator instead.
 
 Unique story concept generation and anti-repetition measures.
 

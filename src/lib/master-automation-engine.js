@@ -1,5 +1,5 @@
 import { NovelDetector } from './novel-detector.js';
-import { StoryDiversityEngine } from './story-diversity-engine.js';
+// StoryDiversityEngine 제거 - 100% AI 동적 생성으로 대체
 import { EmotionalDepthEngine } from './emotional-depth-engine.js';
 import { CompletionCriteriaEngine } from './completion-criteria-engine.js';
 import { CreativityModeEngine } from './creativity-mode-engine.js';
@@ -8,7 +8,9 @@ import { TokenBalancingEngine } from './token-balancing-engine.js';
 import { QualityAssuranceEngine } from './quality-assurance-engine.js';
 import { createStoryGenerator } from './ai-story-generator.js';
 import { createHybridGenerator } from './hybrid-ai-generator.js';
-import { PlatformConfigEngine, printPlatformSummary } from './platform-config-engine.js';
+import { PlatformConfigEngine } from './platform-config-engine.js';
+import { DynamicContentGenerator } from './dynamic-content-generator.js';
+import { dynamicMethods } from './dynamic-methods.js';
 import { shouldMockAIService, debugEnvironment, getEnvironmentInfo } from './environment.js';
 import { promises as fs } from 'fs';
 import { join } from 'path';
@@ -28,7 +30,7 @@ export class MasterAutomationEngine {
     }
 
     this.novelDetector = new NovelDetector(this.novelsDir, this.chaptersDir);
-    this.storyEngine = new StoryDiversityEngine();
+    // storyEngine 제거 - DynamicContentGenerator로 완전 대체
     this.emotionEngine = new EmotionalDepthEngine();
     this.completionEngine = new CompletionCriteriaEngine();
     this.qualityEngine = new QualityAssuranceEngine(platform);
@@ -37,6 +39,16 @@ export class MasterAutomationEngine {
     this.creativityEngine = new CreativityModeEngine();
     this.readerAnalytics = new ReaderAnalyticsEngine();
     this.tokenBalancer = new TokenBalancingEngine();
+    
+    // 동적 콘텐츠 생성기 - 100% AI 생성형 전환
+    this.dynamicGenerator = new DynamicContentGenerator();
+    
+    // 동적 메서드들을 인스턴스에 바인딩
+    Object.assign(this, dynamicMethods);
+    
+    // 플롯 단계 결정 헬퍼 메서드
+    this.determinePlotStage = this.determinePlotStage || this.createDeterminePlotStage();
+    this.getPreviousChapterContext = this.getPreviousChapterContext || this.createGetPreviousChapterContext();
 
     // 환경 정보 디버깅
     debugEnvironment();
@@ -50,7 +62,7 @@ export class MasterAutomationEngine {
       qualityThreshold: 80,
       autoComplete: true,
       autoCreateNew: true,
-      
+
       // 일일 챕터 생성 제한 (권장사항 반영)
       dailyChapterLimit: 2, // 일일 최대 2개 챕터 (기존 2-4개에서 감소)
       priorityQualityOverQuantity: true, // 품질 > 양 우선순위
@@ -63,12 +75,12 @@ export class MasterAutomationEngine {
         qualityPriority: true,
       },
     };
-    
+
     // 일일 생성 추적
     this.dailyGeneration = {
       date: new Date().toDateString(),
       chaptersGenerated: 0,
-      novels: new Set()
+      novels: new Set(),
     };
   }
 
@@ -80,19 +92,21 @@ export class MasterAutomationEngine {
       this.dailyGeneration = {
         date: today,
         chaptersGenerated: 0,
-        novels: new Set()
+        novels: new Set(),
       };
       console.log('📅 새로운 날: 일일 챕터 생성 카운터 리셋');
     }
   }
-  
+
   // 챕터 생성 카운트 증가
   incrementDailyCount(novelSlug) {
     this.dailyGeneration.chaptersGenerated++;
     this.dailyGeneration.novels.add(novelSlug);
-    console.log(`📊 일일 생성 현황: ${this.dailyGeneration.chaptersGenerated}/${this.automationConfig.dailyChapterLimit} 챕터`);
+    console.log(
+      `📊 일일 생성 현황: ${this.dailyGeneration.chaptersGenerated}/${this.automationConfig.dailyChapterLimit} 챕터`
+    );
   }
-  
+
   // 환경별 AI 생성기 생성
   createAIGenerator() {
     const shouldMock = shouldMockAIService() || this.dryRun === true;
@@ -175,16 +189,18 @@ export class MasterAutomationEngine {
     try {
       // 일일 제한 체크
       this.checkAndResetDailyLimit();
-      
+
       if (this.dailyGeneration.chaptersGenerated >= this.automationConfig.dailyChapterLimit) {
-        console.log(`⚠️ 일일 챕터 생성 제한 도달: ${this.dailyGeneration.chaptersGenerated}/${this.automationConfig.dailyChapterLimit}`);
+        console.log(
+          `⚠️ 일일 챕터 생성 제한 도달: ${this.dailyGeneration.chaptersGenerated}/${this.automationConfig.dailyChapterLimit}`
+        );
         return {
           success: true,
           action: 'daily_limit_reached',
-          message: `오늘의 챕터 생성 제한(${this.automationConfig.dailyChapterLimit}개)에 도달했습니다.`
+          message: `오늘의 챕터 생성 제한(${this.automationConfig.dailyChapterLimit}개)에 도달했습니다.`,
         };
       }
-      
+
       // 1단계: 현재 상황 분석
       const situation = await this.analyzeSituation();
 
@@ -387,99 +403,138 @@ export class MasterAutomationEngine {
     };
   }
 
-  // 새 소설 생성
+  // 새 소설 생성 (100% 동적 AI 생성)
   async createNewNovel(situation) {
-    console.log('🆕 새 소설 생성 중...');
+    console.log('🆕 100% 동적 AI 소설 생성 중...');
 
-    // 기존 작품들의 트로프 분석
-    const existingCombinations = situation.activeNovels.map(novel => ({
-      main: 'enemies-to-lovers', // 실제로는 소설 데이터에서 추출
-      sub: 'regression',
-      conflict: 'political-intrigue',
-    }));
+    // 기존 소설들 분석 (중복 방지를 위한)
+    const existingNovels = situation.activeNovels || [];
 
-    // 고유한 컨셉 생성
-    const uniqueConcept = this.storyEngine.generateUniqueNovelConcept(existingCombinations);
-
-    // 제목 생성
-    const title = this.storyEngine.generateCatchyTitle(uniqueConcept);
-
-    // 하이브리드 AI로 소설 초기화 시도
-    let novelInitialization = null;
-    if (this.aiGenerator && typeof this.aiGenerator.initializeNovel === 'function') {
-      try {
-        console.log('🎭 하이브리드 AI로 소설 초기화 중...');
-        novelInitialization = await this.aiGenerator.initializeNovel(
-          title,
-          [uniqueConcept.main, uniqueConcept.sub],
-          uniqueConcept
-        );
-      } catch (error) {
-        console.warn('⚠️ 하이브리드 초기화 실패, 기본 방식 사용:', error.message);
-      }
-    }
-
-    // 캐릭터 생성 (하이브리드 결과 우선 사용)
-    const characters =
-      novelInitialization?.characters || this.storyEngine.designMemorableCharacters(uniqueConcept);
+    // 1. 동적 세계관 생성
+    const worldSetting = await this.dynamicGenerator.generateWorldSetting('로맨스 판타지');
+    
+    // 2. 동적 트로프 조합 생성
+    const tropeCombination = await this.dynamicGenerator.generateTropeCombination(existingNovels);
+    
+    // 3. 동적 캐릭터 이름 생성
+    const characters = await this.dynamicGenerator.generateCharacterNames(
+      '로맨스 판타지',
+      worldSetting.setting_description,
+      tropeCombination.main_trope
+    );
+    
+    // 4. 동적 플롯 구조 생성
+    const plotStructure = await this.dynamicGenerator.generatePlotStructure(
+      characters,
+      worldSetting,
+      tropeCombination
+    );
+    
+    // 5. 동적 메타데이터 생성 (제목, 요약 등)
+    const metadata = await this.dynamicGenerator.generateNovelMetadata(
+      characters,
+      worldSetting,
+      tropeCombination,
+      plotStructure
+    );
 
     // 소설 슬러그 생성
-    const slug = this.generateSlug(title);
+    const slug = this.generateSlug(metadata.title);
 
-    // 소설 파일 생성 (하이브리드 정보 포함)
-    await this.createNovelFile(slug, {
-      title,
-      concept: uniqueConcept,
+    // 완전 동적 소설 파일 생성
+    await this.createDynamicNovelFile(slug, {
+      title: metadata.title,
+      summary: metadata.summary,
+      hook: metadata.hook,
       characters,
-      worldSettings: novelInitialization?.worldSettings,
-      plotStructure: novelInitialization?.plotStructure,
+      worldSetting,
+      tropeCombination,
+      plotStructure,
+      keywords: metadata.keywords
     });
 
-    // 첫 번째 챕터 생성
-    const firstChapter = await this.generateChapter(slug, 1, uniqueConcept, characters, true);
-    await this.saveChapter(slug, 1, firstChapter);
+    // 첫 번째 챕터의 동적 제목 생성
+    const firstChapterTitle = await this.dynamicGenerator.generateChapterTitle(
+      1,
+      'introduction',
+      '이야기 시작',
+      plotStructure.introduction.key_events.join(', ')
+    );
+
+    // 첫 번째 챕터 동적 생성
+    const firstChapterContent = await this.generateDynamicChapter(
+      slug,
+      1,
+      {
+        title: metadata.title,
+        characters,
+        worldSetting,
+        tropeCombination,
+        plotStructure
+      },
+      firstChapterTitle
+    );
+
+    await this.saveChapter(slug, 1, firstChapterContent);
+
+    console.log(`✨ 100% 동적 소설 생성 완료: "${metadata.title}" (${slug})`);
 
     return {
       newNovel: slug,
-      title,
-      concept: uniqueConcept,
+      title: metadata.title,
+      concept: tropeCombination,
+      worldSetting,
+      characters,
       firstChapter: 1,
+      firstChapterTitle,
+      fullyDynamic: true
     };
   }
 
-  // 기존 소설 챕터 계속
+  // 기존 소설 챕터 계속 (100% 동적 생성)
   async continueChapter(novel) {
-    console.log(`📝 챕터 계속: ${novel.data.title}`);
+    console.log(`📝 100% 동적 챕터 계속: ${novel.data.title}`);
 
     const nextChapterNumber = novel.latestChapter + 1;
 
-    // 현재 진행도에 따른 감정 단계 결정
-    const currentStage = Math.max(
-      1,
-      Math.min(10, Math.floor((novel.progressPercentage / 100) * 10))
-    );
-    const emotionStage = this.emotionEngine.generateEmotionProgression(
-      'enemies-to-lovers', // 실제로는 소설 데이터에서 추출
-      currentStage,
-      10
+    // 소설 데이터 동적 추출
+    const novelData = await this.getNovelData(novel.slug);
+    
+    // 이전 사건들 추출 (동적 분석)
+    const previousEvents = await this.extractPreviousEvents(novel.slug, novel.latestChapter);
+    
+    // 현재 플롯 단계 결정
+    const plotStage = this.determinePlotStage(nextChapterNumber);
+    
+    // 다음 사건 예측
+    const upcomingEvents = this.predictUpcomingEvents(plotStage, nextChapterNumber);
+    
+    // 동적 챕터 제목 생성
+    const chapterTitle = await this.dynamicGenerator.generateChapterTitle(
+      nextChapterNumber,
+      plotStage,
+      previousEvents,
+      upcomingEvents
     );
 
-    // 다음 챕터 생성
-    const chapterContent = await this.generateChapter(
+    // 완전 동적 챕터 생성
+    const chapterContent = await this.generateDynamicChapter(
       novel.slug,
       nextChapterNumber,
-      { main: 'enemies-to-lovers' }, // 실제로는 소설 데이터에서 추출
-      null, // 캐릭터 정보
-      false,
-      emotionStage
+      novelData,
+      chapterTitle
     );
 
     await this.saveChapter(novel.slug, nextChapterNumber, chapterContent);
 
+    console.log(`✅ 100% 동적 챕터 생성 완료: ${novel.slug} ${nextChapterNumber}화 - "${chapterTitle}"`);
+
     return {
       continuedNovel: novel.slug,
       newChapter: nextChapterNumber,
-      emotionStage: emotionStage.stage,
+      chapterTitle,
+      fullyDynamic: true,
+      dynamicGeneration: true
     };
   }
 
@@ -505,6 +560,10 @@ export class MasterAutomationEngine {
       const novelData = await this.getNovelData(novelSlug);
       const previousContext = await this.getPreviousChapterContext(novelSlug, chapterNumber);
 
+      // 캐릭터 이름 정보 추출
+      const characterNames = novelData.characterNames || ['주인공', '남주'];
+      console.log(`📝 사용할 캐릭터 이름: ${characterNames.join(', ')}`);
+
       // 개선된 AI 생성 및 품질 검증 프로세스
       let bestResult = null;
       let bestScore = 0;
@@ -525,7 +584,7 @@ export class MasterAutomationEngine {
                 : ['enemies-to-lovers', 'fated-mates'],
               chapterNumber,
               previousContext,
-              characterContext: this.generateCharacterContext(characters),
+              characterContext: this.generateCharacterContextWithNames(characters, characterNames),
               plotOutline: this.generatePlotContext(concept, chapterNumber),
             });
           } else if (bestResult && bestResult.content) {
@@ -553,7 +612,7 @@ export class MasterAutomationEngine {
                 : ['enemies-to-lovers', 'fated-mates'],
               chapterNumber,
               previousContext,
-              characterContext: this.generateCharacterContext(characters),
+              characterContext: this.generateCharacterContextWithNames(characters, characterNames),
               plotOutline: this.generatePlotContext(concept, chapterNumber),
             });
           }
@@ -621,7 +680,7 @@ export class MasterAutomationEngine {
 
         // 일일 생성 카운트 증가
         this.incrementDailyCount(novelSlug);
-        
+
         return {
           frontmatter: {
             title: bestResult.title || `${chapterNumber}화`,
@@ -644,8 +703,6 @@ export class MasterAutomationEngine {
       throw error; // 실패를 그대로 전파
     }
   }
-
-
 
   // 플롯 단계 결정
   determinePlotStage(chapterNumber) {
@@ -673,6 +730,10 @@ export class MasterAutomationEngine {
       ? `\n\n## 플롯 구조\n${novelData.plotStructure.substring(0, 500)}...`
       : '';
 
+    // 캐릭터 이름 추출
+    const protagonistName = novelData.characters.protagonist?.name || '주인공';
+    const maleLeadName = novelData.characters.male_lead?.name || '남주';
+
     const frontmatter = `---
 title: "${novelData.title}"
 author: "하이브리드 AI (Claude + Gemini)"
@@ -682,6 +743,7 @@ publishedDate: ${new Date().toISOString().split('T')[0]}
 totalChapters: 75
 rating: 0
 tropes: ["${novelData.concept.main}", "${novelData.concept.sub}"]
+characterNames: ["${protagonistName}", "${maleLeadName}"]
 ---
 
 # ${novelData.title}
@@ -690,9 +752,13 @@ ${novelData.concept.world}에서 펼쳐지는 ${novelData.concept.mainConflict}�
 
 ## 주요 캐릭터
 
-**주인공**: ${novelData.characters.protagonist?.background || '신비로운 배경'}, ${novelData.characters.protagonist?.personality || '매력적인 성격'}
+**주인공 ${protagonistName}**: ${novelData.characters.protagonist?.background || '신비로운 배경'}, ${novelData.characters.protagonist?.personality || '매력적인 성격'}
 
-**남주**: ${novelData.characters.male_lead?.archetype || '강력한 존재'}, ${novelData.characters.male_lead?.personality || '복잡한 내면'}${worldInfo}${plotInfo}`;
+**남주 ${maleLeadName}**: ${novelData.characters.male_lead?.archetype || '강력한 존재'}, ${novelData.characters.male_lead?.personality || '복잡한 내면'}
+
+## 조연 캐릭터
+
+${novelData.characters.supporting?.map(char => `**${char.name}**: ${char.role}`).join('\n') || ''}${worldInfo}${plotInfo}`;
 
     if (this.dryRun) {
       console.log(`🔄 [DRY-RUN] 소설 파일 생성 시뮬레이션: ${slug}.md`);
@@ -773,11 +839,11 @@ ${chapterData.content}`;
       // 소설 정보 가져오기
       const novelData = await this.getNovelData(novel.slug);
       const previousContext = await this.getPreviousChapterContext(novel.slug, chapterNumber);
-      
+
       // 소설의 트로프와 배경 정보 추출
       const tropes = novelData.tropes || ['enemies-to-lovers', 'fated-mates'];
       const title = novelData.title || '로맨스 판타지';
-      
+
       // 완결 전용 컨텍스트 생성
       const completionContext = `
 이 소설의 완결 챕터입니다.
@@ -792,10 +858,10 @@ ${chapterData.content}`;
         tropes,
         chapterNumber,
         previousContext: completionContext,
-        characterContext: this.extractCharacterNamesFromNovel(novelData),
+        characterContext: this.generateCharacterContextFromNovelData(novelData),
         plotOutline: `소설 완결 - ${scene} 장면으로 마무리`,
         isCompletion: true,
-        isEpilogue
+        isEpilogue,
       });
 
       // 단어수 계산
@@ -828,12 +894,15 @@ ${chapterData.content}`;
         const frontmatter = frontmatterMatch[1];
         const titleMatch = frontmatter.match(/title:\s*"([^"]+)"/);
         const tropesMatch = frontmatter.match(/tropes:\s*\[(.*?)\]/);
-        
+
         let tropes = ['enemies-to-lovers', 'fated-mates']; // 기본값
         if (tropesMatch) {
           try {
             // tropes 배열 파싱
-            const tropesStr = tropesMatch[1].replace(/"/g, '').split(',').map(t => t.trim());
+            const tropesStr = tropesMatch[1]
+              .replace(/"/g, '')
+              .split(',')
+              .map(t => t.trim());
             if (tropesStr.length > 0 && tropesStr[0] !== '') {
               tropes = tropesStr;
             }
@@ -841,20 +910,39 @@ ${chapterData.content}`;
             // 파싱 실패 시 기본값 사용
           }
         }
-        
+
+        // 캐릭터 이름 추출
+        const characterNamesMatch = frontmatter.match(/characterNames:\s*\[(.*?)\]/);
+        let characterNames = ['주인공', '남주']; // 기본값
+        if (characterNamesMatch) {
+          try {
+            const namesStr = characterNamesMatch[1]
+              .replace(/"/g, '')
+              .split(',')
+              .map(n => n.trim());
+            if (namesStr.length >= 2) {
+              characterNames = namesStr;
+            }
+          } catch {
+            // 파싱 실패 시 기본값 사용
+          }
+        }
+
         return {
           title: titleMatch ? titleMatch[1] : '로맨스 판타지',
           tropes,
+          characterNames,
           content,
         };
       }
     } catch {
       console.warn(`소설 데이터 로드 실패: ${novelSlug}`);
     }
-    return { 
-      title: '로맨스 판타지', 
+    return {
+      title: '로맨스 판타지',
       tropes: ['enemies-to-lovers', 'fated-mates'],
-      content: '' 
+      characterNames: ['주인공', '남주'],
+      content: '',
     };
   }
 
@@ -878,9 +966,32 @@ ${chapterData.content}`;
   generateCharacterContext(characters) {
     if (!characters) return '주인공과 남주의 로맨스 스토리';
 
+    const protagonistName = characters.protagonist?.name || '주인공';
+    const maleLeadName = characters.male_lead?.name || '남주';
+
     return `
-주인공: ${characters.protagonist?.background || '신비로운 배경'}, ${characters.protagonist?.personality || '매력적인 성격'}
-남주: ${characters.male_lead?.archetype || '강력한 존재'}, ${characters.male_lead?.personality || '복잡한 내면'}
+주인공 ${protagonistName}: ${characters.protagonist?.background || '신비로운 배경'}, ${characters.protagonist?.personality || '매력적인 성격'}
+남주 ${maleLeadName}: ${characters.male_lead?.archetype || '강력한 존재'}, ${characters.male_lead?.personality || '복잡한 내면'}
+
+중요: 이 캐릭터들의 이름을 정확히 사용해주세요. 다른 이름(카이런, 라이아 등)을 사용하지 마세요.
+`;
+  }
+
+  generateCharacterContextWithNames(characters, characterNames) {
+    if (!characterNames || characterNames.length < 2) {
+      return this.generateCharacterContext(characters);
+    }
+
+    const [protagonistName, maleLeadName] = characterNames;
+
+    return `
+주인공 ${protagonistName}: ${characters?.protagonist?.background || '신비로운 배경'}, ${characters?.protagonist?.personality || '매력적인 성격'}
+남주 ${maleLeadName}: ${characters?.male_lead?.archetype || '강력한 존재'}, ${characters?.male_lead?.personality || '복잡한 내면'}
+
+⚠️ 중요한 지침:
+- 반드시 주인공은 "${protagonistName}", 남주는 "${maleLeadName}"라는 이름을 사용하세요
+- 절대로 "카이런", "라이아", "아리아" 등 다른 이름을 사용하지 마세요
+- 이 작품만의 고유한 캐릭터 이름입니다
 `;
   }
 
@@ -917,6 +1028,79 @@ ${chapterData.content}`;
     return '주인공과 남주의 로맨스 스토리';
   }
 
+  /**
+   * 소설 데이터에서 캐릭터 컨텍스트 생성 (이름 포함)
+   */
+  generateCharacterContextFromNovelData(novelData) {
+    if (!novelData) {
+      return '주인공과 남주의 로맨스 스토리';
+    }
+
+    const characterNames = novelData.characterNames || ['주인공', '남주'];
+    const [protagonistName, maleLeadName] = characterNames;
+
+    // 소설 내용에서 캐릭터 정보 추출
+    let characterInfo = '';
+    if (novelData.content) {
+      const characterSection = novelData.content.match(/## 주요 캐릭터[\s\S]*?(?=##|$)/);
+      if (characterSection) {
+        characterInfo = characterSection[0];
+      }
+    }
+
+    return `
+주인공: ${protagonistName}
+남주: ${maleLeadName}
+
+${characterInfo}
+
+⚠️ 중요한 지침:
+- 반드시 주인공은 "${protagonistName}", 남주는 "${maleLeadName}"라는 이름을 사용하세요
+- 절대로 "카이런", "라이아", "아리아" 등 다른 이름을 사용하지 마세요
+- 이 작품만의 고유한 캐릭터 이름입니다
+`;
+  }
+
+  // 플롯 단계 결정 헬퍼 메서드 생성
+  createDeterminePlotStage() {
+    return (chapterNumber) => {
+      if (chapterNumber <= 15) return 'introduction';
+      if (chapterNumber <= 45) return 'development'; 
+      if (chapterNumber <= 60) return 'climax';
+      return 'resolution';
+    };
+  }
+
+  // 이전 챕터 컨텍스트 가져오기 헬퍼 메서드 생성
+  createGetPreviousChapterContext() {
+    return async (novelSlug, chapterNumber) => {
+      if (chapterNumber <= 1) return '이야기 시작';
+      
+      try {
+        // 최근 1-2개 챕터의 내용을 간략히 요약
+        const recentChapters = [];
+        const startChapter = Math.max(1, chapterNumber - 2);
+        
+        for (let i = startChapter; i < chapterNumber; i++) {
+          const chapterPath = join(this.chaptersDir, `${novelSlug}-ch${i.toString().padStart(2, '0')}.md`);
+          try {
+            const content = await fs.readFile(chapterPath, 'utf-8');
+            // 간단한 요약 - 첫 100자 정도
+            const summary = content.split('\n').slice(3, 6).join(' ').substring(0, 100);
+            if (summary.trim()) {
+              recentChapters.push(`${i}화: ${summary}...`);
+            }
+          } catch {
+            // 챕터가 없으면 스킵
+          }
+        }
+        
+        return recentChapters.join(' → ') || '이전 챕터들';
+      } catch {
+        return '이전 컨텍스트 불가';
+      }
+    };
+  }
 }
 
 // 즉시 실행 함수 - 진정한 자동화

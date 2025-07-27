@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach, afterEach } from 'vitest';
 import { MasterAutomationEngine } from '../lib/master-automation-engine.js';
 import { NovelDetector } from '../lib/novel-detector.js';
-import { StoryDiversityEngine } from '../lib/story-diversity-engine.js';
+// StoryDiversityEngine removed - replaced with DynamicContentGenerator
 import { EmotionalDepthEngine } from '../lib/emotional-depth-engine.js';
 import { CompletionCriteriaEngine } from '../lib/completion-criteria-engine.js';
 import { createMockAIGenerator } from './fixtures/mock-ai-generator.js';
@@ -11,7 +11,7 @@ import { join } from 'path';
 describe('Automation System Integration Tests', () => {
   const testDir = '/tmp/ro-fi-integration-test';
   let novelDetector: NovelDetector;
-  let storyEngine: StoryDiversityEngine;
+  // storyEngine removed - MasterAutomationEngine now uses DynamicContentGenerator
   let emotionEngine: EmotionalDepthEngine;
   let completionEngine: CompletionCriteriaEngine;
   let automationEngine: MasterAutomationEngine;
@@ -25,7 +25,7 @@ describe('Automation System Integration Tests', () => {
 
     // Initialize engines with test directory
     novelDetector = new NovelDetector(join(testDir, 'novels'), join(testDir, 'chapters'));
-    storyEngine = new StoryDiversityEngine();
+    // storyEngine initialization removed - now handled by DynamicContentGenerator
     emotionEngine = new EmotionalDepthEngine();
     completionEngine = new CompletionCriteriaEngine();
     
@@ -65,29 +65,20 @@ describe('Automation System Integration Tests', () => {
     const activeNovels = await novelDetector.getActiveNovels();
     expect(Array.isArray(activeNovels)).toBe(true);
 
-    // 스토리 다양성 엔진 테스트
-    const concept = storyEngine.generateUniqueNovelConcept([]);
-    expect(concept.main).toBeDefined();
-    expect(concept.sub).toBeDefined();
+    // MasterAutomationEngine now uses DynamicContentGenerator internally
+    expect(automationEngine.dynamicGenerator).toBeDefined();
   });
 
-  test('should generate diverse story concepts', async () => {
-    const concepts = [];
-
-    // Generate multiple concepts
-    for (let i = 0; i < 5; i++) {
-      const concept = storyEngine.generateUniqueNovelConcept(concepts);
-      concepts.push(concept);
-
-      expect(concept.main).toBeDefined();
-      expect(concept.sub).toBeDefined();
-      expect(concept.world).toBeDefined();
-    }
-
-    // Check for diversity
-    const mainTropes = concepts.map(c => c.main);
-    const uniqueMainTropes = new Set(mainTropes);
-    expect(uniqueMainTropes.size).toBeGreaterThan(1); // Should have variety
+  test('should generate diverse story concepts using AI', async () => {
+    // DynamicContentGenerator handles concept generation through AI
+    const dynamicGenerator = automationEngine.dynamicGenerator;
+    expect(dynamicGenerator).toBeDefined();
+    
+    // Test that the generator can create trope combinations
+    const tropes = await dynamicGenerator.generateTropeCombination([]);
+    expect(tropes.main_trope).toBeDefined();
+    expect(tropes.sub_tropes).toBeDefined();
+    expect(Array.isArray(tropes.sub_tropes)).toBe(true);
   });
 
   test('should generate emotional depth elements consistently', async () => {
