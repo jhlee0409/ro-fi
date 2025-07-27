@@ -1,32 +1,32 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 /**
- * Gemini 2.5 Pro 기반 스토리 생성기
+ * Gemini 2.5 Flash 기반 스토리 생성기
  * 복잡한 세계관 구축, 논리적 일관성, 설정 관리에 특화
  */
 export class GeminiStoryGenerator {
   constructor(apiKey, config = {}) {
     this.genAI = new GoogleGenerativeAI(apiKey);
-    
+
     // 환경 변수 또는 설정에서 모델 정보 가져오기
-    const modelName = config.modelName || process.env.GEMINI_MODEL || "gemini-2.0-pro-exp";
+    const modelName = config.modelName || process.env.GEMINI_MODEL || 'gemini-2.5-flash';
     const generationConfig = {
       temperature: config.temperature || parseFloat(process.env.GEMINI_TEMPERATURE) || 0.9,
       topK: config.topK || parseInt(process.env.GEMINI_TOP_K) || 40,
       topP: config.topP || parseFloat(process.env.GEMINI_TOP_P) || 0.95,
       maxOutputTokens: config.maxOutputTokens || parseInt(process.env.GEMINI_MAX_TOKENS) || 8192,
-      ...config.generationConfig
+      ...config.generationConfig,
     };
-    
-    this.model = this.genAI.getGenerativeModel({ 
+
+    this.model = this.genAI.getGenerativeModel({
       model: modelName,
       generationConfig,
     });
-    
+
     // 설정 저장 (디버깅 및 로깅용)
     this.config = {
       modelName,
-      generationConfig
+      generationConfig,
     };
   }
 
@@ -169,7 +169,7 @@ JSON 형식으로 구조화하여 응답해주세요.`;
       const result = await this.model.generateContent(prompt);
       const response = result.response;
       const text = response.text();
-      
+
       // JSON 파싱 시도
       try {
         return JSON.parse(text);
@@ -194,7 +194,7 @@ JSON 형식으로 구조화하여 응답해주세요.`;
       previousContext = '',
       characterContext = '',
       plotOutline = '',
-      worldSettings = ''
+      worldSettings = '',
     } = options;
 
     const prompt = `당신은 로맨스 판타지 전문 작가입니다.
@@ -216,11 +216,11 @@ JSON 형식으로 구조화하여 응답해주세요.`;
    - 전개부 5장면 (각 500자): 갈등 발전 + 대화 + 심리
    - 마무리 (500자): 감정 변화 + 다음 화 연결
 
-2. **대화 요구사항**: 
+2. **대화 요구사항**:
    - 장면당 최소 3회 대화 교환 (총 21회 이상)
    - 대화마다 행동/표정 묘사 필수 (50자 이상)
 
-3. **내적 독백**: 
+3. **내적 독백**:
    - 장면당 최소 2회 심리 묘사 (총 14회 이상)
    - 각 내적 독백 최소 30자 이상
 
@@ -255,7 +255,7 @@ JSON 형식으로 구조화하여 응답해주세요.`;
 
       return {
         title: titleMatch ? titleMatch[1].trim() : `${chapterNumber}화`,
-        content: contentMatch ? contentMatch[1].trim() : fullResponse
+        content: contentMatch ? contentMatch[1].trim() : fullResponse,
       };
     } catch (error) {
       console.error('Gemini 챕터 생성 실패:', error);
@@ -296,11 +296,11 @@ JSON 형식으로 구조화하여 응답해주세요.`;
  */
 export function createGeminiGenerator(config = {}) {
   const apiKey = process.env.GEMINI_API_KEY;
-  
+
   if (!apiKey) {
     console.warn('GEMINI_API_KEY not found in environment variables');
     return null;
   }
-  
+
   return new GeminiStoryGenerator(apiKey, config);
 }
