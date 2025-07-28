@@ -1,9 +1,8 @@
 import { describe, test, expect, beforeEach, afterEach } from 'vitest';
 import { MasterAutomationEngine } from '../lib/master-automation-engine.js';
 import { NovelDetector } from '../lib/novel-detector.js';
-// StoryDiversityEngine removed - replaced with DynamicContentGenerator
-import { EmotionalDepthEngine } from '../lib/emotional-depth-engine.js';
-import { CompletionCriteriaEngine } from '../lib/completion-criteria-engine.js';
+// Engines consolidated into unified analytics engine
+import { QualityAnalyticsEngine } from '../lib/quality-analytics-engine.js';
 import { createMockAIGenerator } from './fixtures/mock-ai-generator.js';
 import { promises as fs } from 'fs';
 import { join } from 'path';
@@ -11,9 +10,7 @@ import { join } from 'path';
 describe('Automation System Integration Tests', () => {
   const testDir = '/tmp/ro-fi-integration-test';
   let novelDetector: NovelDetector;
-  // storyEngine removed - MasterAutomationEngine now uses DynamicContentGenerator
-  let emotionEngine: EmotionalDepthEngine;
-  let completionEngine: CompletionCriteriaEngine;
+  let qualityEngine: QualityAnalyticsEngine;
   let automationEngine: MasterAutomationEngine;
 
   beforeEach(async () => {

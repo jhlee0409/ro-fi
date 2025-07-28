@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { createStoryGenerator } from '../../lib/ai-story-generator';
+import { createStoryGenerator } from '../../lib/ai-unified-generator';
 
 export const POST: APIRoute = async ({ request }) => {
   try {

@@ -1,13 +1,8 @@
 import { NovelDetector } from './novel-detector.js';
-// StoryDiversityEngine 제거 - 100% AI 동적 생성으로 대체
-import { EmotionalDepthEngine } from './emotional-depth-engine.js';
-import { CompletionCriteriaEngine } from './completion-criteria-engine.js';
-import { CreativityModeEngine } from './creativity-mode-engine.js';
-import { ReaderAnalyticsEngine } from './reader-analytics-engine.js';
-import { TokenBalancingEngine } from './token-balancing-engine.js';
-import { QualityAssuranceEngine } from './quality-assurance-engine.js';
-import { createStoryGenerator } from './ai-story-generator.js';
-import { createHybridGenerator } from './hybrid-ai-generator.js';
+// 통합된 엔진들로 변경
+import { QualityAnalyticsEngine } from './quality-analytics-engine.js';
+import { UnifiedAIGenerator } from './ai-unified-generator.js';
+import { OperationsMonitor } from './operations-monitor.js';
 import { PlatformConfigEngine } from './platform-config-engine.js';
 import { DynamicContentGenerator } from './dynamic-content-generator.js';
 import { dynamicMethods } from './dynamic-methods.js';
@@ -30,17 +25,19 @@ export class MasterAutomationEngine {
     }
 
     this.novelDetector = new NovelDetector(this.novelsDir, this.chaptersDir);
-    // storyEngine 제거 - DynamicContentGenerator로 완전 대체
-    this.emotionEngine = new EmotionalDepthEngine();
-    this.completionEngine = new CompletionCriteriaEngine();
-    this.qualityEngine = new QualityAssuranceEngine(platform);
-
-    // v2.1 창의성 우선 모드 엔진들
-    this.creativityEngine = new CreativityModeEngine();
-    this.readerAnalytics = new ReaderAnalyticsEngine();
-    this.tokenBalancer = new TokenBalancingEngine();
     
-    // 동적 콘텐츠 생성기 - 100% AI 생성형 전환
+    // 통합된 엔진들로 변경
+    this.qualityEngine = new QualityAnalyticsEngine(platform);
+    this.aiGenerator = new UnifiedAIGenerator({
+      anthropicApiKey: process.env.ANTHROPIC_API_KEY,
+      geminiApiKey: process.env.GEMINI_API_KEY,
+      platform,
+      contentDir: this.contentDir,
+      dryRun: this.dryRun
+    });
+    this.operationsMonitor = new OperationsMonitor();
+    
+    // 동적 콘텐츠 생성기 - 100% AI 생성형 전환 + 연재 관리
     this.dynamicGenerator = new DynamicContentGenerator();
     
     // 동적 메서드들을 인스턴스에 바인딩
@@ -274,8 +271,8 @@ export class MasterAutomationEngine {
     for (const novel of activeNovels) {
       const progress = await this.novelDetector.getNovelWithProgress(novel.slug);
       if (progress) {
-        // 완결 가능성 체크
-        const completionReport = this.completionEngine.generateCompletionReport({
+        // 완결 가능성 체크 (통합된 품질 엔진 사용)
+        const completionReport = this.qualityEngine.checkStoryCompletion({
           currentChapter: progress.latestChapter,
           plotProgress: ['시작', '발전', '절정'],
           relationshipStage: progress.progressPercentage > 80 ? 'union' : 'attraction',
@@ -395,6 +392,9 @@ export class MasterAutomationEngine {
 
     // 소설 상태를 "완결"로 변경
     await this.updateNovelStatus(novel.slug, '완결');
+    
+    // 새로운 상태 관리 시스템에서 완결 처리
+    await this.dynamicGenerator.completeNovel(novel.slug);
 
     return {
       completedNovel: novel.slug,
@@ -477,7 +477,27 @@ export class MasterAutomationEngine {
 
     await this.saveChapter(slug, 1, firstChapterContent);
 
+    // 새로운 소설 상태 관리 시스템에 저장
+    const novelStateData = {
+      title: metadata.title,
+      slug,
+      status: '연재 중',
+      currentChapter: 1,
+      totalChapters: 75,
+      publishedDate: new Date().toISOString().split('T')[0],
+      characters,
+      worldSetting,
+      tropeCombination,
+      plotStructure,
+      metadata,
+      completedEvents: [`1화: ${firstChapterTitle}`],
+      upcomingEvents: plotStructure.introduction.key_events.slice(1) // 남은 도입부 이벤트들
+    };
+    
+    await this.dynamicGenerator.saveNovelState(slug, novelStateData);
+
     console.log(`✨ 100% 동적 소설 생성 완료: "${metadata.title}" (${slug})`);
+    console.log(`💾 연재 상태 관리 시스템에 등록 완료`);
 
     return {
       newNovel: slug,
@@ -539,7 +559,15 @@ export class MasterAutomationEngine {
 
     await this.saveChapter(novel.slug, nextChapterNumber, chapterContent);
 
+    // 소설 진행상황 업데이트
+    await this.dynamicGenerator.updateNovelProgress(novel.slug, nextChapterNumber, {
+      title: chapterTitle,
+      wordCount: chapterContent.content?.length || 0,
+      qualityScore: chapterContent.frontmatter?.qualityScore || 0
+    });
+
     console.log(`✅ 100% 동적 챕터 생성 완료: ${novel.slug} ${nextChapterNumber}화 - "${chapterTitle}"`);
+    console.log(`📊 연재 진행상황 업데이트 완료`);
 
     return {
       continuedNovel: novel.slug,
