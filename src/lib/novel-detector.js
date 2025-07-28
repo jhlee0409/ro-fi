@@ -12,17 +12,17 @@ export class NovelDetector {
     try {
       const files = await fs.readdir(this.novelsDir);
       const novels = [];
-      
+
       for (const file of files) {
         if (file.endsWith('.md')) {
           try {
             const content = await fs.readFile(join(this.novelsDir, file), 'utf-8');
             const { data } = matter(content);
-            
+
             if (data.status === '연재 중') {
               novels.push({
                 slug: file.replace('.md', ''),
-                data
+                data,
               });
             }
           } catch (parseError) {
@@ -32,7 +32,7 @@ export class NovelDetector {
           }
         }
       }
-      
+
       return novels;
     } catch (error) {
       console.error('Failed to get active novels:', error);
@@ -79,7 +79,7 @@ export class NovelDetector {
         slug,
         novel: {
           data: novelData,
-          content: matter(novelContent).content
+          content: matter(novelContent).content,
         },
         data: novelData,
         chaptersCount: novelChapters.length,
@@ -87,8 +87,8 @@ export class NovelDetector {
         progressPercentage,
         lastUpdate,
         completionAnalysis: {
-          overallReadiness: progressPercentage >= 85
-        }
+          overallReadiness: progressPercentage >= 85,
+        },
       };
     } catch (error) {
       console.error(`Failed to get novel progress for ${slug}:`, error);

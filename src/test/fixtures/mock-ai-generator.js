@@ -125,20 +125,168 @@ ${mainTrope} 트롭에 따른 자연스러운 감정 진행이 이어집니다.
   }
 }
 
-// 기본 팩토리 함수
+// 기본 팩토리 함수 (v3.1 통합 아키텍처 지원)
 export function createMockAIGenerator() {
-  return new MockAIGenerator();
-}
-
-// Vitest용 모킹 팩토리
-export function createVitestMockAIGenerator() {
   const mock = new MockAIGenerator();
   
-  // Vitest 스파이 기능 추가
+  // v3.1 통합 시스템용 추가 메서드들
+  mock.generateHybridContent = async (context, options) => {
+    return {
+      content: mock.createTestChapterContent(context.chapter || 1, context.tropes || ['enemies-to-lovers'], context.novel || 'test-novel'),
+      metadata: {
+        aiModels: 'hybrid',
+        tokensUsed: 1500,
+        generationTime: 2.0,
+        qualityScore: 0.85
+      }
+    };
+  };
+
+  mock.generateTropeCombination = async (existingTropes) => {
+    return {
+      main_trope: 'enemies_to_lovers',
+      sub_tropes: ['academic_rivals', 'forced_proximity'],
+      emotional_arc: 'antagonism → understanding → attraction → love',
+      key_moments: ['첫 대결', '협력 상황', '진심 발견', '고백']
+    };
+  };
+
+  mock.generateUniqueCharacter = async (existingCharacters, options) => {
+    const names = ['다니엘', '레오', '세바스찬', '소피아', '이사벨라'];
+    const availableName = names.find(name => !existingCharacters.includes(name)) || '새캐릭터';
+    
+    return {
+      name: availableName,
+      profile: {
+        age: 22,
+        role: options.role || 'supporting',
+        traits: ['intelligent', 'mysterious'],
+        background: `${availableName}는 특별한 능력을 가진 캐릭터입니다.`
+      }
+    };
+  };
+
+  mock.generateCharacterRelations = async (characters) => {
+    return {
+      mainCouple: {
+        male_lead: characters[0]?.name || '카이런',
+        female_lead: characters[1]?.name || '에이라',
+        relationship_type: 'enemies_to_lovers'
+      },
+      dynamics: [
+        { type: 'initial_tension', description: '첫 만남에서의 강한 대립' }
+      ]
+    };
+  };
+
+  mock.routeToOptimalAI = async (context, prompt) => {
+    return {
+      preferredModel: context.type === 'emotional_scene' ? 'claude' : 'gemini',
+      confidence: 0.85,
+      reasoning: 'Mock routing decision'
+    };
+  };
+
+  mock.generateWithFallback = async (prompt, options) => {
+    return {
+      content: `Fallback mock content for: ${prompt.substring(0, 30)}...`,
+      metadata: {
+        aiModel: options.fallback || 'gemini',
+        fallbackUsed: true,
+        tokensUsed: 600
+      }
+    };
+  };
+
+  mock.generateContent = async (prompt, options) => {
+    return {
+      content: `Mock generated content for: ${prompt.substring(0, 50)}...`,
+      metadata: {
+        aiModel: 'mock',
+        tokensUsed: 800,
+        generationTime: 1.5
+      }
+    };
+  };
+
+  mock.generateChapterContent = async (context) => {
+    return {
+      content: mock.createTestChapterContent(
+        context.chapter || 1, 
+        context.tropes || ['enemies-to-lovers'], 
+        context.novel || 'test-novel'
+      ),
+      characterConsistency: {
+        score: 0.9,
+        issues: []
+      },
+      metadata: {
+        wordsCount: 800,
+        readingTime: 4,
+        emotionalTone: 'romantic'
+      }
+    };
+  };
+
+  return mock;
+}
+
+// Vitest용 모킹 팩토리 (최적화된 스파이)
+export function createVitestMockAIGenerator() {
+  const mock = createMockAIGenerator(); // v3.1 메서드 포함
+  
+  // Vitest 스파이 기능 추가 (성능 최적화)
   if (typeof vi !== 'undefined') {
+    // 기본 메서드들
     mock.generateChapter = vi.fn(mock.generateChapter.bind(mock));
     mock.improveChapter = vi.fn(mock.improveChapter.bind(mock));
+    
+    // v3.1 추가 메서드들
+    mock.generateHybridContent = vi.fn(mock.generateHybridContent.bind(mock));
+    mock.generateTropeCombination = vi.fn(mock.generateTropeCombination.bind(mock));
+    mock.generateUniqueCharacter = vi.fn(mock.generateUniqueCharacter.bind(mock));
+    mock.generateCharacterRelations = vi.fn(mock.generateCharacterRelations.bind(mock));
+    mock.routeToOptimalAI = vi.fn(mock.routeToOptimalAI.bind(mock));
+    mock.generateWithFallback = vi.fn(mock.generateWithFallback.bind(mock));
+    mock.generateContent = vi.fn(mock.generateContent.bind(mock));
+    mock.generateChapterContent = vi.fn(mock.generateChapterContent.bind(mock));
   }
   
   return mock;
+}
+
+// 고속 테스트용 간소화 모킹 (성능 최적화)
+export function createFastMockAIGenerator() {
+  return {
+    generateHybridContent: () => Promise.resolve({
+      content: '빠른 테스트 콘텐츠',
+      metadata: { aiModels: 'hybrid', tokensUsed: 100 }
+    }),
+    generateTropeCombination: () => Promise.resolve({
+      main_trope: 'test_trope',
+      sub_tropes: ['sub1']
+    }),
+    generateUniqueCharacter: () => Promise.resolve({
+      name: '테스트캐릭터',
+      profile: { age: 20, role: 'test' }
+    }),
+    generateCharacterRelations: () => Promise.resolve({
+      mainCouple: { male_lead: '남주', female_lead: '여주' }
+    }),
+    routeToOptimalAI: () => Promise.resolve({
+      preferredModel: 'claude',
+      confidence: 0.8
+    }),
+    generateWithFallback: () => Promise.resolve({
+      content: '폴백 콘텐츠',
+      metadata: { fallbackUsed: true }
+    }),
+    generateContent: () => Promise.resolve({
+      content: '기본 콘텐츠'
+    }),
+    generateChapterContent: () => Promise.resolve({
+      content: '챕터 콘텐츠',
+      characterConsistency: { score: 0.9 }
+    })
+  };
 }

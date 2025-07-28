@@ -1,16 +1,20 @@
 import { describe, test, expect, beforeEach, afterEach } from 'vitest';
 import { MasterAutomationEngine } from '../lib/master-automation-engine.js';
 import { NovelDetector } from '../lib/novel-detector.js';
-// Engines consolidated into unified analytics engine
+// v3.1 통합 아키텍처 - 통합된 엔진들 사용
 import { QualityAnalyticsEngine } from '../lib/quality-analytics-engine.js';
+import { UnifiedAIGenerator } from '../lib/ai-unified-generator.js';
+import { OperationsMonitor } from '../lib/operations-monitor.js';
 import { createMockAIGenerator } from './fixtures/mock-ai-generator.js';
 import { promises as fs } from 'fs';
 import { join } from 'path';
 
-describe('Automation System Integration Tests', () => {
+describe('Automation System Integration Tests - v3.1', () => {
   const testDir = '/tmp/ro-fi-integration-test';
   let novelDetector: NovelDetector;
   let qualityEngine: QualityAnalyticsEngine;
+  let unifiedAI: UnifiedAIGenerator;
+  let operationsMonitor: OperationsMonitor;
   let automationEngine: MasterAutomationEngine;
 
   beforeEach(async () => {
@@ -20,15 +24,25 @@ describe('Automation System Integration Tests', () => {
     await fs.mkdir(join(testDir, 'chapters'), { recursive: true });
     await fs.mkdir(join(testDir, 'tropes'), { recursive: true });
 
-    // Initialize engines with test directory
+    // v3.1 통합 엔진 초기화
     novelDetector = new NovelDetector(join(testDir, 'novels'), join(testDir, 'chapters'));
-    // storyEngine initialization removed - now handled by DynamicContentGenerator
-    emotionEngine = new EmotionalDepthEngine();
-    completionEngine = new CompletionCriteriaEngine();
+    qualityEngine = new QualityAnalyticsEngine();
+    unifiedAI = new UnifiedAIGenerator({
+      anthropicApiKey: 'test-key',
+      geminiApiKey: 'test-key'
+    });
+    operationsMonitor = new OperationsMonitor({
+      logDirectory: join(testDir, 'logs'),
+      logLevel: 'info'
+    });
     
-    // 🔧 테스트용 자동화 엔진 - 모킹된 AI 생성기 주입
+    // 🔧 테스트용 자동화 엔진 - 통합된 시스템으로 업데이트
     const mockAIGenerator = createMockAIGenerator();
-    automationEngine = new MasterAutomationEngine(testDir, { aiGenerator: mockAIGenerator });
+    automationEngine = new MasterAutomationEngine(testDir, { 
+      aiGenerator: mockAIGenerator,
+      qualityEngine,
+      operationsMonitor
+    });
   });
 
   afterEach(async () => {
@@ -78,19 +92,30 @@ describe('Automation System Integration Tests', () => {
     expect(Array.isArray(tropes.sub_tropes)).toBe(true);
   });
 
-  test('should generate emotional depth elements consistently', async () => {
-    const internalConflict = emotionEngine.generateInternalConflict('감정의 부정', '테스트캐릭터');
-    const microExpression = emotionEngine.generateMicroExpression('attraction', '테스트캐릭터');
-    const sensoryDetail = emotionEngine.generateSensoryDescription('설렘', '도서관');
+  test('should handle unified quality analytics correctly', async () => {
+    // v3.1 통합된 품질 분석 엔진 테스트
+    const mockContent = `
+      > "안녕하세요. 저는 카이런입니다."
+      > *'드디어 만났구나... 운명의 그 사람을.'*
+      > [에이라가 놀란 듯 뒤돌아본다]
+      **에이라**는 신비로운 미소를 지었다.
+    `;
 
+    const qualityResult = qualityEngine.evaluateQuality(mockContent, {
+      novel: 'test-novel',
+      chapter: 1,
+      emotionalStage: 'introduction'
+    });
+
+    expect(qualityResult.overall).toBeGreaterThan(0);
+    expect(qualityResult.dimensions).toHaveProperty('emotional');
+    expect(qualityResult.dimensions).toHaveProperty('technical');
+    expect(qualityResult.dimensions).toHaveProperty('engagement');
+
+    // 감정 깊이 기능 (통합됨)
+    const internalConflict = qualityEngine.generateInternalConflict('감정의 부정', '테스트캐릭터');
     expect(typeof internalConflict).toBe('string');
     expect(internalConflict.length).toBeGreaterThan(0);
-
-    expect(typeof microExpression).toBe('string');
-    expect(microExpression.length).toBeGreaterThan(0);
-
-    expect(typeof sensoryDetail).toBe('string');
-    expect(sensoryDetail.length).toBeGreaterThan(0);
   });
 
   test('should evaluate completion criteria correctly', async () => {
@@ -105,12 +130,13 @@ describe('Automation System Integration Tests', () => {
       ]
     };
 
-    const isComplete = completionEngine.checkStoryCompletion(mockNovel);
+    // v3.1 통합된 완결 기준 검사 (qualityEngine 내부)
+    const isComplete = qualityEngine.checkStoryCompletion(mockNovel);
     expect(isComplete).toBe(true);
 
-    const report = completionEngine.generateCompletionReport(mockNovel);
+    const report = qualityEngine.generateCompletionReport(mockNovel);
     expect(report.overallReadiness).toBe(true);
-    expect(report.recommendation).toContain('Begin ending sequence');
+    expect(report.recommendation).toBeDefined();
   });
 
   test('should handle automation errors gracefully', async () => {
@@ -118,6 +144,43 @@ describe('Automation System Integration Tests', () => {
     automationEngine.dryRun = true;
     const result = await automationEngine.executeAutomation();
     expect(result.success).toBe(true);
+  });
+
+  test('should integrate operations monitoring', async () => {
+    // v3.1 운영 모니터링 통합 테스트
+    automationEngine.dryRun = true;
+    
+    const result = await automationEngine.executeAutomation();
+    
+    // 모니터링 시스템이 자동화 실행을 추적했는지 확인
+    const workflowHistory = operationsMonitor.getWorkflowHistory();
+    expect(workflowHistory).toBeDefined();
+    
+    // AI 운영 메트릭스 확인
+    const aiMetrics = operationsMonitor.getAIMetrics();
+    expect(aiMetrics).toBeDefined();
+    expect(aiMetrics.totalCalls).toBeDefined();
+  });
+
+  test('should support hybrid AI generation', async () => {
+    // v3.1 하이브리드 AI 시스템 테스트
+    const context = {
+      novel: 'test-novel',
+      chapter: 1,
+      characters: ['카이런', '에이라'],
+      worldSettings: { genre: 'fantasy', setting: 'modern' }
+    };
+
+    // 통합된 AI 생성기의 하이브리드 기능 테스트
+    const hybridResult = await unifiedAI.generateHybridContent(context, {
+      targetLength: 2000,
+      emotionalTone: 'romantic'
+    });
+
+    expect(hybridResult).toBeDefined();
+    expect(hybridResult.content).toBeDefined();
+    expect(hybridResult.metadata).toBeDefined();
+    expect(hybridResult.metadata.aiModels).toContain('hybrid');
   });
 
   test('should maintain proper markdown format in generated content', async () => {

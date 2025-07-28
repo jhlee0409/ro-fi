@@ -76,34 +76,52 @@ export class NovelDataService {
    * 소설별 상세 통계 계산
    */
   static async getNovelStats(novels?: CollectionEntry<'novels'>[]): Promise<NovelStats[]> {
-    const allNovels = novels || await this.getAllNovels();
+    const allNovels = novels || (await this.getAllNovels());
     const allChapters = await this.getAllChapters();
 
-    return allNovels.map(novel => {
-      const novelChapters = allChapters.filter(chapter => chapter.data.novel === novel.slug);
-      const latestChapter = novelChapters.length > 0 ? Math.max(...novelChapters.map(ch => ch.data.chapterNumber)) : 0;
-      const totalWords = novelChapters.reduce((sum, chapter) => sum + (chapter.data.wordCount || 1000), 0);
-      const avgRating = novelChapters.length > 0 
-        ? Number((novelChapters.reduce((sum, chapter) => sum + (chapter.data.rating || 0), 0) / novelChapters.length).toFixed(1))
-        : Number((novel.data.rating || 0).toFixed(1));
-      const lastUpdate = novelChapters.length > 0 
-        ? new Date(Math.max(...novelChapters.map(ch => new Date(ch.data.publicationDate).getTime())))
-        : novel.data.publishedDate || new Date();
-      const progressPercentage = novel.data.totalChapters > 0 
-        ? Math.round((novelChapters.length / novel.data.totalChapters) * 100)
-        : 0;
+    return allNovels
+      .map(novel => {
+        const novelChapters = allChapters.filter(chapter => chapter.data.novel === novel.slug);
+        const latestChapter =
+          novelChapters.length > 0
+            ? Math.max(...novelChapters.map(ch => ch.data.chapterNumber))
+            : 0;
+        const totalWords = novelChapters.reduce(
+          (sum, chapter) => sum + (chapter.data.wordCount || 1000),
+          0
+        );
+        const avgRating =
+          novelChapters.length > 0
+            ? Number(
+                (
+                  novelChapters.reduce((sum, chapter) => sum + (chapter.data.rating || 0), 0) /
+                  novelChapters.length
+                ).toFixed(1)
+              )
+            : Number((novel.data.rating || 0).toFixed(1));
+        const lastUpdate =
+          novelChapters.length > 0
+            ? new Date(
+                Math.max(...novelChapters.map(ch => new Date(ch.data.publicationDate).getTime()))
+              )
+            : novel.data.publishedDate || new Date();
+        const progressPercentage =
+          novel.data.totalChapters > 0
+            ? Math.round((novelChapters.length / novel.data.totalChapters) * 100)
+            : 0;
 
-      return {
-        slug: novel.slug,
-        data: novel.data,
-        chaptersCount: novelChapters.length,
-        latestChapter,
-        lastUpdate,
-        progressPercentage,
-        avgRating,
-        totalWords
-      };
-    }).sort((a, b) => b.lastUpdate.getTime() - a.lastUpdate.getTime());
+        return {
+          slug: novel.slug,
+          data: novel.data,
+          chaptersCount: novelChapters.length,
+          latestChapter,
+          lastUpdate,
+          progressPercentage,
+          avgRating,
+          totalWords,
+        };
+      })
+      .sort((a, b) => b.lastUpdate.getTime() - a.lastUpdate.getTime());
   }
 
   /**
@@ -146,7 +164,7 @@ export class NovelDataService {
    * 특정 챕터 찾기
    */
   static async getChapterBySlugAndNumber(
-    novelSlug: string, 
+    novelSlug: string,
     chapterNumber: number
   ): Promise<CollectionEntry<'chapters'> | null> {
     const chapters = await this.getNovelChapters(novelSlug);
@@ -166,13 +184,18 @@ export class NovelDataService {
   }> {
     const novels = await this.getAllNovels();
     const chapters = await this.getAllChapters();
-    
+
     const activeNovels = novels.filter(n => n.data.status === '연재 중').length;
     const completedNovels = novels.filter(n => n.data.status === '완결').length;
     const totalWords = chapters.reduce((sum, ch) => sum + (ch.data.wordCount || 1000), 0);
-    const avgQuality = chapters.length > 0 
-      ? Number((chapters.reduce((sum, ch) => sum + (ch.data.rating || 0), 0) / chapters.length).toFixed(1))
-      : 0;
+    const avgQuality =
+      chapters.length > 0
+        ? Number(
+            (
+              chapters.reduce((sum, ch) => sum + (ch.data.rating || 0), 0) / chapters.length
+            ).toFixed(1)
+          )
+        : 0;
 
     return {
       totalNovels: novels.length,
@@ -180,7 +203,7 @@ export class NovelDataService {
       completedNovels,
       totalChapters: chapters.length,
       totalWords,
-      avgQuality
+      avgQuality,
     };
   }
 }
@@ -227,7 +250,7 @@ export class SafeDataService {
         completedNovels: 0,
         totalChapters: 0,
         totalWords: 0,
-        avgQuality: 0
+        avgQuality: 0,
       };
     }
   }

@@ -25,7 +25,7 @@ export class MasterAutomationEngine {
     }
 
     this.novelDetector = new NovelDetector(this.novelsDir, this.chaptersDir);
-    
+
     // 통합된 엔진들로 변경
     this.qualityEngine = new QualityAnalyticsEngine(platform);
     this.aiGenerator = new UnifiedAIGenerator({
@@ -33,19 +33,20 @@ export class MasterAutomationEngine {
       geminiApiKey: process.env.GEMINI_API_KEY,
       platform,
       contentDir: this.contentDir,
-      dryRun: this.dryRun
+      dryRun: this.dryRun,
     });
     this.operationsMonitor = new OperationsMonitor();
-    
+
     // 동적 콘텐츠 생성기 - 100% AI 생성형 전환 + 연재 관리
     this.dynamicGenerator = new DynamicContentGenerator();
-    
+
     // 동적 메서드들을 인스턴스에 바인딩
     Object.assign(this, dynamicMethods);
-    
+
     // 플롯 단계 결정 헬퍼 메서드
     this.determinePlotStage = this.determinePlotStage || this.createDeterminePlotStage();
-    this.getPreviousChapterContext = this.getPreviousChapterContext || this.createGetPreviousChapterContext();
+    this.getPreviousChapterContext =
+      this.getPreviousChapterContext || this.createGetPreviousChapterContext();
 
     // 환경 정보 디버깅
     debugEnvironment();
@@ -392,7 +393,7 @@ export class MasterAutomationEngine {
 
     // 소설 상태를 "완결"로 변경
     await this.updateNovelStatus(novel.slug, '완결');
-    
+
     // 새로운 상태 관리 시스템에서 완결 처리
     await this.dynamicGenerator.completeNovel(novel.slug);
 
@@ -412,24 +413,24 @@ export class MasterAutomationEngine {
 
     // 1. 동적 세계관 생성
     const worldSetting = await this.dynamicGenerator.generateWorldSetting('로맨스 판타지');
-    
+
     // 2. 동적 트로프 조합 생성
     const tropeCombination = await this.dynamicGenerator.generateTropeCombination(existingNovels);
-    
+
     // 3. 동적 캐릭터 이름 생성
     const characters = await this.dynamicGenerator.generateCharacterNames(
       '로맨스 판타지',
       worldSetting.setting_description,
       tropeCombination.main_trope
     );
-    
+
     // 4. 동적 플롯 구조 생성
     const plotStructure = await this.dynamicGenerator.generatePlotStructure(
       characters,
       worldSetting,
       tropeCombination
     );
-    
+
     // 5. 동적 메타데이터 생성 (제목, 요약 등)
     const metadata = await this.dynamicGenerator.generateNovelMetadata(
       characters,
@@ -450,7 +451,7 @@ export class MasterAutomationEngine {
       worldSetting,
       tropeCombination,
       plotStructure,
-      keywords: metadata.keywords
+      keywords: metadata.keywords,
     });
 
     // 첫 번째 챕터의 동적 제목 생성
@@ -470,7 +471,7 @@ export class MasterAutomationEngine {
         characters,
         worldSetting,
         tropeCombination,
-        plotStructure
+        plotStructure,
       },
       firstChapterTitle
     );
@@ -491,9 +492,9 @@ export class MasterAutomationEngine {
       plotStructure,
       metadata,
       completedEvents: [`1화: ${firstChapterTitle}`],
-      upcomingEvents: plotStructure.introduction.key_events.slice(1) // 남은 도입부 이벤트들
+      upcomingEvents: plotStructure.introduction.key_events.slice(1), // 남은 도입부 이벤트들
     };
-    
+
     await this.dynamicGenerator.saveNovelState(slug, novelStateData);
 
     console.log(`✨ 100% 동적 소설 생성 완료: "${metadata.title}" (${slug})`);
@@ -513,13 +514,13 @@ export class MasterAutomationEngine {
         conflict_driver: tropeCombination.conflict_driver,
         romance_tension: tropeCombination.romance_tension,
         unique_twist: tropeCombination.unique_twist,
-        combination_description: tropeCombination.combination_description
+        combination_description: tropeCombination.combination_description,
       },
       worldSetting,
       characters,
       firstChapter: 1,
       firstChapterTitle,
-      fullyDynamic: true
+      fullyDynamic: true,
     };
   }
 
@@ -531,16 +532,16 @@ export class MasterAutomationEngine {
 
     // 소설 데이터 동적 추출
     const novelData = await this.getNovelData(novel.slug);
-    
+
     // 이전 사건들 추출 (동적 분석)
     const previousEvents = await this.extractPreviousEvents(novel.slug, novel.latestChapter);
-    
+
     // 현재 플롯 단계 결정
     const plotStage = this.determinePlotStage(nextChapterNumber);
-    
+
     // 다음 사건 예측
     const upcomingEvents = this.predictUpcomingEvents(plotStage, nextChapterNumber);
-    
+
     // 동적 챕터 제목 생성
     const chapterTitle = await this.dynamicGenerator.generateChapterTitle(
       nextChapterNumber,
@@ -563,10 +564,12 @@ export class MasterAutomationEngine {
     await this.dynamicGenerator.updateNovelProgress(novel.slug, nextChapterNumber, {
       title: chapterTitle,
       wordCount: chapterContent.content?.length || 0,
-      qualityScore: chapterContent.frontmatter?.qualityScore || 0
+      qualityScore: chapterContent.frontmatter?.qualityScore || 0,
     });
 
-    console.log(`✅ 100% 동적 챕터 생성 완료: ${novel.slug} ${nextChapterNumber}화 - "${chapterTitle}"`);
+    console.log(
+      `✅ 100% 동적 챕터 생성 완료: ${novel.slug} ${nextChapterNumber}화 - "${chapterTitle}"`
+    );
     console.log(`📊 연재 진행상황 업데이트 완료`);
 
     return {
@@ -574,7 +577,7 @@ export class MasterAutomationEngine {
       newChapter: nextChapterNumber,
       chapterTitle,
       fullyDynamic: true,
-      dynamicGeneration: true
+      dynamicGeneration: true,
     };
   }
 
@@ -1103,9 +1106,9 @@ ${characterInfo}
 
   // 플롯 단계 결정 헬퍼 메서드 생성
   createDeterminePlotStage() {
-    return (chapterNumber) => {
+    return chapterNumber => {
       if (chapterNumber <= 15) return 'introduction';
-      if (chapterNumber <= 45) return 'development'; 
+      if (chapterNumber <= 45) return 'development';
       if (chapterNumber <= 60) return 'climax';
       return 'resolution';
     };
@@ -1115,14 +1118,17 @@ ${characterInfo}
   createGetPreviousChapterContext() {
     return async (novelSlug, chapterNumber) => {
       if (chapterNumber <= 1) return '이야기 시작';
-      
+
       try {
         // 최근 1-2개 챕터의 내용을 간략히 요약
         const recentChapters = [];
         const startChapter = Math.max(1, chapterNumber - 2);
-        
+
         for (let i = startChapter; i < chapterNumber; i++) {
-          const chapterPath = join(this.chaptersDir, `${novelSlug}-ch${i.toString().padStart(2, '0')}.md`);
+          const chapterPath = join(
+            this.chaptersDir,
+            `${novelSlug}-ch${i.toString().padStart(2, '0')}.md`
+          );
           try {
             const content = await fs.readFile(chapterPath, 'utf-8');
             // 간단한 요약 - 첫 100자 정도
@@ -1134,7 +1140,7 @@ ${characterInfo}
             // 챕터가 없으면 스킵
           }
         }
-        
+
         return recentChapters.join(' → ') || '이전 챕터들';
       } catch {
         return '이전 컨텍스트 불가';

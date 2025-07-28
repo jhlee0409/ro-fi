@@ -113,20 +113,28 @@ export class StoryContextManager {
 - **감정 톤**: ${novel.storyTones.nextChapterMood}
 
 ### 주요 캐릭터 현재 상태:
-${Object.entries(novel.characterStates).map(([key, char]) => `
+${Object.entries(novel.characterStates)
+  .map(
+    ([key, char]) => `
 **${char.name}** (${char.role}):
 - 감정 상태: ${char.currentEmotionalState}
 - 현재 위치: ${char.currentLocation}
 - 마지막 사건: ${char.lastMajorEvent}
 - 다음 발전: ${char.nextDevelopment}
-`).join('')}
+`
+  )
+  .join('')}
 
 ### 관계 진행 상황:
-${Object.entries(novel.relationshipMatrix).map(([pair, rel]) => `
+${Object.entries(novel.relationshipMatrix)
+  .map(
+    ([pair, rel]) => `
 **${pair}**: ${rel.currentLevel}
 - 진행 경로: ${rel.progression}
 - 다음 목표: ${rel.nextMilestone}
-`).join('')}
+`
+  )
+  .join('')}
 
 ### 플롯 진행:
 **주요 스토리 아크**: ${novel.plotProgress.mainArc}
@@ -146,8 +154,14 @@ ${novel.plotProgress.worldBuilding.establishedElements.map(el => `- ${el}`).join
 ${novel.plotProgress.worldBuilding.needsExpansion.map(el => `- ${el}`).join('\n')}
 
 ### 품질 기준:
-- 이전 챕터 평균 점수: ${Object.values(novel.qualityMetrics).length > 0 ? 
-  Object.values(novel.qualityMetrics).reduce((sum: any, metrics: any) => sum + metrics.평균점수, 0) / Object.values(novel.qualityMetrics).length : 'N/A'}
+- 이전 챕터 평균 점수: ${
+      Object.values(novel.qualityMetrics).length > 0
+        ? Object.values(novel.qualityMetrics).reduce(
+            (sum: any, metrics: any) => sum + metrics.평균점수,
+            0
+          ) / Object.values(novel.qualityMetrics).length
+        : 'N/A'
+    }
 - 목표 점수: ${this.storyData.globalSettings.qualityThreshold}/10 이상
 - 목표 분량: ${this.storyData.globalSettings.averageChapterLength}자
 
@@ -244,5 +258,5 @@ export const contextHelpers = {
   generateUpdateGuide: (novelSlug: string, chapterNumber: number) => {
     const manager = new StoryContextManager();
     return manager.generateUpdateInstructions(novelSlug, chapterNumber);
-  }
+  },
 };
