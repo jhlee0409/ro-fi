@@ -13,12 +13,55 @@ export class DynamicContentGenerator {
     this.usedNames = new Set(); // 중복 방지를 위한 사용된 이름 추적
     this.usedConcepts = new Set(); // 중복 방지를 위한 스토리 컨셉트 추적
     
+    // 기존 소설에서 사용된 이름 로드
+    this.loadExistingNames();
+    
     // AI 생성기 초기화 시도 (실패해도 괜찮음)
     try {
       this.aiGenerator = createHybridGenerator();
     } catch (error) {
       console.warn('⚠️ AI 생성기 초기화 실패 (모킹 모드로 진행):', error.message);
       this.aiGenerator = null;
+    }
+  }
+
+  /**
+   * 기존 소설에서 사용된 캐릭터 이름 로드
+   */
+  async loadExistingNames() {
+    try {
+      const fs = await import('fs/promises');
+      const path = await import('path');
+      const novelsDir = path.join(process.cwd(), 'src/content/novels');
+      
+      const files = await fs.readdir(novelsDir).catch(() => []);
+      
+      for (const file of files) {
+        if (file.endsWith('.md')) {
+          try {
+            const content = await fs.readFile(path.join(novelsDir, file), 'utf-8');
+            const characterNamesMatch = content.match(/characterNames:\s*\[(.*?)\]/);
+            
+            if (characterNamesMatch) {
+              const names = characterNamesMatch[1]
+                .replace(/"/g, '')
+                .split(',')
+                .map(n => n.trim());
+              
+              if (names.length >= 2) {
+                this.usedNames.add(`${names[0]}_female`);
+                this.usedNames.add(`${names[1]}_male`);
+              }
+            }
+          } catch {
+            // 개별 파일 읽기 실패는 무시
+          }
+        }
+      }
+      
+      console.log(`📚 기존 캐릭터 이름 ${this.usedNames.size}개 로드됨`);
+    } catch {
+      // 초기화 시점에는 파일 시스템 접근이 불가능할 수 있음
     }
   }
 
@@ -71,13 +114,42 @@ JSON 형식으로 응답:
         const femaleKey = `${result.female.name}_female`;
         const maleKey = `${result.male.name}_male`;
         
+        // 정확한 중복 체크
         if (this.usedNames.has(femaleKey) || this.usedNames.has(maleKey)) {
-          console.log('🔄 중복된 이름 감지, 재생성...');
-          return await this.generateCharacterNames(genre, worldSetting, concept);
+          console.log(`🔄 중복된 이름 감지: ${result.female.name}, ${result.male.name}`);
+          console.log(`📋 현재 사용중인 이름: ${Array.from(this.usedNames).join(', ')}`);
+          
+          // 재시도 횟수 제한
+          const retryCount = this._nameRetryCount || 0;
+          if (retryCount >= 5) {
+            console.warn('⚠️ 이름 생성 재시도 한계 도달, 변형 이름 사용');
+            result.female.name = `${result.female.name}${Math.floor(Math.random() * 100)}`;
+            result.male.name = `${result.male.name}${Math.floor(Math.random() * 100)}`;
+          } else {
+            this._nameRetryCount = retryCount + 1;
+            return await this.generateCharacterNames(genre, worldSetting, concept);
+          }
         }
         
+        // 유사 이름 체크 (편집 거리)
+        const similarFemaleNames = this.findSimilarNames(result.female.name, 'female');
+        const similarMaleNames = this.findSimilarNames(result.male.name, 'male');
+        
+        if (similarFemaleNames.length > 0 || similarMaleNames.length > 0) {
+          console.log(`⚠️ 유사한 이름 발견:`);
+          if (similarFemaleNames.length > 0) console.log(`  여주: ${result.female.name} ≈ ${similarFemaleNames.join(', ')}`);
+          if (similarMaleNames.length > 0) console.log(`  남주: ${result.male.name} ≈ ${similarMaleNames.join(', ')}`);
+          
+          // 프롬프트에 기존 이름 정보 추가하여 재생성
+          const existingNamesInfo = `\n\n기존 사용된 이름들 (피해주세요): ${this.getExistingNamesList()}`;
+          return await this.generateCharacterNamesWithExclusion(genre, worldSetting, concept, existingNamesInfo);
+        }
+        
+        this._nameRetryCount = 0; // 성공시 리셋
         this.usedNames.add(femaleKey);
         this.usedNames.add(maleKey);
+        
+        console.log(`✅ 새로운 캐릭터 이름 생성: ${result.female.name}(여), ${result.male.name}(남)`);
         
         return result;
       }
@@ -379,6 +451,122 @@ JSON 형식으로 응답:
       });
       return `${chapterNumber}화`;
     }
+  }
+
+  /**
+   * 유사한 이름 찾기 (레벤슈타인 거리 사용)
+   */
+  findSimilarNames(newName, gender) {
+    const similarNames = [];
+    const threshold = 2; // 최대 2글자 차이까지 유사하다고 판단
+    
+    for (const key of this.usedNames) {
+      if (key.endsWith(`_${gender}`)) {
+        const existingName = key.replace(`_${gender}`, '');
+        const distance = this.levenshteinDistance(newName, existingName);
+        
+        if (distance <= threshold && distance > 0) {
+          similarNames.push(existingName);
+        }
+      }
+    }
+    
+    return similarNames;
+  }
+
+  /**
+   * 레벤슈타인 거리 계산
+   */
+  levenshteinDistance(str1, str2) {
+    const matrix = [];
+    
+    for (let i = 0; i <= str2.length; i++) {
+      matrix[i] = [i];
+    }
+    
+    for (let j = 0; j <= str1.length; j++) {
+      matrix[0][j] = j;
+    }
+    
+    for (let i = 1; i <= str2.length; i++) {
+      for (let j = 1; j <= str1.length; j++) {
+        if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+          matrix[i][j] = matrix[i - 1][j - 1];
+        } else {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1,
+            matrix[i][j - 1] + 1,
+            matrix[i - 1][j] + 1
+          );
+        }
+      }
+    }
+    
+    return matrix[str2.length][str1.length];
+  }
+
+  /**
+   * 기존 이름 목록 가져오기
+   */
+  getExistingNamesList() {
+    const femaleNames = [];
+    const maleNames = [];
+    
+    for (const key of this.usedNames) {
+      if (key.endsWith('_female')) {
+        femaleNames.push(key.replace('_female', ''));
+      } else if (key.endsWith('_male')) {
+        maleNames.push(key.replace('_male', ''));
+      }
+    }
+    
+    return `여주: ${femaleNames.join(', ') || '없음'}, 남주: ${maleNames.join(', ') || '없음'}`;
+  }
+
+  /**
+   * 기존 이름 제외하고 생성
+   */
+  async generateCharacterNamesWithExclusion(genre, worldSetting, concept, exclusionInfo) {
+    if (shouldMockAIService() || !this.aiGenerator) {
+      return this.generateMockCharacterNames();
+    }
+
+    const enhancedPrompt = `로맨스 판타지 소설을 위한 독창적인 캐릭터 이름을 생성해주세요.
+
+장르: ${genre}
+세계관: ${worldSetting}
+스토리 컨셉트: ${concept}
+
+요구사항:
+1. 여주인공과 남주인공 이름 각각 1개씩
+2. 해당 세계관에 어울리는 이름
+3. 발음하기 쉽고 기억하기 쉬운 이름
+4. 기존 유명 작품과 겹치지 않는 독창적인 이름
+5. 캐릭터의 성격이나 운명을 암시하는 의미 포함
+
+${exclusionInfo}
+
+JSON 형식으로 응답:
+{
+  "female": {
+    "name": "이름",
+    "meaning": "이름의 의미나 어원",
+    "personality_hint": "이름이 암시하는 성격"
+  },
+  "male": {
+    "name": "이름", 
+    "meaning": "이름의 의미나 어원",
+    "personality_hint": "이름이 암시하는 성격"
+  }
+}`;
+
+    const response = await this.aiGenerator.generateContent({
+      prompt: enhancedPrompt,
+      maxTokens: 1000,
+      temperature: 0.95 // 더 높은 창의성
+    });
+
+    return this.parseJSONResponse(response.content);
   }
 
   // ========== 유틸리티 메서드 ==========

@@ -482,7 +482,19 @@ export class MasterAutomationEngine {
     return {
       newNovel: slug,
       title: metadata.title,
-      concept: tropeCombination,
+      concept: {
+        // Map dynamic generator format to expected logging format
+        genre: '로맨스 판타지', // Add missing genre field
+        main: tropeCombination.main_trope || 'unknown', // Map main_trope to main
+        sub: tropeCombination.sub_tropes?.[0] || 'unknown', // Map first sub_trope to sub
+        // Preserve original dynamic data for internal use
+        main_trope: tropeCombination.main_trope,
+        sub_tropes: tropeCombination.sub_tropes,
+        conflict_driver: tropeCombination.conflict_driver,
+        romance_tension: tropeCombination.romance_tension,
+        unique_twist: tropeCombination.unique_twist,
+        combination_description: tropeCombination.combination_description
+      },
       worldSetting,
       characters,
       firstChapter: 1,

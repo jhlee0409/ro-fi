@@ -156,6 +156,16 @@ export class HybridAIGenerator {
       const isEmotionalChapter = this.isEmotionallyIntenseChapter(chapterNumber) || emotionalIntensity === 'high';
       
       let chapterContent;
+      let claudeWordCount = 0; // Track word count throughout pipeline
+      let geminiStructureCount = 0; // Track Gemini structure phase
+      
+      // Log Gemini structure design phase (Stage 1)
+      console.log(`📊 1단계 시작: Gemini 논리적 구조 설계`);
+      if (logicalFramework && logicalFramework.outline) {
+        geminiStructureCount = (logicalFramework.outline.length || 0);
+        console.log(`✅ Gemini 구조 설계 완료: ${geminiStructureCount}자 구조 프레임워크`);
+      }
+      
       try {
         // Claude 전용 감성적 컨텍스트 생성
         const emotionalContext = this.buildEmotionalContext(
@@ -165,6 +175,8 @@ export class HybridAIGenerator {
           isEmotionalChapter
         );
         
+        console.log(`📊 2단계 시작: Claude 감성적 집필 (구조 기반: ${geminiStructureCount}자)`);
+        
         chapterContent = await this.claudeGenerator.generateChapter({
           ...options,
           plotOutline: emotionalContext,
@@ -173,7 +185,9 @@ export class HybridAIGenerator {
           logicalConstraints: logicalFramework?.constraints || []
         });
         
-        console.log(`✅ Claude 감성 집필 완료: ${chapterContent?.content?.length || 0}자`);
+        claudeWordCount = chapterContent?.content?.length || 0;
+        console.log(`✅ Claude 감성 집필 완료: ${claudeWordCount}자`);
+        console.log(`📊 단계별 진행: [1단계: Gemini ${geminiStructureCount}자 구조] → [2단계: Claude ${claudeWordCount}자] → [3단계: 검증 예정]`);
       } catch (claudeError) {
         console.error('❌ Claude 감성 집필 실패:', claudeError.message);
         
@@ -194,14 +208,19 @@ export class HybridAIGenerator {
 
           if (validation.issues && validation.issues.length > 0) {
             console.log(`⚠️ ${validation.issues.length}개 일관성 문제 발견, Claude로 수정...`);
+            console.log(`📊 3단계 진행중: Gemini 검증 → Claude 수정 적용`);
             
             // Claude가 Gemini의 논리적 지적사항을 반영하여 감성적으로 수정
+            const beforeValidationCount = chapterContent.content?.length || 0;
             chapterContent.content = await this.claudeGenerator.improveChapter(
               chapterContent.content,
               validation.issues
             );
             
-            console.log('✅ 하이브리드 검증-수정 완료');
+            const afterValidationCount = chapterContent.content?.length || 0;
+            const validationChange = afterValidationCount - beforeValidationCount;
+            console.log(`✅ 하이브리드 검증-수정 완료: ${afterValidationCount}자 (변화: ${validationChange >= 0 ? '+' : ''}${validationChange}자)`);
+            console.log(`📊 단계별 진행: [1단계: Gemini 구조] → [2단계: Claude ${claudeWordCount}자] → [3단계: 검증 ${afterValidationCount}자] → [4단계: 품질개선 예정]`);
           }
         } catch (error) {
           console.warn('⚠️ Gemini 일관성 검증 실패:', error.message);
@@ -209,19 +228,47 @@ export class HybridAIGenerator {
       }
 
       // 4단계: 최종 품질 검사
+      console.log(`📊 4단계 시작: 최종 품질 검사 및 개선`);
+      
       const qualityAssessment = await this.qualityEngine.assessQuality(
         chapterContent.content
       );
+      
+      console.log(`📋 품질 평가 완료: ${qualityAssessment.score}/100점 (임계값: ${this.qualityEngine.qualityStandards.qualityThreshold})`);
 
       if (qualityAssessment.score < this.qualityEngine.qualityStandards.qualityThreshold) {
-        console.log('🔧 최종 품질 개선 중...');
+        console.log(`🔧 4단계 진행중: 품질 개선 필요 (${qualityAssessment.score} < ${this.qualityEngine.qualityStandards.qualityThreshold})`);
+        const beforeQualityCount = chapterContent.content?.length || 0;
         chapterContent.content = await this.qualityEngine.improveContent(
           chapterContent.content,
           qualityAssessment
         );
+        const afterQualityCount = chapterContent.content?.length || 0;
+        const qualityChange = afterQualityCount - beforeQualityCount;
+        console.log(`✅ 품질 개선 완료: ${afterQualityCount}자 (변화: ${qualityChange >= 0 ? '+' : ''}${qualityChange}자)`);
+      } else {
+        console.log(`✅ 품질 기준 충족: ${qualityAssessment.score}/100점 - 개선 생략`);
       }
 
+      const finalWordCount = chapterContent?.content?.length || 0;
+      const totalChange = finalWordCount - claudeWordCount;
+      
       console.log('🎉 하이브리드 챕터 생성 완료: 논리적 구조 + 감성적 표현');
+      console.log(`📊 최종 결과: ${finalWordCount}자 (Claude 원본 대비 ${totalChange >= 0 ? '+' : ''}${totalChange}자 변화)`);
+      console.log(`📈 전체 파이프라인 상세:`);
+      console.log(`   ├─ 1단계: Gemini 구조 설계 (${geminiStructureCount}자 프레임워크)`);
+      console.log(`   ├─ 2단계: Claude 감성 집필 (${claudeWordCount}자)`);
+      console.log(`   ├─ 3단계: Gemini 검증/수정 (검증 완료)`);
+      console.log(`   ├─ 4단계: 품질 개선 (점수: ${qualityAssessment.score}/100)`);
+      console.log(`   └─ 최종 결과: ${finalWordCount}자 (총 변화: ${totalChange >= 0 ? '+' : ''}${totalChange}자)`);
+      
+      // 단계별 품질 메트릭 요약
+      console.log(`📊 품질 메트릭 요약:`);
+      console.log(`   ├─ 원본 길이: ${claudeWordCount}자`);
+      console.log(`   ├─ 최종 길이: ${finalWordCount}자`);
+      console.log(`   ├─ 변화율: ${claudeWordCount > 0 ? ((totalChange / claudeWordCount) * 100).toFixed(1) : '0'}%`);
+      console.log(`   └─ 품질 점수: ${qualityAssessment.score}/100점`);
+      
       return chapterContent;
 
     } catch (error) {
@@ -449,7 +496,7 @@ ${Array.isArray(logicalFramework.constraints) ?
    * DynamicContentGenerator와의 호환성을 위한 표준 메서드
    */
   async generateContent(request) {
-    const { prompt, maxTokens = 2000, type = 'general', ...options } = request;
+    const { prompt, maxTokens = 2000, type = 'general' } = request;
     
     try {
       // 콘텐츠 타입에 따른 적절한 생성기 선택

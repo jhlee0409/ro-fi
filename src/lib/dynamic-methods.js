@@ -105,7 +105,7 @@ ${tropeCombination.unique_twist}
     }
 
     try {
-      const { title, characters, worldSetting, tropeCombination, plotStructure } = novelContext;
+      const { title, characters, characterNames, worldSetting, tropeCombination, plotStructure } = novelContext;
       
       // 이전 챕터들의 컨텍스트 추출
       const previousContext = await this.getPreviousChapterContext(novelSlug, chapterNumber);
@@ -113,23 +113,73 @@ ${tropeCombination.unique_twist}
       // 현재 플롯 단계 결정
       const plotStage = this.determinePlotStage(chapterNumber);
       
+      // 캐릭터 정보 정규화 (두 가지 형식 지원)
+      let finalCharacters;
+      if (characters && characters.female && characters.male) {
+        // 완전한 캐릭터 객체가 있는 경우 (새 소설 생성시)
+        finalCharacters = characters;
+      } else if (characterNames && characterNames.length >= 2) {
+        // characterNames 배열만 있는 경우 (기존 소설 계속시)
+        finalCharacters = {
+          female: {
+            name: characterNames[0],
+            meaning: '아름다운 의미',
+            personality_hint: '강인하고 지혜로운'
+          },
+          male: {
+            name: characterNames[1], 
+            meaning: '강력한 의미',
+            personality_hint: '신비롭고 카리스마 있는'
+          }
+        };
+      } else {
+        // 폴백: 기본 캐릭터 정보
+        console.warn('⚠️ 캐릭터 정보 부족, 기본값 사용');
+        finalCharacters = {
+          female: {
+            name: '세라핀',
+            meaning: '천사의 이름',
+            personality_hint: '강인하고 지혜로운'
+          },
+          male: {
+            name: '다미안',
+            meaning: '정복자',
+            personality_hint: '신비롭고 카리스마 있는'
+          }
+        };
+      }
+      
       // 완전히 동적인 캐릭터 컨텍스트 생성
       const dynamicCharacterContext = `
-**${characters.female.name}** (${characters.female.meaning}): ${characters.female.personality_hint}
-**${characters.male.name}** (${characters.male.meaning}): ${characters.male.personality_hint}
+**${finalCharacters.female.name}** (${finalCharacters.female.meaning}): ${finalCharacters.female.personality_hint}
+**${finalCharacters.male.name}** (${finalCharacters.male.meaning}): ${finalCharacters.male.personality_hint}
 
-⚠️ 중요: 반드시 여주는 "${characters.female.name}", 남주는 "${characters.male.name}"을 사용하세요.
+⚠️ 중요: 반드시 여주는 "${finalCharacters.female.name}", 남주는 "${finalCharacters.male.name}"을 사용하세요.
 절대로 다른 이름을 사용하지 마세요.`;
 
+      // 세계관 정보 정규화
+      const finalWorldSetting = worldSetting || {
+        world_name: '판타지 왕국',
+        setting_description: '마법과 로맨스가 어우러진 환상적인 세계',
+        magic_system: '엘레멘탈 마법 시스템'
+      };
+      
+      // 트로프 정보 정규화
+      const finalTropeCombination = tropeCombination || {
+        main_trope: title?.includes('시간') ? 'time-manipulation' : 'enemies-to-lovers',
+        conflict_driver: '운명적 갈등',
+        romance_tension: '마법적 연결'
+      };
+      
       // 동적 플롯 컨텍스트 생성
       const dynamicPlotContext = `
-**세계관**: ${worldSetting.world_name} - ${worldSetting.setting_description}
-**마법 시스템**: ${worldSetting.magic_system}
-**주요 트로프**: ${tropeCombination.main_trope}
+**세계관**: ${finalWorldSetting.world_name} - ${finalWorldSetting.setting_description}
+**마법 시스템**: ${finalWorldSetting.magic_system}
+**주요 트로프**: ${finalTropeCombination.main_trope}
 **현재 단계**: ${plotStage} (${chapterNumber}화)
 **관계 단계**: ${plotStructure?.relationship_stage || '발전 중'}
-**갈등 요소**: ${tropeCombination.conflict_driver}
-**로맨스 텐션**: ${tropeCombination.romance_tension}`;
+**갈등 요소**: ${finalTropeCombination.conflict_driver}
+**로맨스 텐션**: ${finalTropeCombination.romance_tension}`;
 
       // AI 챕터 생성 (기존 generateChapter와 동일한 품질 보장)
       let bestResult = null;
@@ -140,14 +190,14 @@ ${tropeCombination.unique_twist}
         console.log(`🤖 동적 AI 챕터 생성 시도 (${i + 1}/${maxRetries})...`);
 
         const aiResult = await this.aiGenerator.generateChapter({
-          title: title,
-          tropes: [tropeCombination.main_trope, ...tropeCombination.sub_tropes],
+          title: title || '로맨스 판타지',
+          tropes: [finalTropeCombination.main_trope, ...(finalTropeCombination.sub_tropes || [])],
           chapterNumber,
           chapterTitle, // 동적 생성된 제목 사용
           previousContext,
           characterContext: dynamicCharacterContext,
           plotOutline: dynamicPlotContext,
-          worldSetting: worldSetting.setting_description,
+          worldSetting: finalWorldSetting.setting_description,
           isDynamic: true // 완전 동적 생성 표시
         });
 
