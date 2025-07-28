@@ -325,6 +325,28 @@ JSON 형식으로 구조화하여 응답해주세요.`;
       throw error;
     }
   }
+
+  /**
+   * 범용 콘텐츠 생성 메서드
+   * HybridAIGenerator와의 호환성을 위한 표준 인터페이스
+   */
+  async generateContent(prompt, maxTokens = 2000, options = {}) {
+    try {
+      const response = await this._generateContentWithRetry(prompt);
+      const content = response.text();
+      
+      return {
+        content,
+        usage: {
+          totalTokens: 0 // Gemini doesn't provide token usage in the same format
+        },
+        model: this.config.modelName
+      };
+    } catch (error) {
+      console.error('❌ Gemini generateContent 실패:', error.message);
+      throw error;
+    }
+  }
 }
 
 /**

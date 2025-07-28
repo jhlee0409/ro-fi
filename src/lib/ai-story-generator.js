@@ -689,6 +689,34 @@ ${originalChapter}
 
     return response.content[0].type === 'text' ? response.content[0].text : '';
   }
+
+  /**
+   * 범용 콘텐츠 생성 메서드
+   * HybridAIGenerator와의 호환성을 위한 표준 인터페이스
+   */
+  async generateContent(prompt, maxTokens = 2000, options = {}) {
+    try {
+      const response = await this.anthropicWithRetry({
+        model: 'claude-3-5-sonnet-20241022',
+        max_tokens: maxTokens,
+        messages: [{ role: 'user', content: prompt }],
+        ...options
+      });
+
+      const content = response.content[0].type === 'text' ? response.content[0].text : '';
+      
+      return {
+        content,
+        usage: {
+          totalTokens: response.usage?.input_tokens + response.usage?.output_tokens || 0
+        },
+        model: 'claude-3-5-sonnet-20241022'
+      };
+    } catch (error) {
+      console.error('❌ Claude generateContent 실패:', error.message);
+      throw error;
+    }
+  }
 }
 
 // 환경 변수에서 API 키와 플랫폼을 가져오는 헬퍼 함수
