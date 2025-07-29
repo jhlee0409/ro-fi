@@ -394,6 +394,11 @@ JSON 형태로 정리해서 답변해주세요.`;
     
     let content;
     
+    // Check if any AI service is available
+    if (!this.anthropic && !this.geminiModel) {
+      throw new Error('AI API가 설정되지 않았습니다. Claude 또는 Gemini API 키를 설정해주세요.');
+    }
+    
     if (isEmotionalScene && this.anthropic) {
       // Claude로 감성적 장면 생성
       console.log('💝 Claude로 감성 장면 생성...');
@@ -401,16 +406,27 @@ JSON 형태로 정리해서 답변해주세요.`;
         title, tropes, chapterNumber, chapterTitle,
         previousContext, characterContext, plotOutline, worldSetting
       });
-    } else if (this.geminiModel) {
+    } else if (!isEmotionalScene && this.geminiModel) {
       // Gemini로 논리적 장면 생성
       console.log('🧠 Gemini로 논리적 장면 생성...');
       content = await this.generateLogicalChapterContent({
         title, tropes, chapterNumber, chapterTitle,
         previousContext, characterContext, plotOutline, worldSetting
       });
-    } else {
-      // AI API가 없는 경우 에러
-      throw new Error('AI API가 설정되지 않았습니다. Claude 또는 Gemini API 키를 설정해주세요.');
+    } else if (this.anthropic) {
+      // Fallback to Claude if available
+      console.log('🤖 Claude 폴백 생성...');
+      content = await this.generateEmotionalChapterContent({
+        title, tropes, chapterNumber, chapterTitle,
+        previousContext, characterContext, plotOutline, worldSetting
+      });
+    } else if (this.geminiModel) {
+      // Fallback to Gemini if available
+      console.log('🧠 Gemini 폴백 생성...');
+      content = await this.generateLogicalChapterContent({
+        title, tropes, chapterNumber, chapterTitle,
+        previousContext, characterContext, plotOutline, worldSetting
+      });
     }
     
     return {
@@ -542,9 +558,12 @@ JSON 형태로 정리해서 답변해주세요.`;
   
   parseWorldBuildingText(text) {
     // 텍스트에서 기본 정보 추출
+    // Ensure text is a string
+    const textStr = typeof text === 'string' ? text : String(text || '');
+    
     return {
-      world_name: text.match(/세계.*?[:\n]/)?.[0] || '판타지 세계',
-      setting_description: text.substring(0, 200) + '...',
+      world_name: textStr.match(/세계.*?[:\n]/)?.[0] || '판타지 세계',
+      setting_description: textStr.substring(0, 200) + '...',
       magic_system: '마법 시스템',
       social_structure: '사회 구조',
       key_locations: ['주요 장소1', '주요 장소2'],
@@ -831,8 +850,25 @@ JSON 형태로 정리해서 답변해주세요.`;
   }
   
   // 일반 콘텐츠 생성
-  async generateContent(prompt, options = {}) {
-    const { model = 'claude' } = options;
+  async generateContent(promptOrOptions, options = {}) {
+    // Handle both old API (string prompt) and new API (options object)
+    let prompt, finalOptions;
+    
+    if (typeof promptOrOptions === 'string') {
+      prompt = promptOrOptions;
+      finalOptions = options;
+    } else if (promptOrOptions && typeof promptOrOptions === 'object') {
+      prompt = promptOrOptions.prompt;
+      finalOptions = { ...options, ...promptOrOptions };
+    } else {
+      throw new Error('Invalid prompt parameter - must be string or options object');
+    }
+    
+    if (!prompt || typeof prompt !== 'string') {
+      throw new Error('Prompt must be a non-empty string');
+    }
+    
+    const { model = 'claude' } = finalOptions;
     
     if (model === 'claude' && this.anthropic) {
       const response = await this.callClaude({
@@ -852,8 +888,11 @@ JSON 형태로 정리해서 답변해주세요.`;
       };
     }
     
+    // Ensure prompt is a string for mock response
+    const promptStr = typeof prompt === 'string' ? prompt : String(prompt || 'unknown');
+    
     return {
-      content: `Mock response for: ${prompt.substring(0, 50)}...`,
+      content: `Mock response for: ${promptStr.substring(0, 50)}...`,
       metadata: { model: 'mock' }
     };
   }

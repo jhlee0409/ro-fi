@@ -118,15 +118,20 @@ export class MasterAutomationEngine {
     }
 
     // 하이브리드 AI 생성기 사용 시도
-    const hybridGenerator = createHybridGenerator();
-    if (hybridGenerator) {
+    const hybridGenerator = createHybridGenerator({
+      anthropicApiKey: process.env.ANTHROPIC_API_KEY,
+      geminiApiKey: process.env.GEMINI_API_KEY
+    });
+    
+    // Check if any API is actually available
+    if (hybridGenerator && (hybridGenerator.anthropic || hybridGenerator.geminiModel)) {
       console.log('🌟 하이브리드 AI 시스템 사용 (Claude + Gemini)');
       return hybridGenerator;
     }
 
     // 폴백: Claude 단독 사용
     console.log('🤖 Claude 단독 서비스 사용');
-    return createStoryGenerator();
+    return createStoryGenerator(process.env.ANTHROPIC_API_KEY);
   }
 
   // 모킹된 AI 생성기 생성
