@@ -426,21 +426,50 @@ export class GCMonitor {
       forcedGC: 0,
       memoryBefore: 0,
       memoryAfter: 0,
-      lastCleanup: Date.now()
+      lastCleanup: Date.now(),
+      // 새로운 메트릭 추가
+      peakMemoryUsage: 0,
+      averageMemoryUsage: 0,
+      memoryLeakDetections: 0,
+      performanceImpacts: []
+    };
+    
+    // 메모리 사용량 히스토리 추적
+    this.memoryHistory = new CircularBuffer(100);
+    this.performanceMetrics = {
+      gcFrequency: 0,
+      averageCleanupTime: 0,
+      memoryRecoveryRate: 0
     };
   }
 
   /**
-   * 메모리 사용량 확인
+   * 메모리 사용량 확인 (향상된 메트릭 포함)
    */
   getMemoryUsage() {
     const usage = process.memoryUsage();
-    return {
+    const memoryData = {
       heapUsed: Math.round(usage.heapUsed / 1024 / 1024), // MB
       heapTotal: Math.round(usage.heapTotal / 1024 / 1024),
       external: Math.round(usage.external / 1024 / 1024),
-      rss: Math.round(usage.rss / 1024 / 1024)
+      rss: Math.round(usage.rss / 1024 / 1024),
+      // 새로운 메트릭
+      heapUtilization: Math.round((usage.heapUsed / usage.heapTotal) * 100),
+      timestamp: Date.now()
     };
+    
+    // 히스토리에 추가
+    this.memoryHistory.push(memoryData);
+    
+    // 피크 메모리 업데이트
+    if (memoryData.heapUsed > this.gcStats.peakMemoryUsage) {
+      this.gcStats.peakMemoryUsage = memoryData.heapUsed;
+    }
+    
+    // 평균 메모리 계산
+    this.gcStats.averageMemoryUsage = this.memoryHistory.getAverage();
+    
+    return memoryData;
   }
 
   /**
@@ -466,14 +495,85 @@ export class GCMonitor {
   }
 
   /**
-   * GC 통계
+   * GC 통계 (확장된 메트릭)
    */
   getStats() {
+    const currentMemory = this.getMemoryUsage();
     return {
       ...this.gcStats,
-      currentMemory: this.getMemoryUsage(),
-      timeSinceLastGC: Date.now() - this.gcStats.lastCleanup
+      currentMemory,
+      timeSinceLastGC: Date.now() - this.gcStats.lastCleanup,
+      // 새로운 메트릭
+      memoryTrend: this.calculateMemoryTrend(),
+      performanceImpact: this.calculatePerformanceImpact(),
+      healthScore: this.calculateMemoryHealthScore(currentMemory),
+      recommendations: this.generateMemoryRecommendations(currentMemory)
     };
+  }
+  
+  /**
+   * 메모리 트렌드 분석
+   */
+  calculateMemoryTrend() {
+    const recent = this.memoryHistory.getRecent(10);
+    if (recent.length < 2) return 'insufficient_data';
+    
+    const trend = recent[recent.length - 1].heapUsed - recent[0].heapUsed;
+    if (trend > 50) return 'increasing';
+    if (trend < -50) return 'decreasing';
+    return 'stable';
+  }
+  
+  /**
+   * 성능 영향 계산
+   */
+  calculatePerformanceImpact() {
+    const recent = this.memoryHistory.getRecent(5);
+    const highUsage = recent.filter(m => m.heapUtilization > 80).length;
+    
+    if (highUsage >= 3) return 'high';
+    if (highUsage >= 1) return 'medium';
+    return 'low';
+  }
+  
+  /**
+   * 메모리 건강도 점수
+   */
+  calculateMemoryHealthScore(currentMemory) {
+    let score = 100;
+    
+    // 힙 사용률 패널티
+    if (currentMemory.heapUtilization > 90) score -= 30;
+    else if (currentMemory.heapUtilization > 80) score -= 15;
+    else if (currentMemory.heapUtilization > 70) score -= 5;
+    
+    // GC 빈도 패널티
+    if (this.gcStats.forcedGC > 10) score -= 20;
+    else if (this.gcStats.forcedGC > 5) score -= 10;
+    
+    return Math.max(0, score);
+  }
+  
+  /**
+   * 메모리 개선 권장사항
+   */
+  generateMemoryRecommendations(currentMemory) {
+    const recommendations = [];
+    
+    if (currentMemory.heapUtilization > 85) {
+      recommendations.push('메모리 사용량이 높습니다. 캐시 크기를 줄이거나 GC를 실행하세요.');
+    }
+    
+    if (this.gcStats.forcedGC > 5) {
+      recommendations.push('잦은 강제 GC가 감지됩니다. 메모리 풀 최적화를 고려하세요.');
+    }
+    
+    const trend = this.calculateMemoryTrend();
+    if (trend === 'increasing') {
+      recommendations.push('메모리 사용량이 지속적으로 증가하고 있습니다. 메모리 누수를 확인하세요.');
+    }
+    
+    return recommendations;
   }
 }
 
