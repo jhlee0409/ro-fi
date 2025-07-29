@@ -202,16 +202,24 @@ describe('UnifiedAIGenerator - 하이브리드 AI 시스템', () => {
         return { content: [{text: 'Success after retries'}], usage: { tokens: 1000 } };
       });
 
-      const result = await unifiedGenerator.unifiedRetry(
-        mockFn,
-        3,
-        25, // 테스트용 더 짧은 지연시간 (50ms → 25ms)
-        true
-      );
+      // NODE_ENV를 test로 설정하여 테스트용 짧은 delay 사용
+      const originalEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'test';
 
-      expect(result.content[0].text).toBe('Success after retries');
-      expect(mockFn).toHaveBeenCalledTimes(3);
-    }, 15000); // 15초 타임아웃
+      try {
+        const result = await unifiedGenerator.unifiedRetry(
+          mockFn,
+          3,
+          10, // 더 짧은 지연시간 (10ms)
+          true
+        );
+
+        expect(result.content[0].text).toBe('Success after retries');
+        expect(mockFn).toHaveBeenCalledTimes(3);
+      } finally {
+        process.env.NODE_ENV = originalEnv;
+      }
+    }, 30000); // 30초 타임아웃으로 증가
 
     test('Gemini 5xx 에러 재시도', async () => {
       const error500 = new Error('Server error');

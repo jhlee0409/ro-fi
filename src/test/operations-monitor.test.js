@@ -71,6 +71,10 @@ describe('OperationsMonitor - 통합 모니터링 시스템', () => {
       expect(logFileList.length).toBeGreaterThan(0);
       
       const latestLog = logFileList.pop();
+      if (!latestLog) {
+        throw new Error('No log files found');
+      }
+      
       const logPath = join(testLogDir, latestLog);
       
       // 파일이 존재하고 디렉터리가 아닌 것을 확인

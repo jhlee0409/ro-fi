@@ -643,6 +643,10 @@ export class OperationsMonitor {
   async logToFile(entry) {
     try {
       const logDir = this.logConfig.logDir;
+      
+      // Ensure log directory exists
+      await fs.mkdir(logDir, { recursive: true });
+      
       const fileName = `operations-${new Date().toISOString().split('T')[0]}.log`;
       const filePath = path.join(logDir, fileName);
 

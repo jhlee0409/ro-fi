@@ -17,6 +17,13 @@ export default defineConfig({
       '**/backup/**'
     ],
     
+    // Force exit after tests complete
+    forceRerunTriggers: ['**/src/**/*.js', '**/src/**/*.ts'],
+    dangerouslyIgnoreUnhandledErrors: false,
+    
+    // Setup file for global cleanup
+    setupFiles: ['./vitest.setup.ts'],
+    
     // 성능 최적화된 타임아웃
     testTimeout: 20000, // 20초 (AI retry 로직을 위한 충분한 시간)
     hookTimeout: 10000,  // 10초 (cleanup을 위한 충분한 시간)
