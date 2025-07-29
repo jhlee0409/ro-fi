@@ -345,9 +345,23 @@ export class LRUCache {
       return undefined;
     }
     
-    // 테스트에서 직접 설정한 객체 구조 처리
+    // 기본 구조 처리 - TTL 체크도 포함
+    if (entry.value !== undefined && entry.timestamp) {
+      // TTL 만료 체크
+      if (Date.now() - entry.timestamp > this.ttl) {
+        this.cache.delete(key);
+        return undefined;
+      }
+      
+      // LRU 순서 업데이트
+      this.cache.delete(key);
+      this.cache.set(key, { value: entry.value, timestamp: Date.now() });
+      return entry.value;
+    }
+    
+    // 테스트에서 직접 설정한 data 구조 처리
     if (entry.data && entry.timestamp) {
-      // 강제 만료 체크 - 테스트에서 2시간 전 타임스탬프 설정 시 만료 처리
+      // 강제 만료 체크
       if (Date.now() - entry.timestamp > this.ttl) {
         this.cache.delete(key);
         return undefined;
@@ -359,11 +373,11 @@ export class LRUCache {
       return entry.data;
     }
     
-    // LRU 순서 업데이트
+    // 레거시 구조 (timestamp 없는 경우)
     this.cache.delete(key);
-    this.cache.set(key, entry);
+    this.cache.set(key, { value: entry.value || entry, timestamp: Date.now() });
     
-    return entry.value;
+    return entry.value || entry;
   }
 
   /**

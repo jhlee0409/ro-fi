@@ -54,7 +54,7 @@ export class OperationsMonitor {
     // 로그 관리 설정
     // =================
     this.logConfig = {
-      logDir: config.logDir || path.join(__dirname, '../../logs'),
+      logDir: config.logDirectory || config.logDir || path.join(__dirname, '../../logs'),
       archiveDir: config.archiveDir || path.join(__dirname, '../../logs/archive'),
       maxFileSize: config.maxFileSize || 10 * 1024 * 1024, // 10MB
       maxFiles: config.maxFiles || 10,
@@ -170,6 +170,10 @@ export class OperationsMonitor {
     this.logBuffer = [];
     this.logBatchSize = config.logBatchSize || 50;
     this.pendingWrites = new Set();
+    
+    // 테스트 호환성을 위한 추가 속성들
+    this.enableConsoleLogging = config.enableConsoleLogging !== false;
+    this.recentAlerts = [];
 
     // 시작 시간
     this.startTime = Date.now();
@@ -924,6 +928,181 @@ export class OperationsMonitor {
     if (process.env.NODE_ENV !== 'test') {
       console.log('✅ 운영 모니터링 시스템 종료 완료');
     }
+  }
+
+  // =================
+  // 테스트 호환성 메서드들
+  // =================
+
+  /**
+   * 정보 로그 기록
+   */
+  async logInfo(message, data = {}) {
+    const entry = {
+      level: 'info',
+      message,
+      timestamp: new Date().toISOString(),
+      data,
+      ...data
+    };
+    
+    await this.logToFile(entry);
+    
+    if (this.enableConsoleLogging && process.env.NODE_ENV !== 'test') {
+      console.log(`ℹ️ ${message}`, data);
+    }
+  }
+
+  /**
+   * 경고 로그 기록
+   */
+  async logWarning(message, data = {}) {
+    const entry = {
+      level: 'warning',
+      message,
+      timestamp: new Date().toISOString(),
+      data,
+      ...data
+    };
+    
+    await this.logToFile(entry);
+    
+    if (this.enableConsoleLogging && process.env.NODE_ENV !== 'test') {
+      console.warn(`⚠️ ${message}`, data);
+    }
+  }
+
+  /**
+   * 에러 로그 기록
+   */
+  async logError(message, error = null) {
+    const entry = {
+      level: 'error',
+      message,
+      timestamp: new Date().toISOString(),
+      error: error ? {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      } : null
+    };
+    
+    await this.logToFile(entry);
+    
+    if (this.enableConsoleLogging && process.env.NODE_ENV !== 'test') {
+      console.error(`❌ ${message}`, error);
+    }
+  }
+
+  /**
+   * AI 운영 추적
+   */
+  async trackAIOperation(operation, data = {}) {
+    const entry = {
+      type: 'ai_operation',
+      operation,
+      timestamp: new Date().toISOString(),
+      ...data
+    };
+
+    // AI 메트릭스에 추가
+    if (!this.metrics.ai.operations.has(operation)) {
+      this.metrics.ai.operations.set(operation, {
+        count: 0,
+        totalTime: 0,
+        errors: 0,
+        lastCall: null
+      });
+    }
+
+    const opMetrics = this.metrics.ai.operations.get(operation);
+    opMetrics.count++;
+    opMetrics.lastCall = new Date().toISOString();
+    
+    if (data.duration) {
+      opMetrics.totalTime += data.duration;
+    }
+    
+    if (data.error) {
+      opMetrics.errors++;
+    }
+
+    await this.logToFile(entry);
+  }
+
+  /**
+   * 로그 파일 생성
+   */
+  async createLogFile(filename = null) {
+    const logDir = this.logConfig.logDir;
+    await this.ensureDirectories();
+    
+    const timestamp = new Date().toISOString().split('T')[0];
+    const logFilename = filename || `operations-${timestamp}.log`;
+    const logPath = path.join(logDir, logFilename);
+    
+    // 파일이 없으면 생성
+    try {
+      await fs.access(logPath);
+    } catch {
+      await fs.writeFile(logPath, '');
+    }
+    
+    return logPath;
+  }
+
+  /**
+   * AI 메트릭스 조회
+   */
+  getAIMetrics() {
+    const operations = {};
+    for (const [op, metrics] of this.metrics.ai.operations.entries()) {
+      operations[op] = {
+        ...metrics,
+        averageTime: metrics.count > 0 ? metrics.totalTime / metrics.count : 0,
+        errorRate: metrics.count > 0 ? metrics.errors / metrics.count : 0
+      };
+    }
+
+    return {
+      operations,
+      tokenUsage: this.metrics.ai.tokenUsage,
+      responseTime: this.metrics.ai.responseTime,
+      qualityScores: this.metrics.ai.qualityScores,
+      errorRate: this.metrics.ai.errorRate
+    };
+  }
+
+  /**
+   * 운영 시간 추적
+   */
+  async trackOperationTime(operation, duration) {
+    await this.trackAIOperation(operation, { duration });
+  }
+
+  /**
+   * 성능 메트릭스 수집
+   */
+  async collectPerformanceMetrics() {
+    const metrics = await this.collectSystemMetrics();
+    return metrics;
+  }
+
+  /**
+   * 성능 임계값 설정
+   */
+  setPerformanceThresholds(thresholds) {
+    this.performanceConfig.thresholds = {
+      ...this.performanceConfig.thresholds,
+      ...thresholds
+    };
+  }
+
+  /**
+   * 최근 알림 조회
+   */
+  getRecentAlerts(limit = 10) {
+    return this.recentAlerts.slice(-limit);
   }
 }
 
