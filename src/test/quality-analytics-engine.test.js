@@ -94,7 +94,7 @@ describe('QualityAnalyticsEngine - 통합 테스트', () => {
 
       expect(analysis.criticalPoints).toBeDefined();
       expect(analysis.overallDropoutRate).toBeCloseTo(0.32);
-      expect(analysis.recommendations).toHaveLength.greaterThan(0);
+      expect(analysis.recommendations.length).toBeGreaterThan(0);
     });
   });
 
@@ -163,7 +163,7 @@ describe('QualityAnalyticsEngine - 통합 테스트', () => {
       );
 
       expect(routine.activate).toBe(true);
-      expect(routine.triggers).toHaveLength.greaterThan(0);
+      expect(routine.triggers.length).toBeGreaterThan(0);
       expect(routine.score).toBeGreaterThan(0.5);
     });
 
@@ -256,7 +256,7 @@ describe('QualityAnalyticsEngine - 통합 테스트', () => {
       expect(rhythm.overallPacing).toBeDefined();
       expect(rhythm.climaxBuildup).toBeDefined();
       expect(rhythm.emotionalArcs).toBeDefined();
-      expect(rhythm.recommendations).toHaveLength.greaterThan(0);
+      expect(rhythm.recommendations.length).toBeGreaterThan(0);
     });
 
     test('다음 챕터 페이싱 권장', () => {
@@ -270,7 +270,7 @@ describe('QualityAnalyticsEngine - 통합 테스트', () => {
 
       expect(recommendation.suggestedPacing).toBeDefined();
       expect(recommendation.intensityTarget).toBeDefined();
-      expect(recommendation.techniques).toHaveLength.greaterThan(0);
+      expect(recommendation.techniques.length).toBeGreaterThan(0);
     });
   });
 
@@ -288,7 +288,7 @@ describe('QualityAnalyticsEngine - 통합 테스트', () => {
       expect(report.averageQuality).toBeCloseTo(0.825);
       expect(report.averageEngagement).toBeCloseTo(0.725);
       expect(report.topPerformers).toBeDefined();
-      expect(report.recommendations).toHaveLength.greaterThan(0);
+      expect(report.recommendations.length).toBeGreaterThan(0);
     });
   });
 

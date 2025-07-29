@@ -29,19 +29,19 @@ describe('Automation System Integration Tests - v3.1', () => {
     qualityEngine = new QualityAnalyticsEngine();
     unifiedAI = new UnifiedAIGenerator({
       anthropicApiKey: 'test-key',
-      geminiApiKey: 'test-key'
+      geminiApiKey: 'test-key',
     });
     operationsMonitor = new OperationsMonitor({
       logDirectory: join(testDir, 'logs'),
-      logLevel: 'info'
+      logLevel: 'info',
     });
-    
+
     // 🔧 테스트용 자동화 엔진 - 통합된 시스템으로 업데이트
     const mockAIGenerator = createMockAIGenerator();
-    automationEngine = new MasterAutomationEngine(testDir, { 
+    automationEngine = new MasterAutomationEngine(testDir, {
       aiGenerator: mockAIGenerator,
       qualityEngine,
-      operationsMonitor
+      operationsMonitor,
     });
   });
 
@@ -84,7 +84,7 @@ describe('Automation System Integration Tests - v3.1', () => {
     // DynamicContentGenerator handles concept generation through AI
     const dynamicGenerator = automationEngine.dynamicGenerator;
     expect(dynamicGenerator).toBeDefined();
-    
+
     // Test that the generator can create trope combinations
     const tropes = await dynamicGenerator.generateTropeCombination([]);
     expect(tropes.main_trope).toBeDefined();
@@ -104,7 +104,7 @@ describe('Automation System Integration Tests - v3.1', () => {
     const qualityResult = qualityEngine.evaluateQuality(mockContent, {
       novel: 'test-novel',
       chapter: 1,
-      emotionalStage: 'introduction'
+      emotionalStage: 'introduction',
     });
 
     expect(qualityResult.overall).toBeGreaterThan(0);
@@ -126,8 +126,8 @@ describe('Automation System Integration Tests - v3.1', () => {
       openThreads: [],
       characters: [
         { name: '주인공', growthArc: 90 },
-        { name: '남주', growthArc: 85 }
-      ]
+        { name: '남주', growthArc: 85 },
+      ],
     };
 
     // v3.1 통합된 완결 기준 검사 (qualityEngine 내부)
@@ -149,13 +149,13 @@ describe('Automation System Integration Tests - v3.1', () => {
   test('should integrate operations monitoring', async () => {
     // v3.1 운영 모니터링 통합 테스트
     automationEngine.dryRun = true;
-    
+
     const result = await automationEngine.executeAutomation();
-    
+
     // 모니터링 시스템이 자동화 실행을 추적했는지 확인
     const workflowHistory = operationsMonitor.getWorkflowHistory();
     expect(workflowHistory).toBeDefined();
-    
+
     // AI 운영 메트릭스 확인
     const aiMetrics = operationsMonitor.getAIMetrics();
     expect(aiMetrics).toBeDefined();
@@ -168,13 +168,13 @@ describe('Automation System Integration Tests - v3.1', () => {
       novel: 'test-novel',
       chapter: 1,
       characters: ['카이런', '에이라'],
-      worldSettings: { genre: 'fantasy', setting: 'modern' }
+      worldSettings: { genre: 'fantasy', setting: 'modern' },
     };
 
     // 통합된 AI 생성기의 하이브리드 기능 테스트
     const hybridResult = await unifiedAI.generateHybridContent(context, {
       targetLength: 2000,
-      emotionalTone: 'romantic'
+      emotionalTone: 'romantic',
     });
 
     expect(hybridResult).toBeDefined();
@@ -192,7 +192,7 @@ describe('Automation System Integration Tests - v3.1', () => {
     // Check if files were generated - may not exist if no action was taken
     try {
       const chapterFiles = await fs.readdir(join(testDir, 'chapters'));
-      
+
       if (chapterFiles.length === 0) {
         // No files were generated, which is valid in some automation scenarios
         // Test passes as automation worked without needing to create files
