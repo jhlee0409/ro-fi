@@ -1,5 +1,9 @@
 name: 자동 로판 연재 시스템 (Romance Fantasy Auto Publisher)
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false  # Don't cancel ongoing automation
+
 on:
   schedule:
     # 매일 오전 9시, 오후 3시, 오후 9시 KST 실행 (UTC 기준 00:00, 06:00, 12:00)
@@ -28,6 +32,7 @@ jobs:
       # Give the default GITHUB_TOKEN write permission to commit and push the generated content.
       contents: write
     runs-on: ubuntu-latest
+    timeout-minutes: 30  # Prevent hanging workflows
 
     env:
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -45,7 +50,14 @@ jobs:
         uses: ./.github/actions/setup-node-pnpm
         with:
           install-deps: 'true'
-          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: 📦 Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
 
       - name: 🧪 테스트 실행
         run: |
@@ -55,16 +67,38 @@ jobs:
         continue-on-error: false
 
       - name: 🔍 보안 검사
-        run: pnpm run security:audit
-        continue-on-error: true
+        id: security_audit
+        run: |
+          pnpm run security:audit || echo "SECURITY_WARNING=true" >> $GITHUB_OUTPUT
+        continue-on-error: false
+
+      - name: ⚠️  보안 경고 처리
+        if: steps.security_audit.outputs.SECURITY_WARNING == 'true'
+        run: |
+          echo "::warning title=보안 경고::보안 취약점이 발견되었습니다. 로그를 확인해주세요."
 
       - name: 🚀 자동화 실행
         id: automation
         run: |
+          set -euo pipefail  # Enhanced error handling
+          
+          # Set action type if provided
+          ACTION_TYPE="${{ github.event.inputs.action_type || 'auto' }}"
+          VERBOSE_FLAG=""
+          
           if [[ "${{ github.event.inputs.verbose }}" == "true" ]]; then
-            node scripts/run-automation.js --verbose
+            VERBOSE_FLAG="--verbose"
+          fi
+          
+          # Run with structured output
+          node scripts/run-automation.js --action-type="$ACTION_TYPE" $VERBOSE_FLAG --output-format=json | tee automation-output.json
+          
+          # Extract summary for later use
+          if [ -f automation-output.json ]; then
+            echo "AUTOMATION_SUMMARY=$(jq -c '.summary' automation-output.json)" >> $GITHUB_OUTPUT
+            echo "changes_made=true" >> $GITHUB_OUTPUT
           else
-            node scripts/run-automation.js
+            echo "changes_made=false" >> $GITHUB_OUTPUT
           fi
         continue-on-error: false
 
@@ -77,13 +111,15 @@ jobs:
             logs/
             src/content/
             test-results/
+            automation-output.json
           retention-days: 30
+          compression-level: 9  # Maximum compression
 
       - name: 🎯 Git 설정
         if: success()
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "로판 자동화 봇 🤖"
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
 
       - name: 📝 변경사항 커밋
         if: success()
@@ -93,16 +129,26 @@ jobs:
           # 변경사항이 있는지 확인
           if git diff --staged --quiet; then
             echo "변경사항이 없습니다. 커밋을 건너뜁니다."
+            echo "CHANGES_MADE=false" >> $GITHUB_ENV
             exit 0
           fi
+          
+          # 변경된 파일 수와 크기 확인
+          CHANGED_FILES=$(git diff --staged --name-only | wc -l)
+          CHANGED_SIZE=$(git diff --staged --stat | tail -1)
+          echo "::notice title=변경사항::$CHANGED_FILES 파일 변경됨 - $CHANGED_SIZE"
+          echo "CHANGES_MADE=true" >> $GITHUB_ENV
 
           # 커밋 메시지 생성
           TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S KST')
-          # logs 디렉토리가 있으면 로그 정보 추출, 없으면 기본값 사용
-          if [ -f "logs/automation-report-$(date '+%Y-%m-%d').json" ]; then
-            AUTOMATION_LOG=$(tail -n 20 logs/automation-report-$(date '+%Y-%m-%d').json | grep -o '"summary":[^}]*}' | head -1 || echo '"summary": {"activeNovels": "N/A"}')
+          
+          # Use structured summary from automation step if available
+          if [ -n "${{ steps.automation.outputs.AUTOMATION_SUMMARY }}" ]; then
+            AUTOMATION_LOG="${{ steps.automation.outputs.AUTOMATION_SUMMARY }}"
+          elif [ -f "logs/automation-report-$(date '+%Y-%m-%d').json" ]; then
+            AUTOMATION_LOG=$(tail -n 20 logs/automation-report-$(date '+%Y-%m-%d').json | grep -o '"summary":[^}]*}' | head -1 || echo '{"activeNovels": "N/A"}')
           else
-            AUTOMATION_LOG='"summary": {"activeNovels": "N/A"}'
+            AUTOMATION_LOG='{"activeNovels": "N/A"}'
           fi
 
           git commit -m "🤖 자동 연재 업데이트 - $TIMESTAMP
@@ -113,11 +159,13 @@ jobs:
           Co-Authored-By: Claude <noreply@anthropic.com>"
 
       - name: 📤 GitHub에 푸시
-        if: success()
+        if: success() && env.CHANGES_MADE == 'true'
         uses: ad-m/github-push-action@v0.8.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ github.ref }}
+          force: false
+          tags: false
 
       - name: 🔔 알림 (성공시)
         if: success()
@@ -131,20 +179,35 @@ jobs:
 
   deploy:
     needs: automation
-    if: success()
+    if: success() && github.ref == 'refs/heads/main' && needs.automation.outputs.changes_made == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: 🛒 체크아웃 코드 (배포용)
         uses: actions/checkout@v4
         with:
           ref: ${{ github.ref }}
-          fetch-depth: 0
+          fetch-depth: 1  # Only need latest commit for build
 
       - name: 🔧 Node.js + pnpm 환경 설정 (배포용)
         uses: ./.github/actions/setup-node-pnpm
         with:
           install-deps: 'true'
+
+      - name: 📦 Cache pnpm store (배포용)
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: 📥 다운로드 생성된 콘텐츠
+        uses: actions/download-artifact@v4
+        with:
+          name: automation-results-${{ github.run_number }}
+          path: ./
 
       - name: 🏗️ Astro 빌드
         run: pnpm build
@@ -152,7 +215,6 @@ jobs:
           NODE_ENV: production
 
       - name: 🚀 Vercel 배포
-        if: github.ref == 'refs/heads/main'
         uses: amondnet/vercel-action@v25
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}

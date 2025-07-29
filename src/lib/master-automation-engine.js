@@ -1,7 +1,7 @@
 import { NovelDetector } from './novel-detector.js';
 // 통합된 엔진들로 변경
 import { QualityAnalyticsEngine } from './quality-analytics-engine.js';
-import { UnifiedAIGenerator } from './ai-unified-generator.js';
+import { UnifiedAIGenerator, createHybridGenerator, createStoryGenerator } from './ai-unified-generator.js';
 import { OperationsMonitor } from './operations-monitor.js';
 import { PlatformConfigEngine } from './platform-config-engine.js';
 import { DynamicContentGenerator } from './dynamic-content-generator.js';
