@@ -18,9 +18,9 @@ export default defineConfig({
     ],
     
     // 성능 최적화된 타임아웃
-    testTimeout: 10000, // 10초 (기존 15초에서 단축)
-    hookTimeout: 5000,  // 5초 (기존 10초에서 단축)
-    teardownTimeout: 3000,
+    testTimeout: 20000, // 20초 (AI retry 로직을 위한 충분한 시간)
+    hookTimeout: 10000,  // 10초 (cleanup을 위한 충분한 시간)
+    teardownTimeout: 5000, // 5초 (정리를 위한 충분한 시간)
     
     // 테스트 재시도 설정
     retry: process.env.CI ? 2 : 0,

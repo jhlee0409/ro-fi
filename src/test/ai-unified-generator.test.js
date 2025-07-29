@@ -205,7 +205,7 @@ describe('UnifiedAIGenerator - 하이브리드 AI 시스템', () => {
       const result = await unifiedGenerator.unifiedRetry(
         mockFn,
         3,
-        50, // 테스트용 더 짧은 지연시간
+        25, // 테스트용 더 짧은 지연시간 (50ms → 25ms)
         true
       );
 
@@ -229,7 +229,7 @@ describe('UnifiedAIGenerator - 하이브리드 AI 시스템', () => {
       const result = await unifiedGenerator.unifiedRetry(
         mockFn,
         3,
-        100, // 테스트용 짧은 지연시간
+        50, // 테스트용 더 짧은 지연시간 (100ms → 50ms)
         false
       );
 

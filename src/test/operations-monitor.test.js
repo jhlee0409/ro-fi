@@ -3,7 +3,7 @@
  * v3.1 통합 모니터링 시스템 검증
  */
 
-import { describe, test, expect, beforeEach, vi } from 'vitest';
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { OperationsMonitor } from '../lib/operations-monitor.js';
 import { promises as fs } from 'fs';
 import { join } from 'path';
@@ -25,11 +25,23 @@ describe('OperationsMonitor - 통합 모니터링 시스템', () => {
   });
 
   afterEach(async () => {
+    // 모니터 정리 (열린 스트림 등)
+    if (monitor && typeof monitor.cleanup === 'function') {
+      try {
+        await monitor.cleanup();
+      } catch (error) {
+        console.warn('Monitor cleanup failed:', error.message);
+      }
+    }
+    
     // 테스트 로그 디렉터리 정리
     try {
+      // 약간의 지연을 주어 파일 핸들이 닫히도록 함
+      await new Promise(resolve => setTimeout(resolve, 100));
       await fs.rm(testLogDir, { recursive: true, force: true });
-    } catch {
-      // 정리 실패 무시
+    } catch (error) {
+      // Windows 환경에서 파일 핸들 문제가 있을 수 있으므로 무시
+      console.warn('Test directory cleanup failed:', error.message);
     }
   });
 
@@ -55,8 +67,17 @@ describe('OperationsMonitor - 통합 모니터링 시스템', () => {
       await monitor.logInfo('챕터 생성 완료', testData);
 
       const logFiles = await fs.readdir(testLogDir);
-      const latestLog = logFiles.sort().pop();
-      const logContent = await fs.readFile(join(testLogDir, latestLog), 'utf-8');
+      const logFileList = logFiles.filter(file => file.endsWith('.log')).sort();
+      expect(logFileList.length).toBeGreaterThan(0);
+      
+      const latestLog = logFileList.pop();
+      const logPath = join(testLogDir, latestLog);
+      
+      // 파일이 존재하고 디렉터리가 아닌 것을 확인
+      const stats = await fs.stat(logPath);
+      expect(stats.isFile()).toBe(true);
+      
+      const logContent = await fs.readFile(logPath, 'utf-8');
       
       expect(logContent).toContain('chapter_generation');
       expect(logContent).toContain('test-novel');

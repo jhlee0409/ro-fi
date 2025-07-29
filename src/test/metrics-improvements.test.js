@@ -3,7 +3,7 @@
  * 안전한 메트릭 기능 검증
  */
 
-import { describe, test, expect, beforeEach, vi } from 'vitest';
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { MetricsCollector } from '../lib/metrics-collector.js';
 import { GCMonitor, CircularBuffer } from '../lib/performance-optimizer.js';
 
@@ -14,6 +14,20 @@ describe('메트릭 개선사항 테스트', () => {
   beforeEach(() => {
     metricsCollector = new MetricsCollector({ enabled: true, bufferSize: 100 });
     gcMonitor = new GCMonitor();
+  });
+
+  afterEach(async () => {
+    // MetricsCollector 정리 (주기적 수집 중지)
+    if (metricsCollector && typeof metricsCollector.stop === 'function') {
+      try {
+        metricsCollector.stop();
+      } catch (error) {
+        console.warn('MetricsCollector cleanup failed:', error.message);
+      }
+    }
+    
+    // 약간의 지연을 주어 모든 타이머가 정리되도록 함
+    await new Promise(resolve => setTimeout(resolve, 50));
   });
 
   describe('MetricsCollector - 통합 메트릭 수집', () => {
