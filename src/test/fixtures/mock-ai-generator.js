@@ -188,11 +188,15 @@ export function createMockAIGenerator() {
   };
 
   mock.generateWithFallback = async (prompt, options) => {
+    // 테스트를 위해 에러 시뮬레이션 가능
+    if (!options || (!options.claude && !options.gemini)) {
+      throw new Error('All AI services unavailable');
+    }
+    
     return {
-      content: `Fallback mock content for: ${prompt.substring(0, 30)}...`,
+      content: `Mock AI content for: ${prompt.substring(0, 30)}...`,
       metadata: {
-        aiModel: options.fallback || 'gemini',
-        fallbackUsed: true,
+        aiModel: options.preferred || 'claude',
         tokensUsed: 600
       }
     };
@@ -278,8 +282,8 @@ export function createFastMockAIGenerator() {
       confidence: 0.8
     }),
     generateWithFallback: () => Promise.resolve({
-      content: '폴백 콘텐츠',
-      metadata: { fallbackUsed: true }
+      content: 'AI 생성 콘텐츠',
+      metadata: { aiModel: 'claude' }
     }),
     generateContent: () => Promise.resolve({
       content: '기본 콘텐츠'

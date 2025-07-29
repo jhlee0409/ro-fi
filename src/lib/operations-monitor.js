@@ -135,36 +135,46 @@ export class OperationsMonitor {
     };
 
     // =================
-    // 데이터 저장소 초기화
+    // 데이터 저장소 초기화 (메모리 효율적 순환 버퍼)
     // =================
+    const bufferSize = config.metricsBufferSize || 1000;
     this.metrics = {
       system: {
-        cpu: [],
-        memory: [],
-        disk: [],
-        network: [],
+        cpu: new Array(bufferSize).fill(0),
+        memory: new Array(bufferSize).fill(0),
+        disk: new Array(bufferSize).fill(0),
+        network: new Array(bufferSize).fill(0),
+        currentIndex: 0
       },
       ai: {
         operations: new Map(),
-        tokenUsage: [],
-        responseTime: [],
-        qualityScores: [],
-        errorRate: [],
+        tokenUsage: new Array(bufferSize).fill(0),
+        responseTime: new Array(bufferSize).fill(0),
+        qualityScores: new Array(bufferSize).fill(0),
+        errorRate: new Array(bufferSize).fill(0),
+        currentIndex: 0
       },
       performance: {
-        requests: [],
-        errors: [],
-        latency: [],
+        requests: new Array(bufferSize).fill(0),
+        errors: new Array(bufferSize).fill(0),
+        latency: new Array(bufferSize).fill(0),
+        currentIndex: 0
       },
     };
 
     this.operationHistory = new Map();
     this.currentAlerts = new Map();
     this.logStreams = new Map();
+    
+    // 성능 최적화: 로그 배치 처리
+    this.logBuffer = [];
+    this.logBatchSize = config.logBatchSize || 50;
+    this.pendingWrites = new Set();
 
     // 시작 시간
     this.startTime = Date.now();
     this.isMonitoring = false;
+    this.lastGCTime = Date.now();
 
     this.initialize();
   }
@@ -174,9 +184,11 @@ export class OperationsMonitor {
   // =================
 
   async initialize() {
-    console.log('🔧 통합 운영 모니터링 시스템 초기화...');
+    if (process.env.NODE_ENV !== 'test') {
+      console.log('🔧 통합 운영 모니터링 시스템 초기화...');
+    }
 
-    // 디렉토리 생성
+    // 디렉토리 생성 (병렬 처리)
     await this.ensureDirectories();
 
     // 기본 알림 규칙 설정
@@ -843,9 +855,50 @@ export class OperationsMonitor {
     }
   }
 
+  // 테스트용 누락된 메서드들
+  getWorkflowHistory() {
+    // 워크플로우 히스토리 반환 (Mock 데이터)
+    return Array.from(this.operationHistory.entries()).map(([id, operation]) => ({
+      id,
+      ...operation,
+      duration: operation.endTime ? operation.endTime - operation.startTime : Date.now() - operation.startTime
+    }));
+  }
+  
+  setupAutomaticCleanup() {
+    // 자동 정리 설정 (이미 constructor에서 호출됨)
+    if (process.env.NODE_ENV !== 'test') {
+      this.cleanupInterval = setInterval(() => {
+        this.performDailyCleanup();
+      }, 24 * 60 * 60 * 1000); // 24시간마다
+    }
+  }
+  
+  // 추가 테스트용 메서드들
+  getAIMetrics() {
+    return {
+      operations: this.metrics.ai.operations.size,
+      tokenUsage: this.metrics.ai.tokenUsage.slice(-10), // 최근 10개
+      responseTime: this.metrics.ai.responseTime.slice(-10),
+      qualityScores: this.metrics.ai.qualityScores.slice(-10),
+      errorRate: this.metrics.ai.errorRate.slice(-10),
+      averageResponseTime: this.calculateAverage(this.metrics.ai.responseTime),
+      averageQualityScore: this.calculateAverage(this.metrics.ai.qualityScores)
+    };
+  }
+  
+  calculateAverage(arr) {
+    if (!arr || arr.length === 0) return 0;
+    const validValues = arr.filter(val => val !== null && val !== undefined && val !== 0);
+    if (validValues.length === 0) return 0;
+    return validValues.reduce((sum, val) => sum + val, 0) / validValues.length;
+  }
+
   // 종료 처리
   shutdown() {
-    console.log('🛑 운영 모니터링 시스템 종료...');
+    if (process.env.NODE_ENV !== 'test') {
+      console.log('🛑 운영 모니터링 시스템 종료...');
+    }
 
     this.isMonitoring = false;
 
@@ -856,6 +909,10 @@ export class OperationsMonitor {
     if (this.cleanupInterval) {
       clearInterval(this.cleanupInterval);
     }
+    
+    if (this.flushInterval) {
+      clearInterval(this.flushInterval);
+    }
 
     // 활성 로그 스트림 닫기
     for (const stream of this.logStreams.values()) {
@@ -864,7 +921,9 @@ export class OperationsMonitor {
       }
     }
 
-    console.log('✅ 운영 모니터링 시스템 종료 완료');
+    if (process.env.NODE_ENV !== 'test') {
+      console.log('✅ 운영 모니터링 시스템 종료 완료');
+    }
   }
 }
 

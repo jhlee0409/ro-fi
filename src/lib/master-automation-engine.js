@@ -336,10 +336,10 @@ export class MasterAutomationEngine {
       };
     }
 
-    // 4. 최후의 수단: 새 소설 생성
+    // 4. 새 소설 생성 (활성 소설이 없는 경우)
     return {
       type: 'CREATE_NEW_NOVEL',
-      priority: 'fallback',
+      priority: 'low',
     };
   }
 

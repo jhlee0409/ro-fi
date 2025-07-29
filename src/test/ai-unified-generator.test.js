@@ -17,16 +17,20 @@ describe('UnifiedAIGenerator - 하이브리드 AI 시스템', () => {
     unifiedGenerator = new UnifiedAIGenerator(mockConfig);
     
     // API 호출 모킹
-    vi.spyOn(unifiedGenerator, 'callClaude').mockImplementation(async (prompt) => {
+    vi.spyOn(unifiedGenerator, 'callClaude').mockImplementation(async (params) => {
+      // Claude API는 params 객체를 받음 
+      const prompt = params?.messages?.[0]?.content || params || 'test';
+      const promptStr = typeof prompt === 'string' ? prompt : JSON.stringify(prompt);
       return {
-        content: `Claude response for: ${prompt.substring(0, 50)}...`,
+        content: [{text: `Claude response for: ${promptStr.substring(0, 50)}...`}],
         usage: { tokens: 1000 }
       };
     });
 
     vi.spyOn(unifiedGenerator, 'callGemini').mockImplementation(async (prompt) => {
+      const promptStr = typeof prompt === 'string' ? prompt : JSON.stringify(prompt);
       return {
-        content: `Gemini response for: ${prompt.substring(0, 50)}...`,
+        text: () => `Gemini response for: ${promptStr.substring(0, 50)}...`,
         usage: { tokens: 800 }
       };
     });
@@ -114,7 +118,7 @@ describe('UnifiedAIGenerator - 하이브리드 AI 시스템', () => {
 
       expect(relationships).toBeDefined();
       expect(relationships.mainCouple).toBeDefined();
-      expect(relationships.dynamics).toHaveLength.greaterThan(0);
+      expect(relationships.dynamics.length).toBeGreaterThan(0);
     });
   });
 
@@ -152,14 +156,14 @@ describe('UnifiedAIGenerator - 하이브리드 AI 시스템', () => {
 
       unifiedGenerator.cacheWorldSettings(key, data);
       
-      // 캐시 강제 만료
+      // 캐시 강제 만료 - LRU 캐시의 올바른 구조로 설정
       unifiedGenerator.cache.worldSettings.set(key, {
-        data,
-        timestamp: Date.now() - (2 * 60 * 60 * 1000) // 2시간 전
+        value: data,
+        timestamp: Date.now() - (2 * 60 * 60 * 1000) // 2시간 전, TTL(30분)보다 훨씬 이전
       });
 
       const expired = unifiedGenerator.getCachedWorldSettings(key);
-      expect(expired).toBeNull();
+      expect(expired).toBeUndefined();
     });
   });
 
@@ -168,33 +172,48 @@ describe('UnifiedAIGenerator - 하이브리드 AI 시스템', () => {
       const error529 = new Error('API request failed');
       error529.status = 529;
 
-      vi.spyOn(unifiedGenerator, 'callClaude')
-        .mockRejectedValueOnce(error529)
-        .mockRejectedValueOnce(error529)
-        .mockResolvedValueOnce({ content: 'Success after retries', usage: { tokens: 1000 } });
+      let callCount = 0;
+      const mockFn = vi.fn().mockImplementation(async () => {
+        callCount++;
+        if (callCount < 3) {
+          throw error529;
+        }
+        return { content: [{text: 'Success after retries'}], usage: { tokens: 1000 } };
+      });
 
       const result = await unifiedGenerator.unifiedRetry(
-        () => unifiedGenerator.callClaude('test prompt'),
-        'claude'
+        mockFn,
+        3,
+        100, // 테스트용 짧은 지연시간
+        true
       );
 
-      expect(result.content).toBe('Success after retries');
+      expect(result.content[0].text).toBe('Success after retries');
+      expect(mockFn).toHaveBeenCalledTimes(3);
     });
 
     test('Gemini 5xx 에러 재시도', async () => {
       const error500 = new Error('Server error');
       error500.status = 500;
 
-      vi.spyOn(unifiedGenerator, 'callGemini')
-        .mockRejectedValueOnce(error500)
-        .mockResolvedValueOnce({ content: 'Success', usage: { tokens: 800 } });
+      let callCount = 0;
+      const mockFn = vi.fn().mockImplementation(async () => {
+        callCount++;
+        if (callCount === 1) {
+          throw error500;
+        }
+        return { text: () => 'Success', usage: { tokens: 800 } };
+      });
 
       const result = await unifiedGenerator.unifiedRetry(
-        () => unifiedGenerator.callGemini('test prompt'),
-        'gemini'
+        mockFn,
+        3,
+        100, // 테스트용 짧은 지연시간
+        false
       );
 
-      expect(result.content).toBe('Success');
+      expect(result.text()).toBe('Success');
+      expect(mockFn).toHaveBeenCalledTimes(2);
     });
 
     test('최대 재시도 초과 시 에러 처리', async () => {
@@ -210,32 +229,38 @@ describe('UnifiedAIGenerator - 하이브리드 AI 시스템', () => {
     });
   });
 
-  describe('폴백 메커니즘', () => {
-    test('Claude 장애 시 Gemini 폴백', async () => {
-      vi.spyOn(unifiedGenerator, 'callClaude').mockRejectedValue(new Error('Claude unavailable'));
-      vi.spyOn(unifiedGenerator, 'callGemini').mockResolvedValue({
-        content: 'Gemini fallback response',
-        usage: { tokens: 900 }
-      });
-
-      const result = await unifiedGenerator.generateWithFallback('test prompt', {
-        preferred: 'claude',
-        fallback: 'gemini'
-      });
-
-      expect(result.content).toBe('Gemini fallback response');
-      expect(result.metadata.aiModel).toBe('gemini');
-      expect(result.metadata.fallbackUsed).toBe(true);
+  describe('AI 에러 처리', () => {
+    test('Claude API 없을 때 에러 발생', async () => {
+      const noClaudeGenerator = new UnifiedAIGenerator({ geminiApiKey: 'test-gemini-key' });
+      
+      await expect(noClaudeGenerator.generateEmotionalScene({}))
+        .rejects.toThrow('Claude API가 필요합니다');
     });
 
-    test('양쪽 AI 모두 장애 시 에러 처리', async () => {
-      vi.spyOn(unifiedGenerator, 'callClaude').mockRejectedValue(new Error('Claude down'));
-      vi.spyOn(unifiedGenerator, 'callGemini').mockRejectedValue(new Error('Gemini down'));
+    test('Gemini API 없을 때 에러 발생', async () => {
+      const noGeminiGenerator = new UnifiedAIGenerator({ anthropicApiKey: 'test-claude-key' });
+      
+      await expect(noGeminiGenerator.generateWorldBuilding('test', []))
+        .rejects.toThrow('Gemini API가 필요합니다');
+    });
 
-      await expect(unifiedGenerator.generateWithFallback('test prompt', {
-        preferred: 'claude',
-        fallback: 'gemini'
-      })).rejects.toThrow('All AI services unavailable');
+    test('모든 AI 서비스 사용 불가 시 에러', async () => {
+      const noApiGenerator = new UnifiedAIGenerator({});
+      
+      await expect(noApiGenerator.generateWithFallback('test prompt', {}))
+        .rejects.toThrow('All AI services unavailable');
+    });
+
+    test('네트워크 에러 처리', async () => {
+      vi.spyOn(unifiedGenerator, 'callClaude').mockRejectedValue(new Error('network timeout'));
+      
+      try {
+        await unifiedGenerator.generateEmotionalScene({});
+        // 에러가 발생해야 함
+        expect(true).toBe(false);
+      } catch (error) {
+        expect(error.message).toContain('네트워크 오류로');
+      }
     });
   });
 
@@ -317,10 +342,11 @@ describe('UnifiedAIGenerator - 하이브리드 AI 시스템', () => {
     test('API 호출 실패 로깅', async () => {
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       
-      vi.spyOn(unifiedGenerator, 'callClaude').mockRejectedValue(new Error('API Error'));
+      // API 없는 generator로 테스트
+      const noApiGenerator = new UnifiedAIGenerator({});
 
       try {
-        await unifiedGenerator.generateContent('test prompt', { model: 'claude' });
+        await noApiGenerator.generateWithAI('test prompt', { preferredModel: 'claude' });
       } catch (error) {
         // 에러가 예상됨
       }
