@@ -21,19 +21,25 @@ test-quality-fix.js
 
 # backup files
 backup/
+.api-backup-*/
+.script-backup-*/
 
-# environment variables
+# environment variables (Claude Code Actions uses GitHub Secrets only)
 .env
 .env.local
 .env.development
 .env.test
 .env.production
 
-# AI service configuration files
+# Legacy API files (no longer used - 100% Claude Code Actions)
 .anthropic-api-key
 .gemini-api-key
 ai-config.json
 ai-config.local.json
+
+# Claude Code Actions specific
+.claude-code-cache/
+automation-output.json
 
 # IDE and editor settings
 .vscode/
@@ -49,3 +55,7 @@ Thumbs.db
 
 # vercel
 .vercel
+# Local GitHub Actions testing
+.local-actions/
+.actrc
+logs/

@@ -1,3 +1,24 @@
+import type {
+  QualityStandards,
+  QualityPatterns,
+  ContentAnalysis,
+  ReaderMetrics,
+  CompletionCriteria,
+  CreativityMode,
+  EmotionalDepth,
+  StoryPacing,
+  TokenBalancing,
+  ProcessingResult,
+  PerformanceRecord,
+  Platform
+} from './types/index.js';
+
+interface EngineConfig {
+  enabled?: boolean;
+  bufferSize?: number;
+  cacheSize?: number;
+}
+
 /**
  * 통합 품질 & 분석 엔진
  * 7개 품질/분석 관련 파일을 2개로 통합하는 핵심 컴포넌트
@@ -12,20 +33,100 @@
  * - token-balancing-engine.js ✓
  */
 
-import { PlatformConfigEngine } from './platform-config-engine.js';
+import { PlatformConfigEngine } from './platform-config-engine';
 
 /**
  * 통합 품질 보증 및 분석 엔진
  */
 export class QualityAnalyticsEngine {
-  constructor(platform = null) {
+  private platformConfig: PlatformConfigEngine;
+  private qualityStandards: QualityStandards;
+  private qualityPatterns: QualityPatterns;
+  private contentAnalysis: ContentAnalysis;
+  private readerMetrics: ReaderMetrics;
+  private completionCriteria: CompletionCriteria;
+  private creativityMode: CreativityMode;
+  private emotionalDepth: EmotionalDepth;
+  private storyPacing: StoryPacing;
+  private tokenBalancing: TokenBalancing;
+  private performanceHistory: PerformanceRecord[];
+  private analyticsConfig: Record<string, unknown>;
+  private creativityConfig: Record<string, unknown>;
+  private emotionalConfig: Record<string, unknown>;
+  private pacingConfig: Record<string, unknown>;
+  private tokenConfig: Record<string, unknown>;
+  private cache: Map<string, unknown>;
+  private currentMode: string;
+  private dailyTokenUsage: number;
+  private qualityTrend: number[];
+  private readerFeedback: Record<string, unknown>;
+
+  constructor(platform: Platform | null = null) {
     // 플랫폼 설정
     this.platformConfig = new PlatformConfigEngine();
     if (platform) {
       this.platformConfig.setPlatform(platform);
     }
 
-    this.qualityStandards = this.platformConfig.getQualityStandards();
+    this.qualityStandards = {
+      minWordCount: 1500,
+      maxWordCount: 2000,
+      minQualityScore: 85,
+      requiredElements: ['dialogue', 'description', 'emotion']
+    };
+
+    // 초기화
+    this.performanceHistory = [];
+    this.analyticsConfig = {};
+    this.creativityConfig = {};
+    this.emotionalConfig = {};
+    this.pacingConfig = {};
+    this.tokenConfig = {};
+    this.cache = new Map();
+    this.currentMode = 'standard';
+    this.dailyTokenUsage = 0;
+    this.qualityTrend = [];
+    this.readerFeedback = {};
+
+    // 추가 필수 속성 초기화
+    this.contentAnalysis = {
+      wordCount: 0,
+      emotionalScore: 0,
+      creativityScore: 0,
+      consistencyScore: 0,
+      pacingScore: 0,
+      overallQuality: 0
+    };
+
+    this.creativityMode = {
+      enabled: false,
+      intensityLevel: 0,
+      triggers: [],
+      enhancement: {}
+    };
+
+    this.emotionalDepth = {
+      currentLevel: 0,
+      targetLevel: 0,
+      emotionalArc: [],
+      keyMoments: []
+    };
+
+    this.storyPacing = {
+      currentPace: 'medium',
+      targetPace: 'medium',
+      actionScenes: 0,
+      dialogueScenes: 0,
+      descriptionScenes: 0
+    };
+
+    this.tokenBalancing = {
+      dailyBudget: 10000,
+      usedTokens: 0,
+      remainingTokens: 10000,
+      efficiency: 1.0,
+      costPerChapter: 0
+    };
 
     // =================
     // 품질 보증 설정
@@ -106,11 +207,14 @@ export class QualityAnalyticsEngine {
     // 독자 분석 설정
     // =================
     this.readerMetrics = {
+      engagementScore: new Map(),
+      averageRating: 0,
+      dropoffPoints: new Map(),
+      favoriteScenes: [],
       readingTime: new Map(),
       completionRate: new Map(),
       dropoutPoints: new Map(),
       emotionTracking: new Map(),
-      engagementScore: new Map(),
     };
 
     this.analyticsConfig = {
@@ -135,8 +239,8 @@ export class QualityAnalyticsEngine {
     // 완결 기준 설정
     // =================
     this.completionCriteria = {
-      minimumChapters: 50,
-      maximumChapters: 100,
+      minChapters: 50,
+      maxChapters: 100,
       idealChapters: 75,
 
       storyArcStages: {
@@ -288,7 +392,8 @@ export class QualityAnalyticsEngine {
     const cacheKey = context.chapterNumber;
     if (cacheKey && this.cache.qualityScores.has(cacheKey)) {
       const cached = this.cache.qualityScores.get(cacheKey);
-      if (Date.now() - cached.timestamp < 300000) { // 5분 캐시
+      if (Date.now() - cached.timestamp < 300000) {
+        // 5분 캐시
         return cached;
       }
     }
@@ -302,14 +407,14 @@ export class QualityAnalyticsEngine {
         Promise.resolve(this.assessEngagement(content)),
         Promise.resolve(this.assessPacing(content, context)),
         Promise.resolve(this.assessCharacterVoice(content)),
-        Promise.resolve(this.assessNarrativeFlow(content))
+        Promise.resolve(this.assessNarrativeFlow(content)),
       ]).then(results => ({
         emotional: results[0].status === 'fulfilled' ? results[0].value : 50,
         technical: results[1].status === 'fulfilled' ? results[1].value : 50,
         engagement: results[2].status === 'fulfilled' ? results[2].value : 50,
         pacing: results[3].status === 'fulfilled' ? results[3].value : 50,
         character: results[4].status === 'fulfilled' ? results[4].value : 50,
-        narrative: results[5].status === 'fulfilled' ? results[5].value : 50
+        narrative: results[5].status === 'fulfilled' ? results[5].value : 50,
       })),
       // 개선 제안은 별도로 비동기 처리
       new Promise(resolve => {
@@ -317,11 +422,11 @@ export class QualityAnalyticsEngine {
           const scores = {
             emotional: this.assessEmotionalQuality(content),
             technical: this.assessTechnicalQuality(content),
-            engagement: this.assessEngagement(content)
+            engagement: this.assessEngagement(content),
           };
           resolve(this.generateImprovementSuggestions(scores));
         });
-      })
+      }),
     ]);
 
     const totalScore = this.calculateWeightedScore(scores);
@@ -342,7 +447,7 @@ export class QualityAnalyticsEngine {
         ...result,
         timestamp: Date.now(),
       });
-      
+
       // 캐시 크기 제한 (메모리 누수 방지)
       if (this.cache.qualityScores.size > 100) {
         const firstKey = this.cache.qualityScores.keys().next().value;
@@ -358,12 +463,12 @@ export class QualityAnalyticsEngine {
    */
   assessEmotionalQuality(content) {
     let score = 50;
-    
+
     // null/undefined 체크
     if (!content) {
       return score;
     }
-    
+
     // content가 문자열이 아닌 경우 처리
     const contentStr = typeof content === 'string' ? content : String(content);
 
@@ -390,29 +495,29 @@ export class QualityAnalyticsEngine {
    */
   assessTechnicalQuality(content, context = {}) {
     if (!content) return 40;
-    
+
     let score = 50;
-    
+
     // 마크다운 형식 검증
     const hasCorrectDialogue = content.includes('> "') && content.includes('"');
     const hasCorrectInnerThought = content.includes("> *'") && content.includes("'*");
     const hasCorrectAction = content.includes('> [') && content.includes(']');
     const hasCorrectEmphasis = content.includes('**') && content.match(/\*\*.*\*\*/);
-    
+
     if (hasCorrectDialogue) score += 15;
     if (hasCorrectInnerThought) score += 15;
     if (hasCorrectAction) score += 10;
     if (hasCorrectEmphasis) score += 10;
-    
+
     // 잘못된 형식 패널티 - 더 강하게
     const hasIncorrectDialogue = content.includes("> '") && !content.includes('> "');
     const hasIncorrectInnerThought = content.includes('> "') && !content.includes("> *'");
     const hasIncorrectAction = content.includes('> (') && content.includes(')');
-    
+
     if (hasIncorrectDialogue) score -= 25;
     if (hasIncorrectInnerThought) score -= 25;
     if (hasIncorrectAction) score -= 20;
-    
+
     return Math.max(20, Math.min(100, score));
   }
 
@@ -511,7 +616,8 @@ export class QualityAnalyticsEngine {
     const cacheKey = `${novelSlug}-${chapterNumber}`;
     if (this.cache.readerAnalytics.has(cacheKey)) {
       const cached = this.cache.readerAnalytics.get(cacheKey);
-      if (Date.now() - cached.timestamp < 600000) { // 10분 캐시
+      if (Date.now() - cached.timestamp < 600000) {
+        // 10분 캐시
         return cached.data;
       }
     }
@@ -541,7 +647,7 @@ export class QualityAnalyticsEngine {
     // 결과 캐시
     this.cache.readerAnalytics.set(cacheKey, {
       data: result,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
 
     return result;
@@ -583,22 +689,23 @@ export class QualityAnalyticsEngine {
     // 기본 완결 조건 확인
     const minChapters = 40; // 기본 최소 챕터 수
     const minChaptersMet = novel.currentChapter >= minChapters;
-    
+
     // 플롯 진행도 확인 (4단계 모두 완료되어야 함)
     const plotComplete = novel.plotProgress && novel.plotProgress.includes('해결');
-    
+
     // 관계 진행도 확인
     const relationshipComplete = novel.relationshipStage === 'union';
-    
+
     // 미해결 스레드 확인
     const noOpenThreads = !novel.openThreads || novel.openThreads.length === 0;
-    
+
     // 캐릭터 성장 확인 (80% 이상)
-    const charactersComplete = novel.characters && 
-      novel.characters.every(char => char.growthArc >= 80);
-    
-    return minChaptersMet && plotComplete && relationshipComplete && 
-           noOpenThreads && charactersComplete;
+    const charactersComplete =
+      novel.characters && novel.characters.every(char => char.growthArc >= 80);
+
+    return (
+      minChaptersMet && plotComplete && relationshipComplete && noOpenThreads && charactersComplete
+    );
   }
 
   /**
@@ -692,19 +799,19 @@ export class QualityAnalyticsEngine {
       const quality = 1000;
       const creativity = mode === 'creativity' ? 2000 : 1000;
       const complexity = context.complexity ? Math.round(context.complexity * 1000) : 500;
-      
+
       return {
         total: base + quality + creativity + complexity,
         breakdown: {
           base,
           quality,
           creativity,
-          complexity
+          complexity,
         },
-        mode
+        mode,
       };
     }
-    
+
     // 기존 로직 유지 (하위 호환성)
     const budget = this.tokenConfig.budgetLevels[mode];
     const allocation = this.tokenConfig.priorityAllocation;
@@ -737,17 +844,20 @@ export class QualityAnalyticsEngine {
     // 예산 초과 경고 (배치 처리로 성능 개선)
     const currentBudget = this.tokenConfig.budgetLevels[this.currentMode].dailyLimit;
     const percentage = (this.dailyTokenUsage / currentBudget) * 100;
-    
+
     if (percentage > 80 && !this._warningSent) {
       if (process.env.NODE_ENV !== 'test') {
         console.warn('⚠️ 일일 토큰 예산의 80% 사용됨');
       }
       this._warningSent = true;
-      
+
       // 24시간 후 경고 플래그 리셋
-      setTimeout(() => {
-        this._warningSent = false;
-      }, 24 * 60 * 60 * 1000);
+      setTimeout(
+        () => {
+          this._warningSent = false;
+        },
+        24 * 60 * 60 * 1000
+      );
     }
 
     return {
@@ -818,59 +928,59 @@ export class QualityAnalyticsEngine {
       }
     }
   }
-  
+
   // 테스트용 누락된 메서드들
   analyzeEngagementTrend(novelSlug, chapterNumber) {
     // 트렌드 분석 (Mock 데이터)
     const trends = ['increasing', 'stable', 'decreasing'];
     return trends[Math.floor(Math.random() * trends.length)];
   }
-  
+
   checkEngagementAlerts(data) {
     const alerts = [];
-    
+
     if (data.completionRate < this.analyticsConfig.thresholds.criticalDropout) {
       alerts.push({
         type: 'critical_dropout',
         severity: 'high',
-        message: '독자 이탈률이 임계치를 초과했습니다'
+        message: '독자 이탈률이 임계치를 초과했습니다',
       });
     }
-    
+
     if (data.readingTime < this.analyticsConfig.thresholds.fastReading) {
       alerts.push({
         type: 'fast_reading',
-        severity: 'medium', 
-        message: '읽기 시간이 너무 짧습니다 (스킵 가능성)'
+        severity: 'medium',
+        message: '읽기 시간이 너무 짧습니다 (스킵 가능성)',
       });
     }
-    
+
     return alerts;
   }
-  
+
   generateEngagementRecommendations(data) {
     const recommendations = [];
-    
+
     if (data.completionRate < 0.7) {
       recommendations.push('챕터 길이를 단축하고 흥미 요소를 강화하세요');
     }
-    
+
     if (data.emotionReaction < 5) {
       recommendations.push('감정적 몰입도를 높이는 장면을 추가하세요');
     }
-    
+
     if (data.returnRate < 0.8) {
       recommendations.push('시리즈 연결성과 클리프행어를 강화하세요');
     }
-    
+
     return recommendations;
   }
-  
+
   // 품질 평가용 추가 메서드
   evaluateQuality(content, context = {}) {
     return this.assessQuality(content, context);
   }
-  
+
   // 추가 테스트용 누락 메서드들
   analyzeReaderMetrics(novelState, chapterNumber = null) {
     // null 또는 undefined 처리
@@ -882,21 +992,21 @@ export class QualityAnalyticsEngine {
         engagement: {
           score: 0,
           trend: 'stable',
-          alerts: []
-        }
+          alerts: [],
+        },
       };
     }
-    
+
     // novelState가 객체인 경우 직접 분석
     if (typeof novelState === 'object' && novelState.chapters) {
       const chapters = novelState.chapters;
       const totalReadingTime = chapters.reduce((sum, ch) => sum + (ch.readingTime || 0), 0);
       const totalCompletionRate = chapters.reduce((sum, ch) => sum + (ch.completionRate || 0), 0);
-      
+
       const averageReadingTime = chapters.length > 0 ? totalReadingTime / chapters.length : 0;
       const averageCompletionRate = chapters.length > 0 ? totalCompletionRate / chapters.length : 0;
       const dropoutRate = 1 - averageCompletionRate;
-      
+
       return {
         averageReadingTime,
         averageCompletionRate,
@@ -904,71 +1014,72 @@ export class QualityAnalyticsEngine {
         engagement: {
           score: averageCompletionRate * 100,
           trend: 'stable',
-          alerts: []
-        }
+          alerts: [],
+        },
       };
     }
-    
+
     // 기존 방식 호환성
     return this.analyzeReaderEngagement(novelState, chapterNumber);
   }
-  
+
   analyzeDropoutPoints(chapterData) {
     // 이탈 지점 분석
     if (Array.isArray(chapterData)) {
       const criticalPoints = [];
-      let totalCompletions = 0;
-      let initialCompletions = 0;
-      
+      const totalCompletions = 0;
+      const initialCompletions = 0;
+
       for (let i = 0; i < chapterData.length; i++) {
         const point = chapterData[i];
         if (i === 0) {
-          initialCompletions = point.completions;
+          initialCompletions: any = point.completions;
         }
-        totalCompletions = point.completions;
-        
+        totalCompletions: any = point.completions;
+
         // 이전 지점 대비 15% 이상 감소하면 critical point
         if (i > 0) {
-          const prevCompletions = chapterData[i-1].completions;
+          const prevCompletions = chapterData[i - 1].completions;
           const dropRate = (prevCompletions - point.completions) / prevCompletions;
           if (dropRate > 0.15) {
             criticalPoints.push({
               position: point.position,
               dropRate,
-              remainingReaders: point.completions
+              remainingReaders: point.completions,
             });
           }
         }
       }
-      
-      const overallDropoutRate = initialCompletions > 0 ? 
-        (initialCompletions - totalCompletions) / initialCompletions : 0;
-      
+
+      const overallDropoutRate =
+        initialCompletions > 0 ? (initialCompletions - totalCompletions) / initialCompletions : 0;
+
       return {
         criticalPoints,
         overallDropoutRate,
         recommendations: [
           '중반부 긴장감 강화 필요',
           '캐릭터 간 갈등 요소 추가',
-          '페이싱 조정 검토'
-        ]
+          '페이싱 조정 검토',
+        ],
       };
     }
-    
+
     // 기존 방식 (novel 객체인 경우)
     const dropoutPoints = [];
     for (let i = 1; i <= novel.currentChapter; i++) {
-      if (Math.random() > 0.8) { // 20% 확률로 이탈 지점
+      if (Math.random() > 0.8) {
+        // 20% 확률로 이탈 지점
         dropoutPoints.push({
           chapter: i,
           dropoutRate: Math.random() * 0.3,
-          reasons: ['페이싱 문제', '캐릭터 일관성', '스토리 흥미도']
+          reasons: ['페이싱 문제', '캐릭터 일관성', '스토리 흥미도'],
         });
       }
     }
     return dropoutPoints;
   }
-  
+
   generateCompletionReport(novel) {
     if (!novel) {
       return {
@@ -977,18 +1088,19 @@ export class QualityAnalyticsEngine {
           minChapters: false,
           plotCompletion: false,
           characterArcs: false,
-          qualityStandard: false
+          qualityStandard: false,
         },
         completionPercentage: 0,
         report: '소설 데이터가 없습니다',
-        recommendations: ['소설 데이터 확인 필요']
+        recommendations: ['소설 데이터 확인 필요'],
       };
     }
-    
+
     const completion = this.checkStoryCompletion(novel);
     const ready = typeof completion === 'boolean' ? completion : completion.ready;
-    const percentage = typeof completion === 'boolean' ? (completion ? 100 : 0) : completion.completionPercentage;
-    
+    const percentage =
+      typeof completion === 'boolean' ? (completion ? 100 : 0) : completion.completionPercentage;
+
     return {
       overallReadiness: ready,
       criteria: {
@@ -996,39 +1108,39 @@ export class QualityAnalyticsEngine {
         plotCompletion: ready,
         characterArcs: ready,
         qualityStandard: true,
-        relationshipResolution: ready
+        relationshipResolution: ready,
       },
       recommendation: ready ? '완결 가능' : '추가 작업 필요',
       completionPercentage: percentage,
       report: `소설 "${novel.title}" 완결 준비도: ${percentage}%`,
-      recommendations: ready 
-        ? ['완결 진행 가능'] 
-        : ['메인 플롯 해결 필요', '캐릭터 아크 완성 필요']
+      recommendations: ready
+        ? ['완결 진행 가능']
+        : ['메인 플롯 해결 필요', '캐릭터 아크 완성 필요'],
     };
   }
-  
+
   shouldActivateCreativityMode(novelState, readerMetrics, chapterContext) {
     let score = 0;
     const triggers = [];
-    
+
     // 독자 이탈률이 높을 때
     if (readerMetrics?.dropoutRate > 0.25) {
       score += 0.3;
       triggers.push({ type: 'high_dropout', reason: '독자 이탈률 높음' });
     }
-    
+
     // 독자 참여도가 낮을 때 - 더 민감하게
     if (readerMetrics?.engagement?.score < 0.3) {
       score += 0.4;
       triggers.push({ type: 'low_engagement', reason: '독자 참여도 저하' });
     }
-    
+
     // 중요한 마일스톤 챕터
     if (chapterContext?.progressPercentage < 5 || chapterContext?.plotStage === 'climax') {
       score += 0.3;
       triggers.push({ type: 'milestone', reason: '중요한 스토리 지점' });
     }
-    
+
     // 테스트 케이스 조건 확인 - 높은 이탈률과 낮은 참여도
     if (readerMetrics?.dropoutRate >= 0.3 && readerMetrics?.engagement?.score <= 0.2) {
       score = Math.max(score, 0.7); // 확실히 활성화
@@ -1036,19 +1148,19 @@ export class QualityAnalyticsEngine {
         triggers.push({ type: 'critical_metrics', reason: '치명적인 지표 조합' });
       }
     }
-    
+
     const activate = score > 0.5;
     const mode = activate ? 'CREATIVITY_BOOST' : 'STANDARD';
-    
+
     return {
       activate,
       triggers,
       score,
       mode,
-      reasoning: `점수: ${score.toFixed(2)}, 트리거: ${triggers.length}개`
+      reasoning: `점수: ${score.toFixed(2)}, 트리거: ${triggers.length}개`,
     };
   }
-  
+
   generateCreativePrompt(context, triggers = []) {
     if (!context) {
       return {
@@ -1057,13 +1169,13 @@ export class QualityAnalyticsEngine {
         qualityTarget: 'GOOD',
         prompt: '기본 프롬프트',
         style: 'standard',
-        emphasis: ['효율성']
+        emphasis: ['효율성'],
       };
     }
-    
+
     const { chapterNumber, tropes, mood } = context;
     const hasTriggers = triggers && triggers.length > 0;
-    
+
     return {
       mode: hasTriggers ? 'CREATIVITY_BOOST' : 'EFFICIENCY',
       tokenLimit: hasTriggers ? 'UNLIMITED' : 'STANDARD',
@@ -1071,128 +1183,130 @@ export class QualityAnalyticsEngine {
       prompt: `${chapterNumber}화를 위한 ${hasTriggers ? '창의적' : '표준'} 프롬프트: ${tropes?.join(', ')} 트롭과 ${mood} 분위기로 작성`,
       style: hasTriggers ? 'creative' : 'standard',
       emphasis: hasTriggers ? ['감정적 깊이', '독창성', '몰입도'] : ['효율성'],
-      directive: hasTriggers ? '최고 품질로 생성' : '효율적으로 생성'
+      directive: hasTriggers ? '최고 품질로 생성' : '효율적으로 생성',
     };
   }
-  
+
   optimizeCosts(usage) {
     if (!usage) {
       return {
         efficiency: 75, // 수치가 0보다 커야 함
         recommendation: '사용량 데이터 필요',
         nextMode: 'EFFICIENCY',
-        potentialSavings: 0
+        potentialSavings: 0,
       };
     }
-    
+
     const currentUsage = usage.tokensUsed || usage.total || usage.currentUsage || 0;
     const budget = usage.budget || 10000;
     const usageRatio = currentUsage / budget;
-    
+
     const optimizations = [];
-    let efficiency = 50;
-    
+    const efficiency = 50;
+
     if (usageRatio > 0.8) {
       optimizations.push('효율성 모드 전환');
       optimizations.push('캐시 활용 증대');
-      efficiency = Math.max(20, 80 - (usageRatio - 0.8) * 200);
+      efficiency: any = Math.max(20, 80 - (usageRatio - 0.8) * 200);
     } else {
-      efficiency = Math.min(100, 100 - usageRatio * 50);
+      efficiency: any = Math.min(100, 100 - usageRatio * 50);
     }
-    
+
     return {
       efficiency: Math.round(efficiency),
       recommendation: optimizations.length > 0 ? optimizations[0] : '현재 상태 유지',
       nextMode: usageRatio > 0.8 ? 'EFFICIENCY' : 'CREATIVITY',
-      potentialSavings: Math.min(currentUsage * 0.3, budget * 0.2)
+      potentialSavings: Math.min(currentUsage * 0.3, budget * 0.2),
     };
   }
-  
+
   generateInternalConflict(character, situation) {
     if (!character || !situation) {
       return '기본 내적 갈등 설정이 필요합니다';
     }
-    
+
     return `${character}의 내적 갈등: ${situation} 상황에서의 딜레마`;
   }
-  
+
   generateSensoryDescription(scene) {
     if (!scene) {
       return '기본 감각적 묘사가 필요합니다 - 상세한 묘사를 위한 더 많은 내용';
     }
-    
+
     return `${scene} 장면의 매우 상세하고 생생한 감각적 묘사 - 다양한 감각적 요소들을 포함`;
   }
-  
+
   generateMicroExpression(emotion, intensity) {
     if (!emotion) {
       return '기본 미세 표현 설정이 필요합니다';
     }
-    
+
     const expressions = {
       joy: ['눈가의 주름', '입꼬리 상승', '밝은 눈빛'],
       sadness: ['축 처진 어깨', '떨리는 입술', '흐려진 시선'],
       anger: ['굳어진 턱선', '좁혀진 눈', '경직된 몸'],
-      nervous: ['불안한 눈빛', '미세한 떨림']
+      nervous: ['불안한 눈빛', '미세한 떨림'],
     };
-    
+
     const result = expressions[emotion] || `${emotion} 감정의 미세 표현`;
     return Array.isArray(result) ? result.join(', ') : result;
   }
-  
+
   analyzeNarrativeRhythm(content) {
     // content가 문자열이 아닌 경우 (배열 등) 처리
     if (Array.isArray(content)) {
       // 배열인 경우 각 항목을 분석
       const chapters = content;
-      
-      const overallIntensity = chapters.reduce((sum, ch) => sum + (ch.emotionalIntensity || 0), 0) / chapters.length;
-      const overallAdvancement = chapters.reduce((sum, ch) => sum + (ch.plotAdvancement || 0), 0) / chapters.length;
-      
+
+      const overallIntensity =
+        chapters.reduce((sum, ch) => sum + (ch.emotionalIntensity || 0), 0) / chapters.length;
+      const overallAdvancement =
+        chapters.reduce((sum, ch) => sum + (ch.plotAdvancement || 0), 0) / chapters.length;
+
       return {
         overallPacing: this.calculatePacing(overallIntensity, overallAdvancement),
         climaxBuildup: this.analyzeClimaxBuildup(chapters),
         emotionalArcs: this.analyzeEmotionalArcs(chapters),
-        recommendations: this.generateRhythmRecommendations(chapters)
+        recommendations: this.generateRhythmRecommendations(chapters),
       };
     }
-    
+
     // 문자열 콘텐츠 분석
     if (typeof content !== 'string') {
-      content = String(content || '');
+      content: any = String(content || '');
     }
-    
+
     const sentences = content.split(/[.!?]/).filter(s => s.trim());
     const avgLength = sentences.reduce((sum, s) => sum + s.length, 0) / sentences.length;
-    
+
     return {
       overallPacing: avgLength > 100 ? 'slow' : avgLength > 50 ? 'medium' : 'fast',
       climaxBuildup: 'steady',
       emotionalArcs: ['introduction'],
-      recommendations: ['페이싱 조절 필요']
+      recommendations: ['페이싱 조절 필요'],
     };
   }
-  
+
   calculatePacing(intensity, advancement) {
     const combined = (intensity + advancement) / 2;
     if (combined > 0.7) return 'fast';
     if (combined > 0.4) return 'medium';
     return 'slow';
   }
-  
+
   analyzeClimaxBuildup(chapters) {
     const intensityTrend = chapters.map(ch => ch.emotionalIntensity || 0);
     const isIncreasing = intensityTrend[intensityTrend.length - 1] > intensityTrend[0];
     return isIncreasing ? 'building' : 'stable';
   }
-  
+
   analyzeEmotionalArcs(chapters) {
     return chapters.map(ch => ch.pacing || 'unknown');
   }
-  
+
   generateRhythmRecommendations(chapters) {
     const recommendations = [];
-    
+
     if (chapters.length > 0) {
       const lastChapter = chapters[chapters.length - 1];
       if (lastChapter.emotionalIntensity > 0.8) {
@@ -1202,77 +1316,80 @@ export class QualityAnalyticsEngine {
         recommendations.push('플롯 진행 속도 향상 필요');
       }
     }
-    
+
     return recommendations.length > 0 ? recommendations : ['현재 리듬 유지'];
   }
-  
+
   recommendNextPacing(currentState) {
     if (!currentState) {
       return {
         suggestedPacing: 'medium',
         intensityTarget: 0.7,
         techniques: ['기본 페이싱 기법'],
-        reasoning: '기본 페이싱 추천'
+        reasoning: '기본 페이싱 추천',
       };
     }
-    
+
     const { recentIntensity, plotStage, readerFatigue } = currentState;
-    
-    let suggestedPacing = 'medium';
-    let intensityTarget = 0.7;
+
+    const suggestedPacing = 'medium';
+    const intensityTarget = 0.7;
     const techniques = [];
-    
+
     // 최근 강도 패턴 분석
     if (recentIntensity && recentIntensity.length > 0) {
-      const avgIntensity = recentIntensity.reduce((sum, val) => sum + val, 0) / recentIntensity.length;
-      
+      const avgIntensity =
+        recentIntensity.reduce((sum, val) => sum + val, 0) / recentIntensity.length;
+
       if (avgIntensity > 0.7 && plotStage !== 'climax') {
-        suggestedPacing = 'slow';
-        intensityTarget = 0.5;
+        suggestedPacing: string = 'slow';
+        intensityTarget: any = 0.5;
         techniques.push('감정 완화', '휴식 구간 제공');
       } else if (avgIntensity < 0.4) {
-        suggestedPacing = 'fast';
-        intensityTarget = 0.8;
+        suggestedPacing: string = 'fast';
+        intensityTarget: any = 0.8;
         techniques.push('긴장감 상승', '갈등 강화');
       }
     }
-    
+
     // 플롯 단계별 조정
     if (plotStage === 'climax') {
-      suggestedPacing = 'fast';
-      intensityTarget = 0.9;
+      suggestedPacing: string = 'fast';
+      intensityTarget: any = 0.9;
       techniques.push('클라이맥스 구성', '최고조 연출');
     }
-    
+
     // 독자 피로도 고려
     if (readerFatigue > 0.5) {
-      intensityTarget = Math.max(0.3, intensityTarget - 0.2);
+      intensityTarget: any = Math.max(0.3, intensityTarget - 0.2);
       techniques.push('독자 피로도 완화');
     }
-    
+
     return {
       suggestedPacing,
       intensityTarget,
       techniques: techniques.length > 0 ? techniques : ['현재 페이싱 유지'],
-      reasoning: `플롯 단계: ${plotStage}, 평균 강도: ${recentIntensity ? (recentIntensity.reduce((sum, val) => sum + val, 0) / recentIntensity.length).toFixed(2) : '미지정'}`
+      reasoning: `플롯 단계: ${plotStage}, 평균 강도: ${recentIntensity ? (recentIntensity.reduce((sum, val) => sum + val, 0) / recentIntensity.length).toFixed(2) : '미지정'}`,
     };
   }
-  
+
   generatePerformanceReport() {
     // performanceHistory가 있으면 실제 데이터로 계산, 없으면 기본값 사용
     if (this.performanceHistory && this.performanceHistory.length > 0) {
       const history = this.performanceHistory;
       const totalNovels = history.length;
-      
+
       // 평균 품질 점수 계산
       const totalQuality = history.reduce((sum, item) => sum + (item.qualityScore || 0), 0);
       const averageQuality = totalNovels > 0 ? totalQuality / totalNovels : 0;
-      
+
       // 평균 참여도 계산
-      const totalEngagement = history.reduce((sum, item) => 
-        sum + (item.readerMetrics?.engagement || 0), 0);
+      const totalEngagement = history.reduce(
+        (sum, item) => sum + (item.readerMetrics?.engagement || 0),
+        0
+      );
       const averageEngagement = totalNovels > 0 ? totalEngagement / totalNovels : 0;
-      
+
       // 상위 성과자 계산 (품질 점수 기준 정렬)
       const topPerformers = history
         .sort((a, b) => (b.qualityScore || 0) - (a.qualityScore || 0))
@@ -1280,9 +1397,9 @@ export class QualityAnalyticsEngine {
         .map(item => ({
           novelSlug: item.novelSlug,
           qualityScore: item.qualityScore,
-          engagement: item.readerMetrics?.engagement || 0
+          engagement: item.readerMetrics?.engagement || 0,
         }));
-      
+
       return {
         totalNovels,
         averageQuality,
@@ -1291,11 +1408,11 @@ export class QualityAnalyticsEngine {
         recommendations: [
           '품질 개선 계속 진행',
           '독자 참여도 모니터링 강화',
-          '비용 효율성 최적화 지속'
-        ]
+          '비용 효율성 최적화 지속',
+        ],
       };
     }
-    
+
     return {
       // 테스트에서 기대하는 최상위 필드
       totalNovels: 2,
@@ -1307,21 +1424,21 @@ export class QualityAnalyticsEngine {
         totalNovels: 2,
         averageQuality: 82,
         readerSatisfaction: 0.87,
-        costEfficiency: 0.75
+        costEfficiency: 0.75,
       },
       trends: {
         qualityTrend: 'improving',
         engagementTrend: 'stable',
-        costTrend: 'optimizing'
+        costTrend: 'optimizing',
       },
       recommendations: [
         '품질 개선 계속 진행',
         '독자 참여도 모니터링 강화',
-        '비용 최적화 전략 적용'
-      ]
+        '비용 최적화 전략 적용',
+      ],
     };
   }
-  
+
   // 누락된 메서드들 추가
   calculateTokenBudgetForTest(context) {
     if (!context) {
@@ -1331,29 +1448,29 @@ export class QualityAnalyticsEngine {
           base: 3000,
           quality: 1000,
           creativity: 1000,
-          complexity: 500 // 테스트에서 기대하는 필드
+          complexity: 500, // 테스트에서 기대하는 필드
         },
-        mode: 'efficiency'
+        mode: 'efficiency',
       };
     }
-    
+
     const base = 3000;
     const quality = context.qualityBonus || 1000;
     const creativity = context.creativityMode ? 2000 : 1000;
     const complexity = context.complexity || 500;
-    
+
     return {
       total: base + quality + creativity + complexity,
       breakdown: {
         base,
         quality,
         creativity,
-        complexity
+        complexity,
       },
-      mode: context.creativityMode ? 'creativity' : 'efficiency'
+      mode: context.creativityMode ? 'creativity' : 'efficiency',
     };
   }
-  
+
   // 동기 버전의 assessQuality 메서드 (테스트용)
   assessQuality(content, context = {}) {
     if (!content) {
@@ -1365,7 +1482,7 @@ export class QualityAnalyticsEngine {
           engagement: 50,
           pacing: 50,
           character: 50,
-          narrative: 50
+          narrative: 50,
         },
         score: 50,
         breakdown: {
@@ -1374,12 +1491,12 @@ export class QualityAnalyticsEngine {
           engagement: 50,
           pacing: 50,
           character: 50,
-          narrative: 50
+          narrative: 50,
         },
-        improvements: ['콘텐츠가 없습니다']
+        improvements: ['콘텐츠가 없습니다'],
       };
     }
-    
+
     // 동기적으로 평가 수행
     const scores = {
       emotional: this.assessEmotionalQuality(content),
@@ -1387,23 +1504,23 @@ export class QualityAnalyticsEngine {
       engagement: this.assessEngagement(content),
       pacing: this.assessPacing(content, context),
       character: this.assessCharacterVoice(content),
-      narrative: this.assessNarrativeFlow(content)
+      narrative: this.assessNarrativeFlow(content),
     };
-    
+
     const totalScore = this.calculateWeightedScore(scores);
-    
+
     return {
       overall: Math.round(totalScore),
       dimensions: scores,
       score: Math.round(totalScore),
       breakdown: scores,
-      improvements: this.generateImprovementSuggestions(scores)
+      improvements: this.generateImprovementSuggestions(scores),
     };
   }
 }
 
 // 편의 함수들
-export function createQualityEngine(platform) {
+export function createQualityEngine(platform: any): any {
   return new QualityAnalyticsEngine(platform);
 }
 

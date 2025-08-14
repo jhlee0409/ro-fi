@@ -1,3 +1,20 @@
+interface OptimizerConfig {
+  enabled?: boolean;
+  maxSize?: number;
+  ttl?: number;
+}
+
+interface OptimizationResult {
+  optimized: boolean;
+  savings?: number;
+  metadata?: Record<string, unknown>;
+}
+
+interface CacheEntry<T> {
+  value: T;
+  timestamp: number;
+}
+
 /**
  * 성능 최적화 헬퍼 모듈
  * 메모리 효율성, 가비지 컬렉션, 배치 처리 최적화
@@ -7,7 +24,13 @@
  * 배치 처리 최적화 헬퍼
  */
 export class BatchProcessor {
-  constructor(batchSize = 50, flushInterval = 5000) {
+  private batchSize: number;
+  private flushInterval: number;
+  private buffer: unknown[];
+  private flushTimer: NodeJS.Timeout | null;
+  private processingFunction: ((batch: unknown[]) => Promise<void>) | null;
+
+  constructor(batchSize: number = 50, flushInterval: number = 5000) {
     this.batchSize = batchSize;
     this.flushInterval = flushInterval;
     this.buffer = [];
@@ -18,14 +41,14 @@ export class BatchProcessor {
   /**
    * 처리 함수 설정
    */
-  setProcessor(fn) {
+  setProcessor(fn: (batch: unknown[]) => Promise<void>) {
     this.processingFunction = fn;
   }
 
   /**
    * 항목 추가 (자동 배치 처리)
    */
-  async add(item) {
+  async add(item: unknown): Promise<void> {
     this.buffer.push(item);
 
     // 배치 크기에 도달하면 즉시 처리
@@ -49,7 +72,7 @@ export class BatchProcessor {
     if (this.processingFunction) {
       try {
         await this.processingFunction(batch);
-      } catch (error) {
+      } catch (error: any) {
         console.error('배치 처리 실패:', error);
         // 실패한 항목들을 다시 버퍼에 추가 (재시도)
         this.buffer.unshift(...batch);
@@ -108,14 +131,14 @@ export class CircularBuffer {
   getRecent(n = 10) {
     const result = [];
     const actualN = Math.min(n, this.count);
-    
+
     for (let i = 0; i < actualN; i++) {
       const idx = (this.index - 1 - i + this.size) % this.size;
       if (this.buffer[idx] !== null) {
         result.unshift(this.buffer[idx]);
       }
     }
-    
+
     return result;
   }
 
@@ -124,17 +147,17 @@ export class CircularBuffer {
    */
   getAverage() {
     if (this.count === 0) return 0;
-    
+
     let sum = 0;
     let validCount = 0;
-    
+
     for (let i = 0; i < this.count; i++) {
       if (this.buffer[i] !== null && typeof this.buffer[i] === 'number') {
         sum += this.buffer[i];
         validCount++;
       }
     }
-    
+
     return validCount > 0 ? sum / validCount : 0;
   }
 
@@ -146,7 +169,7 @@ export class CircularBuffer {
       size: this.size,
       count: this.count,
       isFull: this.count === this.size,
-      usage: (this.count / this.size * 100).toFixed(1) + '%'
+      usage: ((this.count / this.size) * 100).toFixed(1) + '%',
     };
   }
 
@@ -169,7 +192,7 @@ export class MemoryPool {
     this.resetFn = resetFn;
     this.pool = [];
     this.active = new Set();
-    
+
     // 초기 객체들 생성
     for (let i = 0; i < initialSize; i++) {
       this.pool.push(this.createFn());
@@ -181,13 +204,13 @@ export class MemoryPool {
    */
   acquire() {
     let obj;
-    
+
     if (this.pool.length > 0) {
-      obj = this.pool.pop();
+      obj: any = this.pool.pop();
     } else {
-      obj = this.createFn();
+      obj: any = this.createFn();
     }
-    
+
     this.active.add(obj);
     return obj;
   }
@@ -197,14 +220,14 @@ export class MemoryPool {
    */
   release(obj) {
     if (!this.active.has(obj)) return false;
-    
+
     this.active.delete(obj);
-    
+
     // 객체 재설정
     if (this.resetFn) {
       this.resetFn(obj);
     }
-    
+
     this.pool.push(obj);
     return true;
   }
@@ -216,7 +239,7 @@ export class MemoryPool {
     return {
       poolSize: this.pool.length,
       activeCount: this.active.size,
-      totalCreated: this.pool.length + this.active.size
+      totalCreated: this.pool.length + this.active.size,
     };
   }
 
@@ -247,9 +270,9 @@ export class AsyncQueue {
       this.queue.push({
         task,
         resolve,
-        reject
+        reject,
       });
-      
+
       this.process();
     });
   }
@@ -283,7 +306,7 @@ export class AsyncQueue {
     return {
       running: this.running,
       pending: this.queue.length,
-      concurrency: this.concurrency
+      concurrency: this.concurrency,
     };
   }
 
@@ -300,51 +323,57 @@ export class AsyncQueue {
 /**
  * 캐시 관리자 (LRU)
  */
-export class LRUCache {
-  constructor(maxSize = 100, ttl = 300000) { // 5분 TTL
+export class LRUCache<T> {
+  private maxSize: number;
+  private ttl: number;
+  private cache: Map<string, CacheEntry<T>>;
+  private cleanupTimer: NodeJS.Timeout | null = null;
+
+  constructor(maxSize = 100, ttl = 300000) {
+    // 5분 TTL
     this.maxSize = maxSize;
     this.ttl = ttl;
     this.cache = new Map();
     this.cleanup();
   }
 
-  /** 
+  /**
    * 값 설정
    */
-  set(key, value) {
+  set(key: string, value: T): void {
     // 기존 키 삭제 (순서 재정렬용)
     if (this.cache.has(key)) {
       this.cache.delete(key);
     }
-    
+
     // 크기 제한 확인
     if (this.cache.size >= this.maxSize) {
       const firstKey = this.cache.keys().next().value;
       this.cache.delete(firstKey);
     }
-    
+
     this.cache.set(key, {
       value,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
 
   /**
    * 값 조회
    */
-  get(key) {
+  get(key: string): T | undefined {
     if (!this.cache.has(key)) {
       return undefined;
     }
-    
+
     const entry = this.cache.get(key);
-    
+
     // TTL 확인 - 테스트에서 강제로 과거 타임스탬프를 설정한 경우도 처리
     if (entry.timestamp && Date.now() - entry.timestamp > this.ttl) {
       this.cache.delete(key);
       return undefined;
     }
-    
+
     // 기본 구조 처리 - TTL 체크도 포함
     if (entry.value !== undefined && entry.timestamp) {
       // TTL 만료 체크
@@ -352,13 +381,13 @@ export class LRUCache {
         this.cache.delete(key);
         return undefined;
       }
-      
+
       // LRU 순서 업데이트
       this.cache.delete(key);
       this.cache.set(key, { value: entry.value, timestamp: Date.now() });
       return entry.value;
     }
-    
+
     // 테스트에서 직접 설정한 data 구조 처리
     if (entry.data && entry.timestamp) {
       // 강제 만료 체크
@@ -366,17 +395,17 @@ export class LRUCache {
         this.cache.delete(key);
         return undefined;
       }
-      
+
       // LRU 순서 업데이트
       this.cache.delete(key);
       this.cache.set(key, { value: entry.data, timestamp: Date.now() });
       return entry.data;
     }
-    
+
     // 레거시 구조 (timestamp 없는 경우)
     this.cache.delete(key);
     this.cache.set(key, { value: entry.value || entry, timestamp: Date.now() });
-    
+
     return entry.value || entry;
   }
 
@@ -385,13 +414,13 @@ export class LRUCache {
    */
   cleanup() {
     const now = Date.now();
-    
+
     for (const [key, entry] of this.cache.entries()) {
       if (now - entry.timestamp > this.ttl) {
         this.cache.delete(key);
       }
     }
-    
+
     // 5분마다 정리
     setTimeout(() => this.cleanup(), 300000);
   }
@@ -403,8 +432,8 @@ export class LRUCache {
     return {
       size: this.cache.size,
       maxSize: this.maxSize,
-      usage: (this.cache.size / this.maxSize * 100).toFixed(1) + '%',
-      ttl: this.ttl
+      usage: ((this.cache.size / this.maxSize) * 100).toFixed(1) + '%',
+      ttl: this.ttl,
     };
   }
 
@@ -431,15 +460,15 @@ export class GCMonitor {
       peakMemoryUsage: 0,
       averageMemoryUsage: 0,
       memoryLeakDetections: 0,
-      performanceImpacts: []
+      performanceImpacts: [],
     };
-    
+
     // 메모리 사용량 히스토리 추적
     this.memoryHistory = new CircularBuffer(100);
     this.performanceMetrics = {
       gcFrequency: 0,
       averageCleanupTime: 0,
-      memoryRecoveryRate: 0
+      memoryRecoveryRate: 0,
     };
   }
 
@@ -455,42 +484,45 @@ export class GCMonitor {
       rss: Math.round(usage.rss / 1024 / 1024),
       // 새로운 메트릭
       heapUtilization: Math.round((usage.heapUsed / usage.heapTotal) * 100),
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
-    
+
     // 히스토리에 추가
     this.memoryHistory.push(memoryData);
-    
+
     // 피크 메모리 업데이트
     if (memoryData.heapUsed > this.gcStats.peakMemoryUsage) {
       this.gcStats.peakMemoryUsage = memoryData.heapUsed;
     }
-    
+
     // 평균 메모리 계산
     this.gcStats.averageMemoryUsage = this.memoryHistory.getAverage();
-    
+
     return memoryData;
   }
 
   /**
    * 필요시 가비지 컬렉션 실행
    */
-  forceGCIfNeeded(threshold = 500) { // 500MB 임계값
+  forceGCIfNeeded(threshold = 500) {
+    // 500MB 임계값
     const usage = this.getMemoryUsage();
-    
+
     if (usage.heapUsed > threshold) {
       this.gcStats.memoryBefore = usage.heapUsed;
-      
+
       if (global.gc) {
         global.gc();
         this.gcStats.forcedGC++;
         this.gcStats.memoryAfter = this.getMemoryUsage().heapUsed;
         this.gcStats.lastCleanup = Date.now();
-        
-        console.log(`🧹 강제 GC 실행: ${this.gcStats.memoryBefore}MB → ${this.gcStats.memoryAfter}MB`);
+
+        console.log(
+          `🧹 강제 GC 실행: ${this.gcStats.memoryBefore}MB → ${this.gcStats.memoryAfter}MB`
+        );
       }
     }
-    
+
     return usage;
   }
 
@@ -507,90 +539,92 @@ export class GCMonitor {
       memoryTrend: this.calculateMemoryTrend(),
       performanceImpact: this.calculatePerformanceImpact(),
       healthScore: this.calculateMemoryHealthScore(currentMemory),
-      recommendations: this.generateMemoryRecommendations(currentMemory)
+      recommendations: this.generateMemoryRecommendations(currentMemory),
     };
   }
-  
+
   /**
    * 메모리 트렌드 분석
    */
   calculateMemoryTrend() {
     const recent = this.memoryHistory.getRecent(10);
     if (recent.length < 2) return 'insufficient_data';
-    
+
     const trend = recent[recent.length - 1].heapUsed - recent[0].heapUsed;
     if (trend > 50) return 'increasing';
     if (trend < -50) return 'decreasing';
     return 'stable';
   }
-  
+
   /**
    * 성능 영향 계산
    */
   calculatePerformanceImpact() {
     const recent = this.memoryHistory.getRecent(5);
     const highUsage = recent.filter(m => m.heapUtilization > 80).length;
-    
+
     if (highUsage >= 3) return 'high';
     if (highUsage >= 1) return 'medium';
     return 'low';
   }
-  
+
   /**
    * 메모리 건강도 점수
    */
   calculateMemoryHealthScore(currentMemory) {
     let score = 100;
-    
+
     // 힙 사용률 패널티
     if (currentMemory.heapUtilization > 90) score -= 30;
     else if (currentMemory.heapUtilization > 80) score -= 15;
     else if (currentMemory.heapUtilization > 70) score -= 5;
-    
+
     // GC 빈도 패널티
     if (this.gcStats.forcedGC > 10) score -= 20;
     else if (this.gcStats.forcedGC > 5) score -= 10;
-    
+
     return Math.max(0, score);
   }
-  
+
   /**
    * 메모리 개선 권장사항
    */
   generateMemoryRecommendations(currentMemory) {
     const recommendations = [];
-    
+
     if (currentMemory.heapUtilization > 85) {
       recommendations.push('메모리 사용량이 높습니다. 캐시 크기를 줄이거나 GC를 실행하세요.');
     }
-    
+
     if (this.gcStats.forcedGC > 5) {
       recommendations.push('잦은 강제 GC가 감지됩니다. 메모리 풀 최적화를 고려하세요.');
     }
-    
+
     const trend = this.calculateMemoryTrend();
     if (trend === 'increasing') {
-      recommendations.push('메모리 사용량이 지속적으로 증가하고 있습니다. 메모리 누수를 확인하세요.');
+      recommendations.push(
+        '메모리 사용량이 지속적으로 증가하고 있습니다. 메모리 누수를 확인하세요.'
+      );
     }
-    
+
     return recommendations;
   }
 }
 
 // 편의 함수들
-export function createBatchProcessor(batchSize, flushInterval) {
+export function createBatchProcessor(batchSize: any, flushInterval: any): any {
   return new BatchProcessor(batchSize, flushInterval);
 }
 
-export function createCircularBuffer(size) {
+export function createCircularBuffer(size: any): any {
   return new CircularBuffer(size);
 }
 
-export function createAsyncQueue(concurrency) {
+export function createAsyncQueue(concurrency: any): any {
   return new AsyncQueue(concurrency);
 }
 
-export function createLRUCache(maxSize, ttl) {
+export function createLRUCache(maxSize: any, ttl: any): any {
   return new LRUCache(maxSize, ttl);
 }
 

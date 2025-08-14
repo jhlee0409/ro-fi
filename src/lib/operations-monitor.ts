@@ -19,6 +19,7 @@ import { createGzip } from 'zlib';
 import { pipeline } from 'stream/promises';
 import { createReadStream, createWriteStream } from 'fs';
 import { fileURLToPath } from 'url';
+import type { PerformanceRecord } from './types/index.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -28,14 +29,14 @@ const AlertSeverity = {
   MEDIUM: 'medium',
   HIGH: 'high',
   CRITICAL: 'critical',
-};
+} as const;
 
 const AlertRule = {
   THRESHOLD: 'threshold',
   PATTERN: 'pattern',
   ANOMALY: 'anomaly',
   COMPOSITE: 'composite',
-};
+} as const;
 
 const LogLevel = {
   DEBUG: 0,
@@ -43,13 +44,61 @@ const LogLevel = {
   WARN: 2,
   ERROR: 3,
   CRITICAL: 4,
-};
+} as const;
+
+type AlertSeverityType = typeof AlertSeverity[keyof typeof AlertSeverity];
+type AlertRuleType = typeof AlertRule[keyof typeof AlertRule];
+type LogLevelType = typeof LogLevel[keyof typeof LogLevel];
+
+interface LogEntry {
+  timestamp: string;
+  level: LogLevelType;
+  message: string;
+  metadata?: Record<string, unknown>;
+  operation?: string;
+  duration?: number;
+  error?: Error;
+}
+
+interface AlertConfig {
+  id: string;
+  name: string;
+  description: string;
+  severity: AlertSeverityType;
+  rule: AlertRuleType;
+  conditions: Record<string, unknown>;
+  enabled: boolean;
+  actions: string[];
+}
+
+interface MonitoringMetrics {
+  timestamp: string;
+  cpu: number;
+  memory: number;
+  operationsPerMinute: number;
+  errorRate: number;
+  responseTime: number;
+}
 
 /**
  * 통합 운영 모니터링 시스템
  */
 export class OperationsMonitor {
-  constructor(config = {}) {
+  private logConfig: any;
+  private aiLoggingConfig: any;
+  private performanceConfig: any;
+  private alertRules: any[];
+  private eventHandlers: any[];
+  private performanceHistory: any[];
+  private currentMetrics: any;
+  private isCollecting: boolean = false;
+  private metricUpdateInterval?: NodeJS.Timeout;
+  private compressionQueue: any[];
+  private archiveQueue: any[];
+  private eventQueue: any[];
+  private config: any;
+
+  constructor(config: any = {}) {
     // =================
     // 로그 관리 설정
     // =================
@@ -643,10 +692,10 @@ export class OperationsMonitor {
   async logToFile(entry) {
     try {
       const logDir = this.logConfig.logDir;
-      
+
       // Ensure log directory exists
       await fs.mkdir(logDir, { recursive: true });
-      
+
       const fileName = `operations-${new Date().toISOString().split('T')[0]}.log`;
       const filePath = path.join(logDir, fileName);
 
@@ -749,7 +798,7 @@ export class OperationsMonitor {
     // 향상된 메트릭 계산
     const operationTypes = {};
     const responseTimes = [];
-    
+
     recentOps.forEach(op => {
       operationTypes[op.type] = (operationTypes[op.type] || 0) + 1;
       if (op.duration) responseTimes.push(op.duration);
@@ -763,49 +812,54 @@ export class OperationsMonitor {
       // 새로운 메트릭
       operationBreakdown: operationTypes,
       responseTimePercentiles: this.calculateResponseTimePercentiles(responseTimes),
-      successRate: recentOps.length > 0 ? 
-        (recentOps.filter(op => op.status === 'completed').length / recentOps.length * 100).toFixed(1) : 100,
+      successRate:
+        recentOps.length > 0
+          ? (
+              (recentOps.filter(op => op.status === 'completed').length / recentOps.length) *
+              100
+            ).toFixed(1)
+          : 100,
       performanceTrend: this.calculatePerformanceTrend(recentOps),
       totalTokensUsed: this.metrics.ai.tokenUsage
         .filter(t => t.timestamp > Date.now() - 60 * 60 * 1000)
         .reduce((sum, t) => sum + t.usage, 0),
     };
   }
-  
+
   /**
    * 응답시간 백분위수 계산
    */
   calculateResponseTimePercentiles(responseTimes) {
     if (responseTimes.length === 0) return { p50: 0, p90: 0, p95: 0, p99: 0 };
-    
+
     const sorted = responseTimes.sort((a, b) => a - b);
-    const getPercentile = (p) => {
-      const index = Math.ceil(sorted.length * p / 100) - 1;
+    const getPercentile = p => {
+      const index = Math.ceil((sorted.length * p) / 100) - 1;
       return sorted[Math.max(0, index)];
     };
-    
+
     return {
       p50: Math.round(getPercentile(50)),
       p90: Math.round(getPercentile(90)),
       p95: Math.round(getPercentile(95)),
-      p99: Math.round(getPercentile(99))
+      p99: Math.round(getPercentile(99)),
     };
   }
-  
+
   /**
    * 성능 트렌드 계산
    */
   calculatePerformanceTrend(operations) {
     if (operations.length < 10) return 'stable';
-    
+
     const recent = operations.slice(-5);
     const older = operations.slice(-10, -5);
-    
+
     if (older.length === 0) return 'stable';
-    
+
     const recentAvg = recent.reduce((sum, op) => sum + (op.duration || 0), 0) / recent.length;
     const olderAvg = older.reduce((sum, op) => sum + (op.duration || 0), 0) / older.length;
-    
+
     if (recentAvg > olderAvg * 1.2) return 'degrading';
     if (recentAvg < olderAvg * 0.8) return 'improving';
     return 'stable';
@@ -1065,8 +1119,8 @@ export class OperationsMonitor {
   async trackAIOperation(operation, data = {}) {
     // 테스트 호환성: 첫 번째 인자가 객체인 경우 처리
     if (typeof operation === 'object' && operation !== null) {
-      data = operation;
-      operation = data.model || data.operation || 'unknown';
+      data: any = operation;
+      operation: any = data.model || data.operation || 'unknown';
     }
 
     const entry = {
@@ -1602,11 +1656,11 @@ export class OperationsMonitor {
           const filePath = path.join(this.logConfig.logDir, file);
           try {
             const stats = await fs.stat(filePath);
-            let shouldDelete = false;
+            const shouldDelete = false;
 
             // Check file modification time
             if (stats.mtime.getTime() < cutoffDate) {
-              shouldDelete = true;
+              shouldDelete: boolean = true;
             }
 
             // For test compatibility: also check if filename contains an old date
@@ -1615,7 +1669,7 @@ export class OperationsMonitor {
             if (dateMatch) {
               const fileDate = new Date(dateMatch[1]);
               if (fileDate.getTime() < cutoffDate) {
-                shouldDelete = true;
+                shouldDelete: boolean = true;
               }
             }
 
@@ -1674,12 +1728,12 @@ export class OperationsMonitor {
     const memoryUsage = metrics.memoryUsage || metrics.memory || 0;
     const cpuUsage = metrics.cpuUsage || metrics.cpu || 0;
 
-    let health = 'healthy';
+    const health = 'healthy';
     if (
       memoryUsage > this.performanceConfig.thresholds.memoryUsage ||
       cpuUsage > this.performanceConfig.thresholds.cpuUsage
     ) {
-      health = 'warning';
+      health: string = 'warning';
     }
 
     return {
@@ -1748,11 +1802,11 @@ export class OperationsMonitor {
 }
 
 // 편의 함수들
-export function createOperationsMonitor(config = {}) {
+export function createOperationsMonitor(config: Record<string, any>): any {
   return new OperationsMonitor(config);
 }
 
-export function getOperationsMonitor(config) {
+export function getOperationsMonitor(config: any): any {
   return new OperationsMonitor(config);
 }
 

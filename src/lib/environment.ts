@@ -3,35 +3,60 @@
  * 테스트, 개발, 프로덕션 환경을 구분하여 적절한 설정 제공
  */
 
+interface TimeoutSettings {
+  test: number;
+  hook: number;
+  api: number;
+}
+
+type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+
+interface EnvironmentInfo {
+  isTest: boolean;
+  isDevelopment: boolean;
+  isProduction: boolean;
+  shouldMockExternal: boolean;
+  shouldMockAI: boolean;
+  timeouts: TimeoutSettings;
+  logLevel: LogLevel;
+  nodeEnv: string;
+}
+
+interface ValidationResult {
+  warnings: string[];
+  errors: string[];
+}
+
 /**
  * 현재 실행 환경이 테스트 환경인지 확인
  */
-export function isTestEnvironment() {
+export function isTestEnvironment(): boolean {
   return (
     process.env.NODE_ENV === 'test' ||
     process.env.VITEST === 'true' ||
-    process.env.npm_lifecycle_event?.includes('test')
+    process.env.npm_lifecycle_event?.includes('test') ||
+    false
   );
 }
 
 /**
  * 현재 실행 환경이 개발 환경인지 확인
  */
-export function isDevelopmentEnvironment() {
+export function isDevelopmentEnvironment(): boolean {
   return process.env.NODE_ENV === 'development' || (!process.env.NODE_ENV && !isTestEnvironment());
 }
 
 /**
  * 현재 실행 환경이 프로덕션 환경인지 확인
  */
-export function isProductionEnvironment() {
+export function isProductionEnvironment(): boolean {
   return process.env.NODE_ENV === 'production';
 }
 
 /**
  * 외부 서비스(API)를 모킹해야 하는지 확인
  */
-export function shouldMockExternalServices() {
+export function shouldMockExternalServices(): boolean {
   // 테스트 환경에서는 기본적으로 모킹
   if (isTestEnvironment()) {
     // INTEGRATION_TEST=true인 경우만 실제 API 사용
@@ -45,7 +70,7 @@ export function shouldMockExternalServices() {
 /**
  * AI 서비스를 모킹해야 하는지 확인
  */
-export function shouldMockAIService() {
+export function shouldMockAIService(): boolean {
   // API 키가 없으면 강제 모킹
   if (!process.env.ANTHROPIC_API_KEY) {
     return true;
@@ -58,7 +83,7 @@ export function shouldMockAIService() {
 /**
  * 환경에 따른 타임아웃 설정 반환
  */
-export function getTimeoutSettings() {
+export function getTimeoutSettings(): TimeoutSettings {
   if (isTestEnvironment()) {
     return {
       test: 5000, // 5초
@@ -86,22 +111,22 @@ export function getTimeoutSettings() {
 /**
  * 환경별 로깅 레벨 반환
  */
-export function getLogLevel() {
+export function getLogLevel(): LogLevel {
   if (isTestEnvironment()) {
-    return process.env.TEST_LOG_LEVEL || 'warn';
+    return (process.env.TEST_LOG_LEVEL as LogLevel) || 'warn';
   }
 
   if (isDevelopmentEnvironment()) {
-    return process.env.LOG_LEVEL || 'debug';
+    return (process.env.LOG_LEVEL as LogLevel) || 'debug';
   }
 
-  return process.env.LOG_LEVEL || 'info';
+  return (process.env.LOG_LEVEL as LogLevel) || 'info';
 }
 
 /**
  * 현재 환경 정보 객체 반환
  */
-export function getEnvironmentInfo() {
+export function getEnvironmentInfo(): EnvironmentInfo {
   return {
     isTest: isTestEnvironment(),
     isDevelopment: isDevelopmentEnvironment(),
@@ -117,9 +142,9 @@ export function getEnvironmentInfo() {
 /**
  * 환경 검증 및 경고
  */
-export function validateEnvironment() {
-  const warnings = [];
-  const errors = [];
+export function validateEnvironment(): ValidationResult {
+  const warnings: string[] = [];
+  const errors: string[] = [];
 
   // API 키 검증
   if (isProductionEnvironment() && !process.env.ANTHROPIC_API_KEY) {
@@ -142,7 +167,7 @@ export function validateEnvironment() {
 }
 
 // 환경 정보 디버깅용 출력
-export function debugEnvironment() {
+export function debugEnvironment(): void {
   if (getLogLevel() === 'debug') {
     const env = getEnvironmentInfo();
     console.log('🔍 Environment Debug Info:', {

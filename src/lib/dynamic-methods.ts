@@ -4,12 +4,43 @@
  */
 
 import { join } from 'path';
+import type {
+  Novel,
+  Chapter,
+  CharacterProfile,
+  WorldSettings,
+  PlotStructure,
+} from './types/index.js';
+
+interface NovelData {
+  title: string;
+  summary: string;
+  hook: string;
+  characters: {
+    female: CharacterProfile;
+    male: CharacterProfile;
+  };
+  worldSetting: WorldSettings;
+  tropeCombination: {
+    main_trope: string;
+    sub_tropes: string[];
+  };
+  plotStructure: PlotStructure;
+  keywords: string[];
+}
+
+interface ChapterOptions {
+  novel: string;
+  chapter: string | number;
+  characters: string[];
+  worldSettings: WorldSettings;
+}
 
 export const dynamicMethods = {
   /**
    * 완전히 동적인 소설 파일 생성
    */
-  async createDynamicNovelFile(slug, novelData) {
+  async createDynamicNovelFile(slug: string, novelData: NovelData): Promise<string> {
     const {
       title,
       summary,
@@ -129,7 +160,7 @@ ${tropeCombination.unique_twist}
       let finalCharacters;
       if (characters && characters.female && characters.male) {
         // 완전한 캐릭터 객체가 있는 경우 (새 소설 생성시)
-        finalCharacters = characters;
+        finalCharacters: any = characters;
       } else if (characterNames && characterNames.length >= 2) {
         // characterNames 배열만 있는 경우 (기존 소설 계속시)
         finalCharacters = {
@@ -195,7 +226,7 @@ ${tropeCombination.unique_twist}
 
       // AI 챕터 생성 (기존 generateChapter와 동일한 품질 보장)
       let bestResult = null;
-      let bestScore = 0;
+      const bestScore = 0;
       const maxRetries = 2;
 
       for (let i = 0; i < maxRetries; i++) {
@@ -223,7 +254,7 @@ ${tropeCombination.unique_twist}
         console.log(`📊 동적 생성 품질 점수: ${qualityScore.score}/100`);
 
         if (qualityScore.score > bestScore) {
-          bestScore = qualityScore.score;
+          bestScore: any = qualityScore.score;
           bestResult = {
             title: chapterTitle, // 동적 생성된 제목 사용
             content: aiResult.content,

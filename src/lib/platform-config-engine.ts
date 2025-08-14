@@ -1,10 +1,52 @@
+import type {
+  ProcessingResult,
+  Platform,
+  QualityStandards
+} from './types/index.js';
+
+interface EngineConfig {
+  enabled?: boolean;
+  bufferSize?: number;
+  cacheSize?: number;
+}
+
+interface PlatformConfig {
+  name: string;
+  description: string;
+  wordCount: {
+    min: number;
+    max: number;
+    target: number;
+  };
+  structure: {
+    scenes: number;
+    sceneLength: number;
+    paragraphs: number;
+  };
+  style: {
+    pacing: 'slow' | 'medium' | 'fast';
+    focus: string;
+    engagement: 'low' | 'medium' | 'high';
+    complexity: 'low' | 'medium' | 'high';
+  };
+  quality: {
+    threshold: number;
+    characterThreshold: number;
+    dialogueRatio: number;
+  };
+}
+
 /**
  * 플랫폼별 설정 관리 엔진
  * 웹소설 플랫폼 표준에 맞는 분량과 스타일 설정을 제공
  */
 
 export class PlatformConfigEngine {
+  private configs: Record<string, PlatformConfig>;
+  private currentPlatform: string;
+
   constructor() {
+    this.currentPlatform = 'default';
     // 플랫폼별 설정 데이터베이스
     this.configs = {
       // 기본 모드 (기존 시스템 호환)
@@ -298,7 +340,7 @@ export class PlatformConfigEngine {
 }
 
 // 환경 변수에서 플랫폼 설정을 가져오는 헬퍼 함수
-export function createPlatformConfig() {
+export function createPlatformConfig(): void {
   const platform = process.env.PLATFORM_MODE || 'default';
   const engine = new PlatformConfigEngine();
 
@@ -310,7 +352,7 @@ export function createPlatformConfig() {
 }
 
 // 플랫폼별 설정 요약 출력
-export function printPlatformSummary() {
+export function printPlatformSummary(): void {
   const engine = new PlatformConfigEngine();
   const platforms = engine.getAvailablePlatforms();
 
@@ -324,6 +366,6 @@ export function printPlatformSummary() {
     console.log(`   - 설명: ${platform.description}`);
   });
 
-  console.log('\n사용법: PLATFORM_MODE=naver node scripts/run-automation.js');
+  console.log('\n사용법: PLATFORM_MODE=naver node scripts/run-automation');
   console.log('');
 }
