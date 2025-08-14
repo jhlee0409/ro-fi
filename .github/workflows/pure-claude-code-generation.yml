@@ -52,6 +52,11 @@ jobs:
         with:
           fetch-depth: 0
           
+      - name: Git 사용자 설정
+        run: |
+          git config --global user.name "로판 자동화 봇 🤖"
+          git config --global user.email "action@github.com"
+          
       # =========================================
       # 유일한 AI 호출: Claude Code Actions만
       # =========================================
