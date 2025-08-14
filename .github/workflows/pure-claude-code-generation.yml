@@ -30,15 +30,12 @@ on:
           - high
       
       story_theme:
-        description: '스토리 테마'
+        description: '로판 하위 장르 (romance_fantasy 고정)'
         required: false
         default: 'romance_fantasy'
         type: choice
         options:
           - romance_fantasy
-          - modern_romance
-          - historical_romance
-          - fantasy_adventure
 
 concurrency:
   group: pure-claude-generation-${{ github.ref }}
@@ -65,13 +62,12 @@ jobs:
       # 유일한 AI 호출: Claude Code Actions만
       # =========================================
       - name: ✍️ Claude Code로 완전 자동 스토리 생성
-        uses: anthropics/claude-code-action@v1
+        uses: anthropics/claude-code-action@beta
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          max_tokens: 16384
-          temperature: ${{ github.event.inputs.creativity_level == 'high' && '0.9' || github.event.inputs.creativity_level == 'medium' && '0.7' || '0.5' }}
-          direct_prompt: |
+          allowed_tools: 'str_replace_based_edit_tool,bash'
+          model: 'claude-4-0-sonnet-20250219'
+          prompt: |
             # 🌹 완전 자율형 로맨스 판타지 연재 시스템 v5.0
             # 100% Claude Code Actions 전용 - API 의존성 ZERO
             
@@ -81,7 +77,7 @@ jobs:
             ## 설정값
             - 모드: ${{ github.event.inputs.generation_mode || 'auto' }}
             - 창의성: ${{ github.event.inputs.creativity_level || 'high' }}
-            - 테마: ${{ github.event.inputs.story_theme || 'romance_fantasy' }}
+            - 장르: 로맨스 판타지 (고정)
             
             ## 🔍 1단계: 전체 상황 스캔 및 분석
             
@@ -136,7 +132,7 @@ jobs:
             author: "Claude Code AI"
             status: "연재 중"
             summary: "[독자 몰입도 MAX 소개글 200자]"
-            tropes: ["${{ github.event.inputs.story_theme }}", "계약연애", "능력각성"]
+            tropes: ["romance_fantasy", "계약연애", "능력각성", "회귀", "빙의", "환생"]
             totalChapters: 1
             publishedDate: "$(date +%Y-%m-%d)"
             rating: 0
@@ -191,11 +187,29 @@ jobs:
             - **독창성**: "이런 설정은 처음이야!" 할 만한 신선함
             - **로맨스**: 심장이 두근거리는 감정선
             
-            ### 테마별 특화
-            ${{ github.event.inputs.story_theme == 'romance_fantasy' && '- 마법과 현실이 교차하는 환상적 배경' || '' }}
-            ${{ github.event.inputs.story_theme == 'modern_romance' && '- 현실적이지만 로맨틱한 도시 배경' || '' }}
-            ${{ github.event.inputs.story_theme == 'historical_romance' && '- 역사적 배경과 시대적 로맨스' || '' }}
-            ${{ github.event.inputs.story_theme == 'fantasy_adventure' && '- 모험과 성장이 있는 판타지 세계' || '' }}
+            ### 🌹 로맨스 판타지 전용 창작 가이드라인
+            
+            **핵심 세계관 설정**:
+            - 마법과 현실이 교차하는 환상적 배경
+            - 황실/귀족 사회 또는 마법 아카데미 설정
+            - 로맨스를 위한 운명적 만남과 갈등 구조
+            
+            **필수 로판 트로프** (반드시 1개 이상 포함):
+            - 👑 **계약연애/정략결혼**: 어쩔 수 없이 시작된 관계가 진짜 사랑으로
+            - 🔄 **회귀/시간역행**: 전생 기억으로 운명 바꾸기
+            - 👻 **빙의/환생**: 소설 속 악역/조연으로 들어가기
+            - ⚔️ **적대관계**: 원수에서 연인으로 (enemies-to-lovers)
+            - 🏫 **아카데미**: 마법학교/기사학원에서의 성장과 로맨스
+            - 💎 **신분차이**: 황족과 평민, 마법사와 일반인의 금지된 사랑
+            - 🌙 **운명의 상대**: 예언된 짝, 소울메이트, 마법적 연결
+            - 🗡️ **복수와 구원**: 상처받은 마음의 치유와 사랑
+            
+            **감정선 발전 단계**:
+            1. 극적 첫 만남 (적대적/우연한/운명적)
+            2. 갈등과 오해 (신분차이/과거사/성격차이)
+            3. 서서히 드러나는 진심 (배려/질투/보호본능)
+            4. 위기 상황에서의 진실 고백
+            5. 해피엔딩으로 향하는 감동적 결말
             
             ## 📝 5단계: 메타데이터 정확성
             
@@ -229,7 +243,7 @@ jobs:
             📊 생성 정보:
             - 모드: ${{ github.event.inputs.generation_mode || 'auto' }}
             - 창의성: ${{ github.event.inputs.creativity_level || 'high' }}  
-            - 테마: ${{ github.event.inputs.story_theme || 'romance_fantasy' }}
+            - 장르: 로맨스 판타지 (고정)
             - 품질점수: 9.5/10 (Claude Code 최고급)
             
             🎯 독자 만족도 목표: 95%+
@@ -256,8 +270,6 @@ jobs:
             **창의성을 최대한 발휘하여 독자들이 "와!" 할 만한 작품을 만들어주세요!**
             
             🎨 예술적 영감을 받아 최고의 로맨스 판타지를 창조하세요! 🌟
-            
-          allowed_tools: 'str_replace_based_edit_tool,bash'
           
       # =========================================
       # 검증 및 배포 (API 호출 없음)
