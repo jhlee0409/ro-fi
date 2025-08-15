@@ -51,7 +51,7 @@
     "ci": "pnpm lint && pnpm type-check && pnpm test:coverage && pnpm test:e2e",
     "ci:cypress": "pnpm lint && pnpm type-check && pnpm test:coverage && pnpm test:e2e:cypress",
     "ci:all": "pnpm lint && pnpm type-check && pnpm test:coverage && pnpm test:e2e && pnpm test:e2e:cypress",
-    "postinstall": "./node_modules/.bin/playwright install || npx playwright install || echo 'Playwright install failed, continuing...'"
+    "postinstall": "echo 'Skipping Playwright install in production'"
   },
   "dependencies": {
     "@astrojs/react": "^4.0.0",
