@@ -228,8 +228,19 @@ ${novel.content}
 #### 기존 챕터들:
 ${chapters
   .filter(ch => ch.novel === novel.slug)
-  .map(ch => `### ${ch.chapterNumber}화\n${ch.content.substring(0, 500)}...`)
+  .sort((a, b) => a.chapterNumber - b.chapterNumber)
+  .map((ch, index, filteredChapters) => {
+    const isRecent = filteredChapters.length - index <= 3;
+    const content = isRecent ? ch.content : ch.content.substring(0, 300) + '...';
+    return `${ch.chapterNumber}화\n${content}`;
+  })
   .join('\n\n')}
+
+#### 스토리 완결을 위한 컨텍스트:
+- 총 ${chapters.filter(ch => ch.novel === novel.slug).length}화 완료
+- 주요 캐릭터 관계와 갈등 상황 정리
+- 해결해야 할 핵심 문제들
+- 모든 캐릭터의 행복한 미래를 위한 결말 방향
 
 #### 생성할 내용:
 완결 에필로그를 생성해주세요. 파일명은 "${novel.slug}-ch${novel.totalChapters + 1}.md"입니다.
@@ -246,6 +257,14 @@ wordCount: [실제 글자 수]
 ---
 \`\`\`
 
+#### 포맷 주의사항:
+- 메타데이터와 본문 사이에 빈 줄을 넣지 마세요
+- 본문은 메타데이터 바로 아래에 바로 시작하세요
+- 마크다운 문법을 사용하지 마세요 (##, ###, ** 등 사용 금지)
+- 단락 구분은 빈 줄로만 하세요
+- 따옴표나 특수 기호를 남발하지 마세요
+- 깔끔하고 읽기 쉬운 문체로 작성하세요
+
 `;
   } else if (action === 'continue') {
     const novelChapters = chapters.filter(ch => ch.novel === novel.slug);
@@ -261,7 +280,28 @@ wordCount: [실제 글자 수]
 ${novel.content}
 
 #### 기존 챕터들:
-${novelChapters.map(ch => `### ${ch.chapterNumber}화\n${ch.content.substring(0, 500)}...`).join('\n\n')}
+${novelChapters
+  .sort((a, b) => a.chapterNumber - b.chapterNumber)
+  .map((ch, index) => {
+    const isRecent = novelChapters.length - index <= 3;
+    const content = isRecent ? ch.content : ch.content.substring(0, 300) + '...';
+    return `${ch.chapterNumber}화\n${content}`;
+  })
+  .join('\n\n')}
+
+#### 최근 스토리 진행 상황:
+${
+  novelChapters.length > 0
+    ? `
+- 총 ${novelChapters.length}화 완료
+- 최근 주요 이벤트: ${novelChapters
+        .slice(-3)
+        .map(ch => `${ch.chapterNumber}화`)
+        .join(', ')}
+- 다음 화 예상 방향: ${nextChapterNumber}화에서 이어질 스토리 라인
+`
+    : '첫 화 시작'
+}
 
 #### 생성할 내용:
 ${nextChapterNumber}화를 생성해주세요. 파일명은 "${novel.slug}-ch${nextChapterNumber}.md"입니다.
@@ -278,6 +318,14 @@ wordCount: [실제 글자 수]
 ---
 \`\`\`
 
+#### 포맷 주의사항:
+- 메타데이터와 본문 사이에 빈 줄을 넣지 마세요
+- 본문은 메타데이터 바로 아래에 바로 시작하세요
+- 마크다운 문법을 사용하지 마세요 (##, ###, ** 등 사용 금지)
+- 단락 구분은 빈 줄로만 하세요
+- 따옴표나 특수 기호를 남발하지 마세요
+- 깔끔하고 읽기 쉬운 문체로 작성하세요
+
 `;
   } else {
     prompt += `#### 새 소설 시작:
@@ -287,32 +335,27 @@ wordCount: [실제 글자 수]
 - 소설 메타데이터 파일도 함께 생성
 
 #### 생성할 내용:
-완전히 새로운 로맨스 판타지 소설의 1화와 메타데이터를 생성해주세요.
+완전히 새로운 로맨스 판타지 소설의 1화를 생성해주세요.
 
-소설 메타데이터 파일명: "new-romance-fantasy-${Date.now()}.md"
-챕터 파일명: "new-romance-fantasy-${Date.now()}-ch1.md"
+#### 중요:
+- 실제 소설 내용을 작성하세요 (예시나 설명이 아닌)
+- 최소 4,000자 이상의 완성된 소설 내용을 작성하세요
+- 로맨스 판타지 장르의 매력을 살린 매력적인 스토리를 만들어주세요
+- novel 필드에는 제목을 영어로 번역한 kebab-case 슬러그를 사용하세요
+- 예: "재회, 흩날리는 벚꽃 아래" → "reunion-under-falling-cherry-blossoms"
 
-소설 메타데이터:
-\`\`\`yaml
----
-title: "매력적인 소설 제목"
-slug: "new-romance-fantasy-${Date.now()}"
-author: "AI 작가"
-description: "매력적인 소설 설명"
-genre: ["로맨스", "판타지"]
-status: "ongoing"
-totalChapters: 1
-publishedDate: "${new Date().toISOString().split('T')[0]}"
-contentRating: "15+"
-tags: ["로맨스", "판타지", "마법", "사랑"]
----
-\`\`\`
+#### 파일명 규칙:
+- novel 필드에는 제목 기반 슬러그 사용
+- 예: "재회, 흩날리는 벚꽃 아래" → "reunion-under-falling-cherry-blossoms"
+- 영어로 번역 후 kebab-case 형식으로 변환
+- 특수문자 제거, 공백은 하이픈으로 변경
+- URL 친화적이고 SEO에 유리한 형식
 
 챕터 메타데이터:
 \`\`\`yaml
 ---
 title: "감정을 자극하는 제목"
-novel: "new-romance-fantasy-${Date.now()}"
+novel: "제목-기반-슬러그"
 chapterNumber: 1
 publishedDate: "${new Date().toISOString().split('T')[0]}"
 contentRating: "15+"
@@ -320,15 +363,35 @@ wordCount: [실제 글자 수]
 ---
 \`\`\`
 
+#### 포맷 주의사항:
+- 메타데이터와 본문 사이에 빈 줄을 넣지 마세요
+- 본문은 메타데이터 바로 아래에 바로 시작하세요
+- 마크다운 문법을 사용하지 마세요 (##, ###, ** 등 사용 금지)
+- 단락 구분은 빈 줄로만 하세요
+- 따옴표나 특수 기호를 남발하지 마세요
+- 깔끔하고 읽기 쉬운 문체로 작성하세요
+
 `;
   }
 
   prompt += `
-## 지시사항:
+## 중요 포맷 지시사항:
+1. 메타데이터는 정확히 위의 YAML 형식으로 작성하세요
+2. 메타데이터와 본문 사이에 빈 줄을 넣지 마세요
+3. 본문은 메타데이터 바로 아래에 바로 시작하세요
+4. 마크다운 문법을 사용하지 마세요 (##, ###, ** 등 사용 금지)
+5. 단락 구분은 빈 줄로만 하세요
+6. 따옴표나 특수 기호를 남발하지 마세요
+7. 깔끔하고 읽기 쉬운 문체로 작성하세요
+
+## 생성 요구사항:
 1. 위의 메타데이터 형식을 정확히 포함하여 마크다운 파일을 생성하세요
 2. 한국어로 자연스럽고 아름다운 문체로 작성하세요
 3. 로맨스 판타지 장르의 매력을 최대한 살려주세요
 4. 독자의 감정을 자극하는 매력적인 스토리를 만들어주세요
+5. 포맷이 깔끔하고 정확해야 합니다
+6. 실제 소설 내용을 작성하세요 (예시나 설명이 아닌)
+7. 최소 4,000자 이상의 완성된 소설 내용을 작성하세요
 
 생성된 마크다운 파일의 전체 내용을 그대로 출력해주세요.`;
 
@@ -427,27 +490,32 @@ Gemini AI 완전 자동 생성"`);
     } else {
       // 새 소설 시작
       const timestamp = Date.now();
-      const novelSlug = `new-romance-fantasy-${timestamp}`;
 
-      // 소설 메타데이터와 챕터 분리
-      const parts = content.split('---');
-      if (parts.length >= 4) {
-        const novelMetadata = parts.slice(0, 2).join('---') + '---';
-        const chapterContent = parts.slice(2).join('---');
+      // 제목 기반 슬러그 생성 함수
+      const generateSlug = title => {
+        return title
+          .toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, '') // 특수문자 제거
+          .replace(/\s+/g, '-') // 공백을 하이픈으로 변경
+          .replace(/-+/g, '-') // 연속된 하이픈을 하나로
+          .replace(/^-|-$/g, ''); // 앞뒤 하이픈 제거
+      };
 
-        await writeFile(`src/content/novels/${novelSlug}.md`, novelMetadata);
-        await writeFile(`src/content/chapters/${novelSlug}-ch1.md`, chapterContent);
+      // 임시 슬러그 (타임스탬프 기반, 나중에 제목으로 업데이트)
+      const novelSlug = `novel-${timestamp}`;
 
-        // Git 커밋
-        execSync('git add src/content/novels/ src/content/chapters/');
-        execSync(`git commit -m "자동 연재: 새로운 로맨스 판타지 소설 시작
+      // Gemini AI가 생성한 내용을 그대로 사용
+      await writeFile(`src/content/chapters/${novelSlug}-ch1.md`, content);
+
+      // Git 커밋
+      execSync('git add src/content/novels/ src/content/chapters/');
+      execSync(`git commit -m "자동 연재: 새로운 로맨스 판타지 소설 시작
 
 새 소설: ${novelSlug}
 1화 완성
 품질점수: 9/10
 총 연재 현황: 1화
 Gemini AI 완전 자동 생성"`);
-      }
     }
 
     // Git 푸시
