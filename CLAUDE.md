@@ -63,28 +63,29 @@ Create a self-sustaining romance fantasy novel platform that generates high-qual
 
 ## Current Status
 
-### v4.0 - Gemini AI Automation System - PRODUCTION READY
+### v6.0 - Enterprise-Grade AI Platform - PRODUCTION READY
 
 #### Core Systems (100% Complete)
 
-- 7 AI Engines: 3,300+ lines of sophisticated automation logic
-- Test Coverage: 87 tests with 85% pass rate (74/87 passing)
-- v2.1 Creativity Mode: Dynamic quality enhancement based on reader metrics
-- GitHub Actions: 4 automated workflows (daily execution)
-- Production Deployment: Vercel integration with monitoring
-- Quality Assurance: Comprehensive error handling and logging
+- 8+ AI Engines: Enterprise-grade automation with deployment/monitoring systems
+- Advanced Testing: Vitest + Playwright + Cypress multi-layer testing
+- Phase 6: Deployment Management & Monitoring System with health checks
+- GitHub Actions: Automated daily execution with Gemini API integration
+- Production Deployment: Vercel integration with enterprise monitoring
+- Schema Compliance: Fixed content generation to prevent build failures
 
 #### AI Engine Architecture
 
-| Engine                   | Lines | Purpose                         | Status |
-| ------------------------ | ----- | ------------------------------- | ------ |
-| MasterAutomationEngine   | 597   | Orchestration & decision-making | Active |
-| TokenBalancingEngine     | 713   | Cost optimization (75% savings) | Active |
-| ReaderAnalyticsEngine    | 621   | Reader behavior analysis        | Active |
-| CreativityModeEngine     | 558   | Dynamic quality enhancement     | Active |
-| StoryDiversityEngine     | 328   | Unique story generation         | Active |
-| CompletionCriteriaEngine | 262   | Smart story completion          | Active |
-| EmotionalDepthEngine     | 253   | Emotional storytelling          | Active |
+| Engine                       | Purpose                              | Status |
+| ---------------------------- | ------------------------------------ | ------ |
+| MasterAutomationEngine       | Orchestration & decision-making      | Active |
+| TokenBalancingEngine         | Cost optimization                    | Active |
+| ReaderAnalyticsEngine        | Reader behavior analysis             | Active |
+| QualityAnalyticsEngine       | Quality assessment & improvement     | Active |
+| DeploymentManagementSystem   | Blue-Green deployments & rollbacks   | Active |
+| MonitoringAlertingSystem     | Real-time monitoring & SLA tracking  | Active |
+| HealthStatusDashboard        | Multi-level health checks            | Active |
+| InteractiveChoiceSystem      | Reader engagement & personalization | Active |
 
 #### Automation Workflow
 
@@ -127,27 +128,35 @@ cp .env.example .env.local
 
 ```bash
 # Production automation
-pnpm automation:run                    # Execute full automation
-node scripts/run-automation.js         # Direct execution
-node scripts/run-automation.js --verbose # Detailed logging
-node scripts/run-automation.js --dry-run # Test mode
+pnpm ai-novel:auto                     # Execute full automation (auto mode)
+pnpm ai-novel:run                      # Direct execution
+pnpm ai-novel:test                     # Test mode (dry-run)
+
+# Manual generation modes
+pnpm ai-novel:new                      # Force new novel creation
+pnpm ai-novel:continue                 # Force chapter continuation  
+pnpm ai-novel:complete                 # Force novel completion
 
 # API testing
 pnpm ai-novel:system-test              # Test Gemini API connection
-pnpm setup:check                       # Verify setup
 ```
 
 #### Testing & Quality
 
 ```bash
 # Testing suite
-pnpm test                              # Run all unit tests
+pnpm test                              # Run all unit tests (Vitest)
 pnpm test:watch                        # Watch mode for development
 pnpm test:ui                           # Visual test interface
-pnpm test:e2e                          # End-to-end tests
+pnpm test:e2e                          # Playwright E2E tests
+pnpm test:e2e:ui                       # Playwright UI mode
 pnpm test:coverage                     # Coverage report
 pnpm test:integration                  # Integration tests
-pnpm test:all                          # Complete test suite
+pnpm test:all                          # Complete test suite (Vitest + Playwright + Cypress)
+
+# Alternative E2E testing
+pnpm test:e2e:cypress                  # Cypress E2E tests
+pnpm test:e2e:cypress:open             # Cypress interactive mode
 
 # Quality assurance
 pnpm lint                              # ESLint check
@@ -171,6 +180,21 @@ pnpm ci                                # Complete CI pipeline
 ```
 
 ## Advanced System Architecture
+
+### Testing Architecture
+
+**Multi-Layer Testing Strategy**:
+- **Vitest**: Unit and integration tests for AI engines and core logic
+- **Playwright**: E2E testing for web application and user workflows  
+- **Cypress**: Alternative E2E testing with visual testing capabilities
+- **Integration Tests**: AI system integration testing with external APIs
+
+**Critical Test Categories**:
+- Content generation schema compliance validation
+- AI engine functionality and decision logic
+- Deployment system reliability and rollback procedures
+- Health monitoring system accuracy
+- Reader analytics and engagement tracking
 
 ### AI Engine Integration Flow
 
@@ -323,13 +347,12 @@ Chapter: {
 
 ```bash
 # Required for production
-ANTHROPIC_API_KEY=sk-ant-api03-xxx     # Claude API access
+GEMINI_API_KEY=AIzaSyXXXXXXXXXXXXXX     # Primary AI system (Gemini API)
 VERCEL_TOKEN=xxx                       # Deployment token
 VERCEL_ORG_ID=xxx                      # Organization ID
 VERCEL_PROJECT_ID=xxx                  # Project ID
 
-# Optional for enhanced features
-GEMINI_API_KEY=AIzaSyXXXXXXXXXXXXXX     # Gemini API for hybrid AI system
+# Optional
 NODE_ENV=production                    # Environment mode
 LOG_LEVEL=info                         # Logging verbosity
 ```
@@ -337,11 +360,11 @@ LOG_LEVEL=info                         # Logging verbosity
 ### Automation Schedule
 
 ```yaml
-GitHub Actions Schedule:
-  - 09:00 KST (00:00 UTC): auto-publish (1차)
-  - 11:00 KST (02:00 UTC): ai-story-generation (메인)
-  - 15:00 KST (06:00 UTC): auto-publish (2차)
-  - 21:00 KST (12:00 UTC): auto-publish (3차)
+GitHub Actions Schedule (AI Story Generation Pipeline):
+  - 01:00 UTC (KST 10:00): Main execution time
+  - 02:30 UTC (KST 11:30): Backup execution
+  - 04:00 UTC (KST 13:00): Final backup execution
+  - Manual trigger: workflow_dispatch available
 ```
 
 ## Best Practices & Guidelines
@@ -433,22 +456,26 @@ GitHub Actions Schedule:
 
 ### Key Files
 
-- `src/lib/master-automation-engine.js` - Main orchestration
-- `scripts/ai-novel-generator.js` - Gemini API 기반 메인 생성기
-- `scripts/test-gemini-system.js` - Gemini API 고급 테스트 시스템
-- `scripts/run-automation.js` - Production runner
-- `.github/workflows/` - Automation workflows
-- `src/test/` - Test suites and examples
+- `src/lib/master-automation-engine.ts` - Main orchestration engine
+- `scripts/ai-novel-generator.js` - Gemini API 메인 생성기 (schema-compliant)
+- `scripts/gemini-story-generator.js` - GitHub Actions 생성기 (schema-compliant)  
+- `scripts/test-gemini-system.js` - Gemini API 시스템 테스트
+- `src/content/config.ts` - Content schema validation (CRITICAL)
+- `.github/workflows/ai-story-generation-pipeline.yml` - Main automation workflow
+- `src/lib/deployment-management-system.ts` - Blue-Green deployment system
+- `src/lib/monitoring-alerting-system.ts` - Enterprise monitoring
+- `src/test/` - Comprehensive test suites (295+ tests)
 
 ## Project Status Summary
 
-Production-Ready AI Platform - Fully automated romance fantasy content generation  
-Comprehensive Testing - 540+ test cases with 95% success rate  
-Advanced AI Integration - 7 specialized engines with 3,300+ lines of logic  
-Professional Deployment - Vercel hosting with monitoring and optimization  
-Quality Assurance - ESLint, Prettier, TypeScript, and security scanning
+**Enterprise-Grade AI Platform** - Fully automated romance fantasy content generation with enterprise monitoring  
+**Advanced Testing Suite** - 295+ test cases across Vitest, Playwright, and Cypress  
+**AI Engine Integration** - 8+ specialized engines with deployment/monitoring systems  
+**Schema Compliance** - Content generation fixed to prevent build failures  
+**Professional Deployment** - Vercel hosting with Blue-Green deployment and health monitoring  
+**Quality Assurance** - ESLint, Prettier, TypeScript, multi-layer testing, and security scanning
 
-**The ro-fi platform represents a complete, production-ready Gemini AI-powered content generation system that demonstrates the potential of automated creative writing while maintaining high quality standards and reader engagement.**
+**The ro-fan platform represents a complete, enterprise-grade Gemini AI-powered content generation system with sophisticated deployment, monitoring, and quality assurance systems for production environments.**
 
 ---
 

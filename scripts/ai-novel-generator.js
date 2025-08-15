@@ -13,7 +13,7 @@
  * - Gemini의 긴 컨텍스트와 빠른 응답 활용
  * 
  * 🚀 사용법:
- * node scripts/ai-novel-generator.js [--mode auto|new_novel|continue_chapter|complete_novel] [--creativity low|medium|high] [--dry-run] [--verbose]
+ * node scripts/ai-novel-generator.js [--mode auto|new_novel|continue_chapter|complete_novel] [--creativity low|medium|high] [--dry-run] [--verbose] [--enable-continuity] [--disable-continuity]
  */
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
@@ -23,6 +23,15 @@ import fs from 'fs/promises';
 import matter from 'gray-matter';
 import { execSync } from 'child_process';
 import dotenv from 'dotenv';
+
+// 연속성 관리 시스템 통합 (선택적)
+let continuityIntegration = null;
+try {
+  const continuityModule = await import('../src/lib/continuity-integration.js');
+  continuityIntegration = continuityModule.LegacyCompatibilityHelper;
+} catch (error) {
+  console.log('연속성 시스템 로드 실패 (기존 방식으로 동작):', error.message);
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -755,11 +764,37 @@ class AutomationEngine {
     this.analyzer = new ContentAnalyzer(this.logger);
     this.generator = new NovelGenerator(this.logger);
     this.fileManager = new FileManager(this.logger);
+    
+    // 연속성 시스템 통합 (비동기 초기화)
+    this.continuityEnabled = false;
+    this.initializeContinuitySystem();
+  }
+  
+  async initializeContinuitySystem() {
+    try {
+      if (continuityIntegration && continuityIntegration.isContinuityEnabled()) {
+        await this.logger.info('연속성 관리 시스템 통합 시작');
+        this.generator = await continuityIntegration.integrateContinuitySystem(
+          this.generator, 
+          this.logger
+        );
+        this.continuityEnabled = true;
+        await this.logger.success('연속성 관리 시스템 통합 완료');
+      } else {
+        await this.logger.info('연속성 관리 시스템 비활성화 (ENABLE_CONTINUITY_SYSTEM=false)');
+      }
+    } catch (error) {
+      await this.logger.warn('연속성 시스템 통합 실패, 기존 방식으로 동작', { error: error.message });
+      this.continuityEnabled = false;
+    }
   }
 
   async run() {
     try {
       await this.logger.info('🌟 로맨스 판타지 자동 연재 시스템 시작', this.options);
+
+      // 연속성 시스템 초기화 완료 대기
+      await this.initializeContinuitySystem();
 
       // API 키 확인
       await this.logger.info('환경변수 확인', { 
@@ -1029,6 +1064,10 @@ async function main() {
       options.dryRun = true;
     } else if (arg === '--verbose') {
       options.verbose = true;
+    } else if (arg === '--enable-continuity') {
+      process.env.ENABLE_CONTINUITY_SYSTEM = 'true';
+    } else if (arg === '--disable-continuity') {
+      process.env.ENABLE_CONTINUITY_SYSTEM = 'false';
     }
   }
 
