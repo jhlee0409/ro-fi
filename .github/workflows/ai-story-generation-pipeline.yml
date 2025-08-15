@@ -43,7 +43,7 @@ jobs:
       - name: 📦 의존성 설치
         run: |
           echo "🔧 pnpm으로 의존성 설치 중..."
-          pnpm install --frozen-lockfile
+          pnpm install --no-frozen-lockfile
           echo "✅ 설치 완료"
 
       - name: 🔑 API 키 확인
