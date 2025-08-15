@@ -3,10 +3,10 @@ name: AI Story Generation Pipeline
 on:
   schedule:
     # Anthropic API 트래픽 분산: 시간대별 백업 실행
-    - cron: '0 1 * * *'   # 01:00 UTC (KST 10:00) - 메인 시간
-    - cron: '30 2 * * *'  # 02:30 UTC (KST 11:30) - 529 에러 시 백업
-    - cron: '0 4 * * *'   # 04:00 UTC (KST 13:00) - 최종 백업
-  
+    - cron: '0 1 * * *' # 01:00 UTC (KST 10:00) - 메인 시간
+    - cron: '30 2 * * *' # 02:30 UTC (KST 11:30) - 529 에러 시 백업
+    - cron: '0 4 * * *' # 04:00 UTC (KST 13:00) - 최종 백업
+
   workflow_dispatch: # 수동 실행 허용
     inputs:
       force_mode:
@@ -62,6 +62,7 @@ jobs:
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          mode: agent
           direct_prompt: |
             # 🌹 완전 자율형 로맨스 판타지 연재 시스템 v4.0
 
@@ -74,7 +75,7 @@ jobs:
             # 모든 소설 파일 확인
             find src/content/novels/ -name "*.md" -exec echo "=== 소설: {} ===" \; -exec cat {} \;
 
-            # 모든 챕터 파일 확인  
+            # 모든 챕터 파일 확인
             find src/content/chapters/ -name "*.md" -exec echo "=== 챕터: {} ===" \; -exec cat {} \;
 
             # 파일 개수 확인
@@ -233,7 +234,7 @@ jobs:
           echo "📅 실행 시간: $(date '+%Y-%m-%d %H:%M:%S KST')"
           echo "🔄 강제 모드: ${{ github.event.inputs.force_mode || 'false' }}"
           echo ""
-          
+
           # 총 현황
           total_novels=$(find src/content/novels/ -name "*.md" | wc -l)
           total_chapters=$(find src/content/chapters/ -name "*.md" | wc -l)
@@ -241,7 +242,7 @@ jobs:
           echo "  📚 소설: ${total_novels}편"
           echo "  📖 챕터: ${total_chapters}화"
           echo ""
-          
+
           # 링크
           echo "🔗 유용한 링크:"
           echo "  🌐 웹사이트: https://ro-fi.vercel.app"
