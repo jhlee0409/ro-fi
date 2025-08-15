@@ -429,6 +429,15 @@ async function saveAndCommit(content, action, novel) {
   log('파일 저장 및 커밋 중...');
 
   try {
+    // 필요한 디렉토리 생성
+    try {
+      await fs.mkdir('src/content/novels', { recursive: true });
+      await fs.mkdir('src/content/chapters', { recursive: true });
+      log('✅ 디렉토리 구조 확인 완료');
+    } catch (dirError) {
+      log(`⚠️ 디렉토리 생성 경고: ${dirError.message}`);
+    }
+
     // Git 사용자 설정 (CI 환경에서 필요)
     try {
       execSync('git config user.email "ro-fi-automation@noreply.github.com"');
@@ -453,8 +462,21 @@ async function saveAndCommit(content, action, novel) {
       );
       await writeFile(novelPath, novelContent);
 
-      // Git 커밋
-      execSync('git add src/content/novels/ src/content/chapters/');
+      // Git 커밋 (파일이 존재하는 경우에만 추가)
+      try {
+        execSync('git add src/content/novels/ src/content/chapters/');
+      } catch (gitError) {
+        log(`⚠️ Git add 경고: ${gitError.message}`);
+        // 개별 파일 추가 시도
+        try {
+          execSync(`git add src/content/novels/${novel.slug}.md`);
+          execSync(`git add src/content/chapters/${chapterFilename}`);
+        } catch (individualError) {
+          log(`❌ 개별 파일 추가 실패: ${individualError.message}`);
+          throw individualError;
+        }
+      }
+
       execSync(`git commit -m "자동 연재: ${novel.title} 완결
 
 에필로그 추가
@@ -479,8 +501,21 @@ Gemini AI 완전 자동 생성"`);
       );
       await writeFile(novelPath, novelContent);
 
-      // Git 커밋
-      execSync('git add src/content/novels/ src/content/chapters/');
+      // Git 커밋 (파일이 존재하는 경우에만 추가)
+      try {
+        execSync('git add src/content/novels/ src/content/chapters/');
+      } catch (gitError) {
+        log(`⚠️ Git add 경고: ${gitError.message}`);
+        // 개별 파일 추가 시도
+        try {
+          execSync(`git add src/content/novels/${novel.slug}.md`);
+          execSync(`git add src/content/chapters/${chapterFilename}`);
+        } catch (individualError) {
+          log(`❌ 개별 파일 추가 실패: ${individualError.message}`);
+          throw individualError;
+        }
+      }
+
       execSync(`git commit -m "자동 연재: ${novel.title} ${nextChapterNumber}화
 
 새로운 챕터 추가
@@ -507,8 +542,48 @@ Gemini AI 완전 자동 생성"`);
       // Gemini AI가 생성한 내용을 그대로 사용
       await writeFile(`src/content/chapters/${novelSlug}-ch1.md`, content);
 
-      // Git 커밋
-      execSync('git add src/content/novels/ src/content/chapters/');
+      // 소설 메타데이터 파일 생성
+      const novelMetadata = `---
+title: "새로운 로맨스 판타지"
+slug: "${novelSlug}"
+author: Gemini AI
+status: "ongoing"
+summary: >-
+  Gemini AI가 자동 생성한 새로운 로맨스 판타지 소설입니다.
+tropes:
+  - 로맨스
+  - 판타지
+publishedDate: '${new Date().toISOString().split('T')[0]}'
+totalChapters: 1
+rating: 0
+coverImage: /images/covers/${novelSlug}.jpg
+tags:
+  - 로맨스
+  - 판타지
+  - 여성향
+genre: 로맨스 판타지
+targetAudience: 20-30대 여성
+expectedLength: 60-80화
+---
+
+`;
+      await writeFile(`src/content/novels/${novelSlug}.md`, novelMetadata);
+
+      // Git 커밋 (파일이 존재하는 경우에만 추가)
+      try {
+        execSync('git add src/content/novels/ src/content/chapters/');
+      } catch (gitError) {
+        log(`⚠️ Git add 경고: ${gitError.message}`);
+        // 개별 파일 추가 시도
+        try {
+          execSync(`git add src/content/novels/${novelSlug}.md`);
+          execSync(`git add src/content/chapters/${novelSlug}-ch1.md`);
+        } catch (individualError) {
+          log(`❌ 개별 파일 추가 실패: ${individualError.message}`);
+          throw individualError;
+        }
+      }
+
       execSync(`git commit -m "자동 연재: 새로운 로맨스 판타지 소설 시작
 
 새 소설: ${novelSlug}
