@@ -151,21 +151,21 @@ jobs:
         run: |
           echo "📊 현재 연재 상황 분석 중..."
           
-          NOVEL_COUNT=$(find src/content/novels -name "*.md" 2>/dev/null | wc -l || echo "0")
-          CHAPTER_COUNT=$(find src/content/chapters -name "*.md" 2>/dev/null | wc -l || echo "0")
+          NOVEL_COUNT="$(find src/content/novels -name "*.md" 2>/dev/null | wc -l || echo "0")"
+          CHAPTER_COUNT="$(find src/content/chapters -name "*.md" 2>/dev/null | wc -l || echo "0")"
           
           echo "현재 상황:"
           echo "- 총 소설 수: $NOVEL_COUNT"
           echo "- 총 챕터 수: $CHAPTER_COUNT"
           
-          if [ $NOVEL_COUNT -gt 0 ]; then
+          if [ "$NOVEL_COUNT" -gt 0 ]; then
             echo "📚 기존 소설 목록:"
             find src/content/novels -name "*.md" 2>/dev/null | while read file; do
               echo "  - $(basename "$file" .md)"
             done
           fi
           
-          if [ $CHAPTER_COUNT -gt 0 ]; then
+          if [ "$CHAPTER_COUNT" -gt 0 ]; then
             echo "📖 최근 챕터 (최대 5개):"
             find src/content/chapters -name "*.md" 2>/dev/null | head -5 | while read file; do
               echo "  - $(basename "$file")"
@@ -193,7 +193,7 @@ jobs:
           echo ""
           
           # 실행 시간 측정
-          START_TIME=$(date +%s)
+          START_TIME="$(date +%s)"
           
           # Gemini AI 스크립트 실행
           if [ "$DRY_RUN" = "true" ]; then
@@ -212,19 +212,19 @@ jobs:
           fi
           
           EXECUTION_RESULT=$?
-          END_TIME=$(date +%s)
+          END_TIME="$(date +%s)"
           DURATION=$((END_TIME - START_TIME))
           
           echo ""
           echo "⏱️ 실행 시간: ${DURATION}초"
           
-          if [ $EXECUTION_RESULT -eq 0 ]; then
+          if [ "$EXECUTION_RESULT" -eq 0 ]; then
             echo "✅ Gemini AI 생성 성공!"
             echo "success=true" >> $GITHUB_OUTPUT
           else
             echo "❌ Gemini AI 생성 실패 (종료 코드: $EXECUTION_RESULT)"
             echo "success=false" >> $GITHUB_OUTPUT
-            exit $EXECUTION_RESULT
+            exit "$EXECUTION_RESULT"
           fi
       
       # =====================================
@@ -235,22 +235,22 @@ jobs:
         run: |
           echo "📋 생성 후 상태 확인:"
           
-          NEW_NOVEL_COUNT=$(find src/content/novels -name "*.md" 2>/dev/null | wc -l || echo "0")
-          NEW_CHAPTER_COUNT=$(find src/content/chapters -name "*.md" 2>/dev/null | wc -l || echo "0")
+          NEW_NOVEL_COUNT="$(find src/content/novels -name "*.md" 2>/dev/null | wc -l || echo "0")"
+          NEW_CHAPTER_COUNT="$(find src/content/chapters -name "*.md" 2>/dev/null | wc -l || echo "0")"
           
           echo "업데이트 후:"
           echo "- 총 소설 수: $NEW_NOVEL_COUNT (이전: ${{ steps.analyze.outputs.novel_count }})"
           echo "- 총 챕터 수: $NEW_CHAPTER_COUNT (이전: ${{ steps.analyze.outputs.chapter_count }})"
           
-          NOVELS_ADDED=$((NEW_NOVEL_COUNT - ${{ steps.analyze.outputs.novel_count }}))
-          CHAPTERS_ADDED=$((NEW_CHAPTER_COUNT - ${{ steps.analyze.outputs.chapter_count }}))
+          NOVELS_ADDED="$((NEW_NOVEL_COUNT - ${{ steps.analyze.outputs.novel_count }}))"
+          CHAPTERS_ADDED="$((NEW_CHAPTER_COUNT - ${{ steps.analyze.outputs.chapter_count }}))"
           
           echo "변경사항:"
           echo "- 추가된 소설: $NOVELS_ADDED"
           echo "- 추가된 챕터: $CHAPTERS_ADDED"
           
           # 새로 생성된 파일들 표시
-          if [ $NOVELS_ADDED -gt 0 ] || [ $CHAPTERS_ADDED -gt 0 ]; then
+          if [ "$NOVELS_ADDED" -gt 0 ] || [ "$CHAPTERS_ADDED" -gt 0 ]; then
             echo ""
             echo "🆕 새로 생성된 파일들:"
             git status --porcelain | grep "^A" | sed 's/^A  /  + /' || echo "  (Git으로 추적되지 않는 새 파일들)"
@@ -287,7 +287,7 @@ jobs:
           git add src/content/novels/ src/content/chapters/
           
           # 커밋 메시지 생성
-          TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S KST')
+          TIMESTAMP="$(date '+%Y-%m-%d %H:%M:%S KST')"
           MODE_KOREAN=""
           case "$GENERATION_MODE" in
             "auto") MODE_KOREAN="자동 판단" ;;
@@ -297,31 +297,31 @@ jobs:
             *) MODE_KOREAN="$GENERATION_MODE" ;;
           esac
           
-          COMMIT_MSG="🌟 Gemini API 자동 연재: $MODE_KOREAN
-
-📊 실행 정보:
-- 모드: $GENERATION_MODE
-- 창의성: $CREATIVITY_LEVEL
-- 장르: $TARGET_GENRE  
-- 실행 시간: $TIMESTAMP
-- 워크플로우: ${{ github.workflow }}
-- 실행 ID: ${{ github.run_id }}
-
-🤖 시스템 정보:
-- Gemini API 직접 호출 (100% 네이티브)
-- google/generative-ai v0.21.0
-- Node.js 기반 완전 자동화
-- 프로덕션 품질 로맨스 판타지
-
-✨ 특징:
-- 스마트 우선순위 로직 (완결 > 연재 > 신규)
-- 고품질 메타데이터 자동 관리
-- 감정적 깊이와 몰입감 있는 스토리텔링
-- 로맨스 판타지 전문 트로프 활용
-- Gemini의 긴 컨텍스트와 빠른 응답 활용
-
-Co-Authored-By: Gemini AI <gemini@google.com>
-Generated-By: GitHub Actions Automation"
+          COMMIT_MSG="🌟 Gemini API 자동 연재: ${MODE_KOREAN}
+          
+          📊 실행 정보:
+          - 모드: ${GENERATION_MODE}
+          - 창의성: ${CREATIVITY_LEVEL}
+          - 장르: ${TARGET_GENRE}
+          - 실행 시간: ${TIMESTAMP}
+          - 워크플로우: ${{ github.workflow }}
+          - 실행 ID: ${{ github.run_id }}
+          
+          🤖 시스템 정보:
+          - Gemini API 직접 호출 (100% 네이티브)
+          - google/generative-ai v0.21.0
+          - Node.js 기반 완전 자동화
+          - 프로덕션 품질 로맨스 판타지
+          
+          ✨ 특징:
+          - 스마트 우선순위 로직 (완결 > 연재 > 신규)
+          - 고품질 메타데이터 자동 관리
+          - 감정적 깊이와 몰입감 있는 스토리텔링
+          - 로맨스 판타지 전문 트로프 활용
+          - Gemini의 긴 컨텍스트와 빠른 응답 활용
+          
+          Co-Authored-By: Gemini AI <gemini@google.com>
+          Generated-By: GitHub Actions Automation"
           
           git commit -m "$COMMIT_MSG"
           
@@ -330,7 +330,8 @@ Generated-By: GitHub Actions Automation"
           git push origin main
           
           echo "✅ 커밋 및 푸시 완료!"
-          echo "🔗 변경사항: https://github.com/${{ github.repository }}/commit/$(git rev-parse HEAD)"
+          COMMIT_SHA="$(git rev-parse HEAD)"
+          echo "🔗 변경사항: https://github.com/${{ github.repository }}/commit/${COMMIT_SHA}"
       
       # =====================================
       # 9. Vercel 자동 배포
@@ -354,7 +355,7 @@ Generated-By: GitHub Actions Automation"
           
           # 프로덕션 배포
           echo "🌐 Vercel 프로덕션 배포 중..."
-          vercel --token=$VERCEL_TOKEN --prod --yes --scope=$VERCEL_ORG_ID || {
+          vercel --token="$VERCEL_TOKEN" --prod --yes --scope="$VERCEL_ORG_ID" || {
             echo "⚠️ Vercel 배포 실패. 수동 배포가 필요할 수 있습니다."
             echo "GitHub 푸시는 성공했으므로 Vercel이 자동으로 감지하여 배포할 수도 있습니다."
           }
