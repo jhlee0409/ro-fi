@@ -1,20 +1,15 @@
-name: 🤖 Gemini AI 로맨스 판타지 완전 자동화 v3.0
-
-# 완전히 수정된 pnpm 기반 워크플로우
-# 100% 검증된 Gemini API + GitHub Actions 자동화
+name: Gemini AI Romance Fantasy Automation v3.0
 
 on:
-  # 📅 정기 실행 스케줄 (KST 기준)
   schedule:
-    - cron: '0 2 * * *'   # 11:00 KST - 메인 연재 시간
-    - cron: '30 6 * * *'  # 15:30 KST - 오후 업데이트
-    - cron: '0 12 * * *'  # 21:00 KST - 저녁 연재
+    - cron: '0 2 * * *'
+    - cron: '30 6 * * *'
+    - cron: '0 12 * * *'
   
-  # 🎮 수동 실행
   workflow_dispatch:
     inputs:
       generation_mode:
-        description: '📚 생성 모드'
+        description: 'Generation Mode'
         required: true
         default: 'auto'
         type: choice
@@ -25,7 +20,7 @@ on:
           - complete_novel
       
       creativity_level:
-        description: '🎨 창의성 레벨'
+        description: 'Creativity Level'
         required: false
         default: 'high'
         type: choice
@@ -35,19 +30,18 @@ on:
           - high
       
       dry_run:
-        description: '🔍 테스트 모드'
+        description: 'Test Mode'
         required: false
         default: false
         type: boolean
 
-# 동시 실행 제한
 concurrency:
-  group: gemini-automation-${{ github.ref }}
+  group: gemini-automation
   cancel-in-progress: false
 
 jobs:
   gemini-automation:
-    name: 🌟 Gemini AI 자동 연재
+    name: Gemini AI Automation
     runs-on: ubuntu-latest
     
     permissions:
@@ -65,135 +59,98 @@ jobs:
       TZ: Asia/Seoul
     
     steps:
-      # ===========================================
-      # 1. 환경 준비 (pnpm 기반)
-      # ===========================================
-      - name: 📥 저장소 체크아웃
+      - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
       
-      - name: 📦 pnpm 설치
+      - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 8
           run_install: false
       
-      - name: 🚀 Node.js 환경 설정
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'pnpm'
       
-      - name: 🔧 의존성 설치
+      - name: Install Dependencies
         run: |
-          echo "🔧 pnpm으로 의존성 설치 중..."
+          echo "Installing dependencies with pnpm..."
           pnpm install --frozen-lockfile
-          echo "✅ 설치 완료"
-          echo "📊 설치된 패키지 수: $(pnpm list --depth=0 | grep -c '─')"
+          echo "Installation complete"
       
-      # ===========================================
-      # 2. 환경 검증
-      # ===========================================
-      - name: 🔍 환경변수 검증
+      - name: Verify Environment
         run: |
-          echo "🔍 환경변수 상태:"
-          echo "  - NODE_ENV: $NODE_ENV"
-          echo "  - GEMINI_API_KEY: $([ -n "$GEMINI_API_KEY" ] && echo '✅ 설정됨' || echo '❌ 없음')"
-          echo "  - API 키 길이: ${#GEMINI_API_KEY}"
-          echo "  - 생성 모드: $GENERATION_MODE"
-          echo "  - 창의성: $CREATIVITY_LEVEL"
-          echo "  - 테스트 모드: $DRY_RUN"
+          echo "Environment verification:"
+          echo "- NODE_ENV: $NODE_ENV"
+          echo "- GEMINI_API_KEY exists: ${{ secrets.GEMINI_API_KEY && 'Yes' || 'No' }}"
+          echo "- Generation mode: $GENERATION_MODE"
+          echo "- Creativity level: $CREATIVITY_LEVEL"
+          echo "- Test mode: $DRY_RUN"
           
           if [ -z "$GEMINI_API_KEY" ]; then
-            echo "❌ GEMINI_API_KEY가 설정되지 않았습니다"
-            echo "GitHub Secrets에 GEMINI_API_KEY를 설정해주세요"
+            echo "ERROR: GEMINI_API_KEY not set"
             exit 1
           fi
-          
-          echo "✅ 모든 환경변수 검증 완료"
+          echo "Environment verification complete"
       
-      - name: 🧪 Gemini API 연결 테스트
+      - name: Test Gemini API
         run: |
-          echo "🧪 Gemini API 연결 테스트 중..."
+          echo "Testing Gemini API connection..."
           node scripts/test-github-environment.js
       
-      - name: 📁 디렉토리 준비
+      - name: Prepare Directories
         run: |
-          echo "📁 프로젝트 디렉토리 확인:"
-          echo "  - 소설: $([ -d src/content/novels ] && echo '✅' || echo '❌ 생성 필요') src/content/novels"
-          echo "  - 챕터: $([ -d src/content/chapters ] && echo '✅' || echo '❌ 생성 필요') src/content/chapters"
-          echo "  - 스크립트: $([ -f scripts/ai-novel-generator.js ] && echo '✅' || echo '❌') scripts/ai-novel-generator.js"
-          
+          echo "Preparing project directories..."
           mkdir -p src/content/novels src/content/chapters logs
-          echo "✅ 모든 디렉토리 준비 완료"
+          echo "Directories ready"
       
-      # ===========================================
-      # 3. Git 설정
-      # ===========================================
-      - name: 👤 Git 사용자 설정
+      - name: Setup Git
         run: |
-          git config --global user.name "🤖 Gemini AI 자동화"
+          git config --global user.name "Gemini AI Automation"
           git config --global user.email "gemini-automation@github.com"
           git config --global init.defaultBranch main
-          echo "✅ Git 설정 완료"
+          echo "Git configuration complete"
       
-      # ===========================================
-      # 4. 현재 상태 분석
-      # ===========================================
-      - name: 📊 연재 상황 분석
+      - name: Analyze Current State
         id: analyze
         run: |
-          echo "📊 현재 상황 분석 중..."
+          echo "Analyzing current state..."
           
-          NOVEL_COUNT="$(find src/content/novels -name "*.md" 2>/dev/null | wc -l || echo "0")"
-          CHAPTER_COUNT="$(find src/content/chapters -name "*.md" 2>/dev/null | wc -l || echo "0")"
+          NOVEL_COUNT=$(find src/content/novels -name "*.md" 2>/dev/null | wc -l || echo "0")
+          CHAPTER_COUNT=$(find src/content/chapters -name "*.md" 2>/dev/null | wc -l || echo "0")
           
-          echo "현재 상황:"
-          echo "  - 총 소설: $NOVEL_COUNT"
-          echo "  - 총 챕터: $CHAPTER_COUNT"
-          
-          if [ "$NOVEL_COUNT" -gt 0 ]; then
-            echo "📚 기존 소설:"
-            find src/content/novels -name "*.md" 2>/dev/null | while read file; do
-              echo "    - $(basename "$file" .md)"
-            done
-          fi
+          echo "Current state:"
+          echo "- Novels: $NOVEL_COUNT"
+          echo "- Chapters: $CHAPTER_COUNT"
           
           echo "novel_count=$NOVEL_COUNT" >> $GITHUB_OUTPUT
           echo "chapter_count=$CHAPTER_COUNT" >> $GITHUB_OUTPUT
-          echo "✅ 분석 완료"
+          echo "Analysis complete"
       
-      # ===========================================
-      # 5. 메인 Gemini AI 실행
-      # ===========================================
-      - name: 🌟 Gemini AI 자동 생성 실행
+      - name: Run Gemini AI Generation
         id: generate
         run: |
-          echo "🌟 Gemini AI 자동 연재 시작"
-          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "설정 정보:"
-          echo "  🎯 모드: $GENERATION_MODE"
-          echo "  🎨 창의성: $CREATIVITY_LEVEL"
-          echo "  🔍 테스트: $DRY_RUN"
-          echo "  📅 시간: $(date '+%Y-%m-%d %H:%M:%S KST')"
-          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo ""
+          echo "Starting Gemini AI generation..."
+          echo "Mode: $GENERATION_MODE"
+          echo "Creativity: $CREATIVITY_LEVEL"
+          echo "Test mode: $DRY_RUN"
           
-          # 실행 시간 측정
-          START_TIME="$(date +%s)"
+          START_TIME=$(date +%s)
           
-          # Gemini AI 스크립트 실행
           if [ "$DRY_RUN" = "true" ]; then
-            echo "🔍 테스트 모드로 실행..."
+            echo "Running in test mode..."
             node scripts/ai-novel-generator.js \
               --mode "$GENERATION_MODE" \
               --creativity "$CREATIVITY_LEVEL" \
               --dry-run \
               --verbose
           else
-            echo "🚀 실제 생성 모드로 실행..."
+            echo "Running in production mode..."
             node scripts/ai-novel-generator.js \
               --mode "$GENERATION_MODE" \
               --creativity "$CREATIVITY_LEVEL" \
@@ -201,222 +158,195 @@ jobs:
           fi
           
           RESULT=$?
-          END_TIME="$(date +%s)"
+          END_TIME=$(date +%s)
           DURATION=$((END_TIME - START_TIME))
           
-          echo ""
-          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "⏱️ 실행 시간: ${DURATION}초"
+          echo "Execution time: ${DURATION}s"
           
           if [ "$RESULT" -eq 0 ]; then
-            echo "✅ Gemini AI 생성 성공!"
+            echo "Generation successful"
             echo "success=true" >> $GITHUB_OUTPUT
           else
-            echo "❌ 생성 실패 (코드: $RESULT)"
+            echo "Generation failed with code: $RESULT"
             echo "success=false" >> $GITHUB_OUTPUT
             exit $RESULT
           fi
       
-      # ===========================================
-      # 6. 결과 확인
-      # ===========================================
-      - name: 📋 생성 결과 확인
+      - name: Check Results
         if: steps.generate.outputs.success == 'true'
         run: |
-          echo "📋 생성 후 상태:"
+          echo "Checking generation results..."
           
-          NEW_NOVEL_COUNT="$(find src/content/novels -name "*.md" 2>/dev/null | wc -l || echo "0")"
-          NEW_CHAPTER_COUNT="$(find src/content/chapters -name "*.md" 2>/dev/null | wc -l || echo "0")"
+          NEW_NOVEL_COUNT=$(find src/content/novels -name "*.md" 2>/dev/null | wc -l || echo "0")
+          NEW_CHAPTER_COUNT=$(find src/content/chapters -name "*.md" 2>/dev/null | wc -l || echo "0")
           
-          echo "  - 현재 소설: $NEW_NOVEL_COUNT (이전: ${{ steps.analyze.outputs.novel_count }})"
-          echo "  - 현재 챕터: $NEW_CHAPTER_COUNT (이전: ${{ steps.analyze.outputs.chapter_count }})"
+          echo "After generation:"
+          echo "- Novels: $NEW_NOVEL_COUNT (was: ${{ steps.analyze.outputs.novel_count }})"
+          echo "- Chapters: $NEW_CHAPTER_COUNT (was: ${{ steps.analyze.outputs.chapter_count }})"
           
-          NOVELS_ADDED="$((NEW_NOVEL_COUNT - ${{ steps.analyze.outputs.novel_count }}))"
-          CHAPTERS_ADDED="$((NEW_CHAPTER_COUNT - ${{ steps.analyze.outputs.chapter_count }}))"
+          NOVELS_ADDED=$((NEW_NOVEL_COUNT - ${{ steps.analyze.outputs.novel_count }}))
+          CHAPTERS_ADDED=$((NEW_CHAPTER_COUNT - ${{ steps.analyze.outputs.chapter_count }}))
           
-          echo ""
-          echo "📈 변경사항:"
-          echo "  - 추가된 소설: $NOVELS_ADDED"
-          echo "  - 추가된 챕터: $CHAPTERS_ADDED"
-          
-          if [ "$NOVELS_ADDED" -gt 0 ] || [ "$CHAPTERS_ADDED" -gt 0 ]; then
-            echo ""
-            echo "🆕 새 파일들:"
-            git status --porcelain | grep "^A\|^??" | head -10
-          fi
-          echo "✅ 결과 확인 완료"
+          echo "Changes:"
+          echo "- Added novels: $NOVELS_ADDED"
+          echo "- Added chapters: $CHAPTERS_ADDED"
+          echo "Results check complete"
       
-      # ===========================================
-      # 7. Git 커밋 및 푸시
-      # ===========================================
-      - name: 📤 변경사항 커밋
+      - name: Commit Changes
         if: steps.generate.outputs.success == 'true' && github.event.inputs.dry_run != 'true'
         run: |
-          echo "📤 Git 커밋 준비..."
+          echo "Preparing to commit changes..."
           
           if [ -z "$(git status --porcelain)" ]; then
-            echo "ℹ️ 변경사항 없음. 커밋 건너뜀."
+            echo "No changes to commit"
             exit 0
           fi
           
-          # 소설/챕터 파일만 추가
           git add src/content/novels/ src/content/chapters/
           
-          # 커밋 메시지 생성
-          TIMESTAMP="$(date '+%Y-%m-%d %H:%M:%S KST')"
+          TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S KST')
           WORKFLOW_ID="${{ github.run_id }}"
           
-          git commit -m "🌟 Gemini AI 자동 연재: $GENERATION_MODE
+          git commit -m "Gemini AI Auto-Generation: $GENERATION_MODE
 
-📊 실행 정보:
-- 모드: $GENERATION_MODE
-- 창의성: $CREATIVITY_LEVEL
-- 실행 시간: $TIMESTAMP
-- 워크플로우 ID: $WORKFLOW_ID
+Execution Info:
+- Mode: $GENERATION_MODE
+- Creativity: $CREATIVITY_LEVEL
+- Time: $TIMESTAMP
+- Workflow ID: $WORKFLOW_ID
 
-🤖 기술 정보:
-- Gemini API v0.21.0 직접 호출
-- pnpm 기반 완전 자동화
-- 프로덕션 품질 로맨스 판타지
+Technical Info:
+- Gemini API v0.21.0
+- pnpm-based automation
+- Production quality romance fantasy
 
 Co-Authored-By: Gemini AI <gemini@google.com>
 Generated-By: GitHub Actions v3.0"
-          echo "✅ 커밋 완료"
           
-          echo "🚀 GitHub 푸시 중..."
+          echo "Commit complete"
+          
+          echo "Pushing to GitHub..."
           git push origin main
           
-          COMMIT_SHA="$(git rev-parse HEAD)"
+          COMMIT_SHA=$(git rev-parse HEAD)
           REPO="${{ github.repository }}"
-          echo "✅ 푸시 완료!"
-          echo "🔗 커밋: https://github.com/$REPO/commit/$COMMIT_SHA"
+          echo "Push complete"
+          echo "Commit URL: https://github.com/$REPO/commit/$COMMIT_SHA"
       
-      # ===========================================
-      # 8. Vercel 배포
-      # ===========================================
-      - name: 🚀 Vercel 자동 배포
+      - name: Deploy to Vercel
         if: steps.generate.outputs.success == 'true' && github.event.inputs.dry_run != 'true'
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
-          echo "🚀 Vercel 배포 시작..."
+          echo "Starting Vercel deployment..."
           
           if [ -z "$VERCEL_TOKEN" ]; then
-            echo "⚠️ VERCEL_TOKEN이 없어 배포를 건너뜁니다"
-            echo "Git 푸시는 완료되었으므로 Vercel이 자동 배포할 수 있습니다"
+            echo "VERCEL_TOKEN not set, skipping deployment"
+            echo "Git push completed, Vercel may auto-deploy"
             exit 0
           fi
           
-          echo "📦 Vercel CLI 설치..."
+          echo "Installing Vercel CLI..."
           pnpm add -g vercel@latest
           
-          echo "🔨 프로젝트 빌드..."
-          pnpm build || echo "빌드 실패 - Vercel에서 빌드됩니다"
+          echo "Building project..."
+          pnpm build || echo "Build failed - Vercel will build"
           
-          echo "🌐 프로덕션 배포..."
+          echo "Deploying to production..."
           vercel --token="$VERCEL_TOKEN" --prod --yes --scope="$VERCEL_ORG_ID" || {
-            echo "⚠️ Vercel 배포 실패"
-            echo "Git 푸시는 성공했으므로 자동 배포가 트리거될 수 있습니다"
+            echo "Vercel deployment failed"
+            echo "Git push succeeded, auto-deployment may trigger"
           }
           
-          echo "✅ Vercel 배포 프로세스 완료"
-          echo "🔗 사이트: https://ro-fi.vercel.app"
+          echo "Vercel deployment process complete"
+          echo "Site URL: https://ro-fi.vercel.app"
       
-      # ===========================================
-      # 9. 로그 업로드
-      # ===========================================
-      - name: 📝 실행 로그 보관
+      - name: Upload Logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gemini-automation-logs-${{ github.run_id }}
+          name: automation-logs
           path: logs/
           retention-days: 30
       
-      # ===========================================
-      # 10. 실행 완료 요약
-      # ===========================================
-      - name: 🎉 실행 결과 요약
+      - name: Summary
         if: always()
         run: |
           echo ""
-          echo "🎉━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "📊 Gemini AI 자동 연재 실행 완료 - v3.0"
-          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━🎉"
+          echo "========================================"
+          echo "Gemini AI Automation Complete - v3.0"
+          echo "========================================"
           echo ""
-          echo "📋 실행 정보:"
-          echo "  🎯 모드: $GENERATION_MODE"
-          echo "  🎨 창의성: $CREATIVITY_LEVEL"
-          echo "  🔍 테스트: $DRY_RUN"
-          echo "  📅 완료: $(date '+%Y-%m-%d %H:%M:%S KST')"
+          echo "Execution Info:"
+          echo "- Mode: $GENERATION_MODE"
+          echo "- Creativity: $CREATIVITY_LEVEL"
+          echo "- Test Mode: $DRY_RUN"
+          echo "- Completed: $(date '+%Y-%m-%d %H:%M:%S KST')"
           echo ""
-          echo "📈 결과:"
-          echo "  ✨ 생성 성공: ${{ steps.generate.outputs.success || 'false' }}"
-          echo "  📚 소설 수: ${{ steps.analyze.outputs.novel_count || '0' }}"
-          echo "  📖 챕터 수: ${{ steps.analyze.outputs.chapter_count || '0' }}"
+          echo "Results:"
+          echo "- Generation Success: ${{ steps.generate.outputs.success || 'false' }}"
+          echo "- Novel Count: ${{ steps.analyze.outputs.novel_count || '0' }}"
+          echo "- Chapter Count: ${{ steps.analyze.outputs.chapter_count || '0' }}"
           echo ""
           REPO="${{ github.repository }}"
           RUN_ID="${{ github.run_id }}"
-          echo "🔗 링크:"
-          echo "  📊 워크플로우: https://github.com/$REPO/actions/runs/$RUN_ID"
-          echo "  🌐 웹사이트: https://ro-fi.vercel.app"
-          echo "  📚 소설 목록: https://github.com/$REPO/tree/main/src/content/novels"
-          echo "  📖 챕터 목록: https://github.com/$REPO/tree/main/src/content/chapters"
+          echo "Links:"
+          echo "- Workflow: https://github.com/$REPO/actions/runs/$RUN_ID"
+          echo "- Website: https://ro-fi.vercel.app"
+          echo "- Novels: https://github.com/$REPO/tree/main/src/content/novels"
+          echo "- Chapters: https://github.com/$REPO/tree/main/src/content/chapters"
           echo ""
           
           if [ "${{ steps.generate.outputs.success }}" = "true" ]; then
-            echo "✅ 🌟 자동 연재 시스템이 성공적으로 완료되었습니다!"
-            echo "💝 새로운 로맨스 판타지 콘텐츠를 확인해보세요!"
+            echo "SUCCESS: Automation completed successfully!"
+            echo "New romance fantasy content is ready!"
           else
-            echo "❌ 🚨 실행 중 오류가 발생했습니다."
-            echo "📝 로그 아티팩트를 확인하여 문제를 진단해주세요."
+            echo "ERROR: Execution failed"
+            echo "Check logs for troubleshooting"
           fi
           
           echo ""
-          echo "🤖 Gemini AI 자동 연재 시스템 v3.0 - 100% pnpm 기반"
-          echo "💖 최고 품질의 로맨스 판타지를 선사합니다"
+          echo "Gemini AI Automation v3.0 - 100% pnpm"
+          echo "High-quality romance fantasy generation"
           echo ""
 
-  # ===========================================
-  # 실패 알림
-  # ===========================================
   failure-notification:
-    name: 🚨 실패 알림
+    name: Failure Notification
     runs-on: ubuntu-latest
     needs: gemini-automation
     if: failure()
     
     steps:
-      - name: 🚨 실패 이슈 생성
+      - name: Create Failure Issue
         uses: actions/github-script@v7
         with:
           script: |
-            const title = `🚨 Gemini AI 자동 연재 실패 - ${new Date().toLocaleDateString('ko-KR')}`;
+            const title = `Gemini AI Automation Failed - ${new Date().toLocaleDateString('ko-KR')}`;
             const body = `
-            ## 🚨 Gemini AI 자동 연재 시스템 실패
+            ## Gemini AI Automation Failure
             
-            **실행 정보:**
-            - 워크플로우: ${{ github.workflow }}
-            - 실행 ID: ${{ github.run_id }}
-            - 모드: ${{ github.event.inputs.generation_mode || 'auto' }}
-            - 창의성: ${{ github.event.inputs.creativity_level || 'high' }}
-            - 실행 시간: ${new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}
+            **Execution Info:**
+            - Workflow: ${{ github.workflow }}
+            - Run ID: ${{ github.run_id }}
+            - Mode: ${{ github.event.inputs.generation_mode || 'auto' }}
+            - Creativity: ${{ github.event.inputs.creativity_level || 'high' }}
+            - Time: ${new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}
             
-            **확인 사항:**
-            - [ ] GEMINI_API_KEY 시크릿 설정 확인
-            - [ ] pnpm 의존성 설치 문제 확인
-            - [ ] API 할당량 및 연결 상태 확인
-            - [ ] 스크립트 실행 오류 로그 확인
+            **Check Items:**
+            - [ ] GEMINI_API_KEY secret configuration
+            - [ ] pnpm dependency installation
+            - [ ] API quota and connection status
+            - [ ] Script execution error logs
             
-            **문제 해결:**
-            1. [워크플로우 로그 확인](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
-            2. 로그 아티팩트 다운로드 후 상세 분석
-            3. 환경변수 및 시크릿 설정 재확인
+            **Troubleshooting:**
+            1. [Workflow Logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            2. Download log artifacts for detailed analysis
+            3. Verify environment variables and secrets
             
             ---
-            *v3.0 자동 생성 이슈 - 해결 후 이슈를 닫아주세요*
+            *Auto-generated issue - close after resolution*
             `;
             
             github.rest.issues.create({
