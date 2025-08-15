@@ -264,39 +264,32 @@ jobs:
           
           # 커밋 메시지 생성
           TIMESTAMP="$(date '+%Y-%m-%d %H:%M:%S KST')"
+          WORKFLOW_ID="${{ github.run_id }}"
           
-          COMMIT_MSG="🌟 Gemini AI 자동 연재: $GENERATION_MODE
-          
+          git commit -m "🌟 Gemini AI 자동 연재: $GENERATION_MODE
+
 📊 실행 정보:
 - 모드: $GENERATION_MODE
-- 창의성: $CREATIVITY_LEVEL  
+- 창의성: $CREATIVITY_LEVEL
 - 실행 시간: $TIMESTAMP
-- 워크플로우 ID: ${{ github.run_id }}
+- 워크플로우 ID: $WORKFLOW_ID
 
 🤖 기술 정보:
 - Gemini API v0.21.0 직접 호출
 - pnpm 기반 완전 자동화
 - 프로덕션 품질 로맨스 판타지
-- GitHub Actions 네이티브 실행
-
-✨ 특징:
-- 스마트 우선순위 (완결 > 연재 > 신규)
-- 고품질 메타데이터 관리
-- 감정적 깊이와 몰입감
-- 로맨스 판타지 전문 트로프
 
 Co-Authored-By: Gemini AI <gemini@google.com>
 Generated-By: GitHub Actions v3.0"
-          
-          git commit -m "$COMMIT_MSG"
           echo "✅ 커밋 완료"
           
           echo "🚀 GitHub 푸시 중..."
           git push origin main
           
           COMMIT_SHA="$(git rev-parse HEAD)"
+          REPO="${{ github.repository }}"
           echo "✅ 푸시 완료!"
-          echo "🔗 커밋: https://github.com/${{ github.repository }}/commit/$COMMIT_SHA"
+          echo "🔗 커밋: https://github.com/$REPO/commit/$COMMIT_SHA"
       
       # ===========================================
       # 8. Vercel 배포
@@ -364,11 +357,13 @@ Generated-By: GitHub Actions v3.0"
           echo "  📚 소설 수: ${{ steps.analyze.outputs.novel_count || '0' }}"
           echo "  📖 챕터 수: ${{ steps.analyze.outputs.chapter_count || '0' }}"
           echo ""
+          REPO="${{ github.repository }}"
+          RUN_ID="${{ github.run_id }}"
           echo "🔗 링크:"
-          echo "  📊 워크플로우: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          echo "  📊 워크플로우: https://github.com/$REPO/actions/runs/$RUN_ID"
           echo "  🌐 웹사이트: https://ro-fi.vercel.app"
-          echo "  📚 소설 목록: https://github.com/${{ github.repository }}/tree/main/src/content/novels"
-          echo "  📖 챕터 목록: https://github.com/${{ github.repository }}/tree/main/src/content/chapters"
+          echo "  📚 소설 목록: https://github.com/$REPO/tree/main/src/content/novels"
+          echo "  📖 챕터 목록: https://github.com/$REPO/tree/main/src/content/chapters"
           echo ""
           
           if [ "${{ steps.generate.outputs.success }}" = "true" ]; then
