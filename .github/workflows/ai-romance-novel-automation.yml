@@ -102,13 +102,18 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
+          cache: 'pnpm'
+      
+      - name: 📦 pnpm 설치
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
       
       - name: 🔧 의존성 설치
         run: |
-          echo "🔧 패키지 설치 중..."
-          npm ci
-          echo "✅ 설치 완료: $(npm list --depth=0 | wc -l) 패키지"
+          echo "🔧 pnpm으로 패키지 설치 중..."
+          pnpm install --frozen-lockfile
+          echo "✅ 설치 완료: $(pnpm list --depth=0 | wc -l) 패키지"
       
       # =====================================
       # 2. 환경 검증
@@ -368,11 +373,11 @@ jobs:
           
           # Vercel CLI 설치
           echo "📦 Vercel CLI 설치 중..."
-          npm install -g vercel@latest
+          pnpm add -g vercel@latest
           
           # 배포 전 빌드
           echo "🔨 프로젝트 빌드 중..."
-          npm run build || echo "빌드 스크립트가 없거나 실패 (Vercel에서 빌드됨)"
+          pnpm build || echo "빌드 스크립트가 없거나 실패 (Vercel에서 빌드됨)"
           
           # 프로덕션 배포
           echo "🌐 Vercel 프로덕션 배포 중..."
