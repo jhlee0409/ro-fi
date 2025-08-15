@@ -39,11 +39,10 @@ Create a self-sustaining romance fantasy novel platform that generates high-qual
 
 ### AI & Automation Stack
 
-- **Primary AI**: Anthropic Claude Sonnet 4 (@anthropic-ai/sdk 0.56.0)
-- **Secondary AI**: Google Gemini 2.5 Pro (@google/generative-ai 0.21.0) [선택사항]
-- **Hybrid AI System**: 작업 유형별 최적 AI 자동 선택
-  - Claude: 감성적 표현, 대화, 창의적 문체에 특화
-  - Gemini: 세계관 구축, 논리적 일관성, 복잡한 설정 관리에 특화
+- **Primary AI**: Google Gemini 1.5 Pro (@google/generative-ai 0.21.0)
+- **AI Specialization**: 로맨스 판타지 특화 생성
+  - Gemini: 감성적 표현, 창의적 문체, 긴 컨텍스트 처리에 최적화
+  - 한국어 로맨스 판타지 생성에 특별히 최적화된 프롬프트 시스템
 - Content Management: Gray Matter for markdown processing
 - Automation: 7 specialized AI engines (3,300+ lines of code)
 - Scheduling: GitHub Actions (4 workflows, 1-day intervals)
@@ -57,7 +56,7 @@ Create a self-sustaining romance fantasy novel platform that generates high-qual
 
 ## Current Status
 
-### v3.1 - Advanced AI Automation System - PRODUCTION READY
+### v4.0 - Gemini AI Automation System - PRODUCTION READY
 
 #### Core Systems (100% Complete)
 
@@ -100,7 +99,7 @@ Create a self-sustaining romance fantasy novel platform that generates high-qual
 ```bash
 Node.js: v22.17.0+
 Package Manager: pnpm (preferred)
-Environment: ANTHROPIC_API_KEY required, GEMINI_API_KEY optional
+Environment: GEMINI_API_KEY required (Anthropic Claude 완전 교체)
 ```
 
 ### Installation
@@ -111,8 +110,8 @@ pnpm install --ignore-scripts
 
 # Setup environment variables
 cp .env.example .env.local
-# Add your ANTHROPIC_API_KEY (required)
-# Add your GEMINI_API_KEY (optional - for hybrid AI features)
+# Add your GEMINI_API_KEY (required - primary AI)
+# ANTHROPIC_API_KEY is no longer needed (fully replaced by Gemini)
 ```
 
 ### Essential Commands
@@ -127,7 +126,7 @@ node scripts/run-automation.js --verbose # Detailed logging
 node scripts/run-automation.js --dry-run # Test mode
 
 # API testing
-pnpm test:claude                       # Test Claude API connection
+pnpm ai-novel:system-test              # Test Gemini API connection
 pnpm setup:check                       # Verify setup
 ```
 
@@ -428,9 +427,8 @@ GitHub Actions Schedule:
 ### Key Files
 
 - `src/lib/master-automation-engine.js` - Main orchestration
-- `src/lib/hybrid-ai-generator.js` - Hybrid AI system coordinator
-- `src/lib/gemini-story-generator.js` - Gemini API integration
-- `src/lib/ai-story-generator.js` - Claude API integration
+- `scripts/ai-novel-generator.js` - Gemini API 기반 메인 생성기
+- `scripts/test-gemini-system.js` - Gemini API 고급 테스트 시스템
 - `scripts/run-automation.js` - Production runner
 - `.github/workflows/` - Automation workflows
 - `src/test/` - Test suites and examples
@@ -443,7 +441,7 @@ Advanced AI Integration - 7 specialized engines with 3,300+ lines of logic
 Professional Deployment - Vercel hosting with monitoring and optimization  
 Quality Assurance - ESLint, Prettier, TypeScript, and security scanning
 
-**The ro-fi platform represents a complete, production-ready AI-powered content generation system that demonstrates the potential of automated creative writing while maintaining high quality standards and reader engagement.**
+**The ro-fi platform represents a complete, production-ready Gemini AI-powered content generation system that demonstrates the potential of automated creative writing while maintaining high quality standards and reader engagement.**
 
 ---
 
