@@ -107,7 +107,7 @@ jobs:
       - name: 🔧 의존성 설치
         run: |
           echo "🔧 패키지 설치 중..."
-          npm ci --only=production
+          npm ci
           echo "✅ 설치 완료: $(npm list --depth=0 | wc -l) 패키지"
       
       # =====================================
@@ -115,12 +115,26 @@ jobs:
       # =====================================
       - name: 🔍 API 키 검증
         run: |
+          echo "🔍 환경변수 확인:"
+          echo "- NODE_ENV: $NODE_ENV"
+          echo "- GEMINI_API_KEY 존재 여부: $([ -n "$GEMINI_API_KEY" ] && echo '✅ 설정됨' || echo '❌ 없음')"
+          echo "- GEMINI_API_KEY 길이: ${#GEMINI_API_KEY}"
+          
           if [ -z "$GEMINI_API_KEY" ]; then
             echo "❌ GEMINI_API_KEY가 설정되지 않았습니다"
             echo "GitHub Secrets에서 GEMINI_API_KEY를 설정해주세요"
+            echo "현재 설정된 환경변수:"
+            env | grep -E "(NODE_ENV|GEMINI|API)" || echo "관련 환경변수 없음"
             exit 1
           fi
           echo "✅ Gemini API 키 확인 완료"
+      
+      - name: 🧪 GitHub 환경 완전성 테스트
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          echo "🧪 GitHub Actions 환경에서 Gemini API 연결 테스트 중..."
+          node scripts/test-github-environment.js
       
       - name: 📁 디렉토리 구조 확인
         run: |
@@ -183,6 +197,9 @@ jobs:
       # =====================================
       - name: 🤖 Gemini AI 로맨스 판타지 생성 실행
         id: generate
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          NODE_ENV: ${{ env.NODE_ENV }}
         run: |
           echo "🌟 Gemini API 자동 연재 시작"
           echo "설정:"
@@ -190,6 +207,10 @@ jobs:
           echo "  - 창의성: $CREATIVITY_LEVEL"
           echo "  - 장르: $TARGET_GENRE"
           echo "  - 테스트 모드: $DRY_RUN"
+          echo ""
+          echo "🔧 환경변수 재확인:"
+          echo "  - GEMINI_API_KEY: $([ -n "$GEMINI_API_KEY" ] && echo '✅ 있음' || echo '❌ 없음')"
+          echo "  - NODE_ENV: $NODE_ENV"
           echo ""
           
           # 실행 시간 측정

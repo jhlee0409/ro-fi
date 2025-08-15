@@ -28,7 +28,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const PROJECT_ROOT = join(__dirname, '..');
 
-// .env.local 파일 로드
+// 환경변수 로드 (GitHub Actions와 로컬 환경 모두 지원)
 dotenv.config({ path: join(PROJECT_ROOT, '.env.local') });
 
 // 설정
@@ -767,8 +767,14 @@ class AutomationEngine {
       await this.logger.info('🌟 로맨스 판타지 자동 연재 시스템 시작', this.options);
 
       // API 키 확인
+      await this.logger.info('환경변수 확인', { 
+        hasApiKey: !!CONFIG.API_KEY,
+        apiKeyLength: CONFIG.API_KEY ? CONFIG.API_KEY.length : 0,
+        nodeEnv: process.env.NODE_ENV
+      });
+      
       if (!CONFIG.API_KEY) {
-        throw new Error('GEMINI_API_KEY 환경변수가 설정되지 않았습니다');
+        throw new Error('GEMINI_API_KEY 환경변수가 설정되지 않았습니다. GitHub Secrets에 GEMINI_API_KEY가 올바르게 설정되어 있는지 확인해주세요.');
       }
 
       // 디렉토리 확인 및 생성
