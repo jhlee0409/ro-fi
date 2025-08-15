@@ -10,8 +10,38 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Gemini API 설정
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const apiKey = process.env.GEMINI_API_KEY;
+if (!apiKey) {
+  console.error('❌ GEMINI_API_KEY 환경 변수가 설정되지 않았습니다.');
+  console.error('GitHub Actions에서는 ${{ secrets.GEMINI_API_KEY }}로 설정됩니다.');
+  console.error('로컬 테스트 시: GEMINI_API_KEY=your_key node scripts/gemini-story-generator.js');
+  process.exit(1);
+}
+
+console.log(`🔑 API 키 확인: ${apiKey.substring(0, 10)}...${apiKey.substring(apiKey.length - 4)}`);
+
+const genAI = new GoogleGenerativeAI(apiKey);
 const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+// API 키 유효성 검증
+async function validateApiKey() {
+  try {
+    log('API 키 유효성 검증 중...');
+    const result = await model.generateContent('안녕하세요');
+    const response = await result.response;
+    log('✅ API 키 유효성 확인 완료');
+    return true;
+  } catch (error) {
+    log(`❌ API 키 유효성 검증 실패: ${error.message}`);
+    if (error.message.includes('API_KEY_INVALID')) {
+      console.error('🔍 문제 해결 방법:');
+      console.error('1. Google AI Studio에서 올바른 API 키를 발급받았는지 확인');
+      console.error('2. API 키가 올바르게 복사되었는지 확인');
+      console.error('3. API 키에 Gemini API 사용 권한이 있는지 확인');
+    }
+    return false;
+  }
+}
 
 // 로깅 함수
 function log(message) {
@@ -382,6 +412,12 @@ async function main() {
   try {
     log('Gemini AI 로맨스 판타지 자동 연재 시스템 시작');
 
+    // 0. API 키 유효성 검증
+    const isValidApiKey = await validateApiKey();
+    if (!isValidApiKey) {
+      process.exit(1);
+    }
+
     // 1. 현재 상황 분석
     const { novels, chapters } = await analyzeCurrentState();
     log(`분석 완료: 소설 ${novels.length}편, 챕터 ${chapters.length}화`);
@@ -408,4 +444,11 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   main();
 }
 
-export { main, analyzeCurrentState, determineAction, generateContent, saveAndCommit };
+export {
+  main,
+  analyzeCurrentState,
+  determineAction,
+  generateContent,
+  saveAndCommit,
+  validateApiKey,
+};
