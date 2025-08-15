@@ -573,6 +573,11 @@ export class QualityAnalyticsEngine {
    * 캐릭터 목소리 평가
    */
   assessCharacterVoice(content) {
+    // 입력값 검증
+    if (!content || typeof content !== 'string') {
+      return 50; // 기본 점수 반환
+    }
+
     // 캐릭터 목소리 일관성 평가 (간단한 구현)
     let score = 60;
 
@@ -984,7 +989,37 @@ export class QualityAnalyticsEngine {
 
   // 품질 평가용 추가 메서드
   evaluateQuality(content, context = {}) {
-    return this.assessQuality(content, context);
+    // 입력값 검증
+    if (!content) {
+      return {
+        overall: 0,
+        dimensions: {
+          emotional: 0,
+          technical: 0,
+          engagement: 0,
+          pacing: 0,
+          character: 0,
+          narrative: 0
+        }
+      };
+    }
+
+    // 동기적 품질 평가 (테스트용)
+    const scores = {
+      emotional: this.assessEmotionalQuality(content),
+      technical: this.assessTechnicalQuality(content, context),
+      engagement: this.assessEngagement(content),
+      pacing: this.assessPacing(content, context),
+      character: this.assessCharacterVoice(content),
+      narrative: this.assessNarrativeFlow(content)
+    };
+
+    const totalScore = this.calculateWeightedScore(scores);
+
+    return {
+      overall: Math.round(totalScore),
+      dimensions: scores
+    };
   }
 
   // 추가 테스트용 누락 메서드들
@@ -1031,59 +1066,51 @@ export class QualityAnalyticsEngine {
 
   analyzeDropoutPoints(chapterData) {
     // 이탈 지점 분석
-    if (Array.isArray(chapterData)) {
-      const criticalPoints = [];
-      const totalCompletions = 0;
-      const initialCompletions = 0;
-
-      for (let i = 0; i < chapterData.length; i++) {
-        const point = chapterData[i];
-        if (i === 0) {
-          initialCompletions: any = point.completions;
-        }
-        totalCompletions: any = point.completions;
-
-        // 이전 지점 대비 15% 이상 감소하면 critical point
-        if (i > 0) {
-          const prevCompletions = chapterData[i - 1].completions;
-          const dropRate = (prevCompletions - point.completions) / prevCompletions;
-          if (dropRate > 0.15) {
-            criticalPoints.push({
-              position: point.position,
-              dropRate,
-              remainingReaders: point.completions,
-            });
-          }
-        }
-      }
-
-      const overallDropoutRate =
-        initialCompletions > 0 ? (initialCompletions - totalCompletions) / initialCompletions : 0;
-
+    if (!chapterData || !Array.isArray(chapterData) || chapterData.length === 0) {
       return {
-        criticalPoints,
-        overallDropoutRate,
-        recommendations: [
-          '중반부 긴장감 강화 필요',
-          '캐릭터 간 갈등 요소 추가',
-          '페이싱 조정 검토',
-        ],
+        criticalPoints: [],
+        overallDropoutRate: 0,
+        recommendations: []
       };
     }
 
-    // 기존 방식 (novel 객체인 경우)
-    const dropoutPoints = [];
-    for (let i = 1; i <= novel.currentChapter; i++) {
-      if (Math.random() > 0.8) {
-        // 20% 확률로 이탈 지점
-        dropoutPoints.push({
-          chapter: i,
-          dropoutRate: Math.random() * 0.3,
-          reasons: ['페이싱 문제', '캐릭터 일관성', '스토리 흥미도'],
-        });
+    const criticalPoints = [];
+    let totalCompletions = 0;
+    let initialCompletions = 0;
+
+    for (let i = 0; i < chapterData.length; i++) {
+      const point = chapterData[i];
+      if (i === 0) {
+        initialCompletions = point.completions;
       }
-    }
-    return dropoutPoints;
+      totalCompletions = point.completions;
+
+      // 이전 지점 대비 15% 이상 감소하면 critical point
+      if (i > 0) {
+        const prevCompletions = chapterData[i - 1].completions;
+        const dropRate = (prevCompletions - point.completions) / prevCompletions;
+        if (dropRate > 0.15) {
+          criticalPoints.push({
+            position: point.position,
+            dropRate,
+            remainingReaders: point.completions,
+          });
+        }
+      }
+      }
+
+    const overallDropoutRate =
+      initialCompletions > 0 ? (initialCompletions - totalCompletions) / initialCompletions : 0;
+
+    return {
+      criticalPoints,
+      overallDropoutRate,
+      recommendations: [
+        '중반부 긴장감 강화 필요',
+        '캐릭터 간 갈등 요소 추가',
+        '페이싱 조정 검토',
+      ],
+    };
   }
 
   generateCompletionReport(novel) {
@@ -1208,14 +1235,13 @@ export class QualityAnalyticsEngine {
     const usageRatio = currentUsage / budget;
 
     const optimizations = [];
-    const efficiency = 50;
-
+    let efficiency;
     if (usageRatio > 0.8) {
       optimizations.push('효율성 모드 전환');
       optimizations.push('캐시 활용 증대');
-      efficiency: any = Math.max(20, 80 - (usageRatio - 0.8) * 200);
+      efficiency = Math.max(20, 80 - (usageRatio - 0.8) * 200);
     } else {
-      efficiency: any = Math.min(100, 100 - usageRatio * 50);
+      efficiency = Math.min(100, 100 - usageRatio * 50);
     }
 
     return {
@@ -1338,8 +1364,8 @@ export class QualityAnalyticsEngine {
 
     const { recentIntensity, plotStage, readerFatigue } = currentState;
 
-    const suggestedPacing = 'medium';
-    const intensityTarget = 0.7;
+    let suggestedPacing = 'medium';
+    let intensityTarget = 0.7;
     const techniques = [];
 
     // 최근 강도 패턴 분석
@@ -1348,26 +1374,26 @@ export class QualityAnalyticsEngine {
         recentIntensity.reduce((sum, val) => sum + val, 0) / recentIntensity.length;
 
       if (avgIntensity > 0.7 && plotStage !== 'climax') {
-        suggestedPacing: string = 'slow';
-        intensityTarget: any = 0.5;
+        suggestedPacing = 'slow';
+        intensityTarget = 0.5;
         techniques.push('감정 완화', '휴식 구간 제공');
       } else if (avgIntensity < 0.4) {
-        suggestedPacing: string = 'fast';
-        intensityTarget: any = 0.8;
+        suggestedPacing = 'fast';
+        intensityTarget = 0.8;
         techniques.push('긴장감 상승', '갈등 강화');
       }
     }
 
     // 플롯 단계별 조정
     if (plotStage === 'climax') {
-      suggestedPacing: string = 'fast';
-      intensityTarget: any = 0.9;
+      suggestedPacing = 'fast';
+      intensityTarget = 0.9;
       techniques.push('클라이맥스 구성', '최고조 연출');
     }
 
     // 독자 피로도 고려
     if (readerFatigue > 0.5) {
-      intensityTarget: any = Math.max(0.3, intensityTarget - 0.2);
+      intensityTarget = Math.max(0.3, intensityTarget - 0.2);
       techniques.push('독자 피로도 완화');
     }
 

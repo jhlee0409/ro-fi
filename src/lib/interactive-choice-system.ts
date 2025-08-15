@@ -125,6 +125,7 @@ export class InteractiveChoiceSystem {
   private currentFlags: Set<string>;
   private choiceHistory: ChoiceHistory[];
   private characterAffection: Map<string, Map<string, number>>; // reader -> character -> affection
+  private totalChoicesGenerated: number;
 
   constructor() {
     this.contextManager = new EnhancedContextManager();
@@ -133,6 +134,7 @@ export class InteractiveChoiceSystem {
     this.currentFlags = new Set();
     this.choiceHistory = [];
     this.characterAffection = new Map();
+    this.totalChoicesGenerated = 0;
     
     this.initializeChoiceTemplates();
   }
@@ -187,7 +189,10 @@ export class InteractiveChoiceSystem {
     // 4. 독자 선호도 기반 개인화
     const personalizedChoices = this.personalizeChoices(choices, readerProfile);
     
-    // 5. 최대 4개 선택지로 제한하고 매력도 순 정렬
+    // 5. 생성된 선택지 수 증가
+    this.totalChoicesGenerated += personalizedChoices.length;
+    
+    // 6. 최대 4개 선택지로 제한하고 매력도 순 정렬
     return personalizedChoices
       .sort((a, b) => b.readerAppeal - a.readerAppeal)
       .slice(0, 4);
@@ -712,10 +717,21 @@ export class InteractiveChoiceSystem {
   getSystemStats(): any {
     return {
       totalReaders: this.readerProfiles.size,
-      totalChoices: this.choiceHistory.length,
-      activeFlags: this.currentFlags.size,
+      totalChoices: this.totalChoicesGenerated,
+      activeFlags: this.countActiveFlags(),
       averageEngagement: this.calculateAverageEngagement()
     };
+  }
+
+  private countActiveFlags(): number {
+    return this.currentFlags.size;
+  }
+
+  /**
+   * 독자 프로필 조회
+   */
+  getReaderProfile(readerId: string): ReaderProfile | undefined {
+    return this.readerProfiles.get(readerId);
   }
 
   private calculateAverageEngagement(): number {

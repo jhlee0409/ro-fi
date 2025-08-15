@@ -182,15 +182,11 @@ rating: 0
     const novelWithProgress = await detector.getNovelWithProgress('active-novel');
     
     expect(novelWithProgress).toBeDefined();
-    expect(novelWithProgress!.novel.data.title).toBe('진행 중인 소설');
-    expect(novelWithProgress!.novel.data.status).toBe('연재 중');
-    expect(novelWithProgress!.novel.data.author).toBe('테스트 작가');
-    expect(novelWithProgress!.novel.data.totalChapters).toBe(10);
-    expect(novelWithProgress!.novel.data.tropes).toEqual(['enemies-to-lovers']);
-    
-    // Novel should have valid structure
-    expect(novelWithProgress!.novel.data.title).toBe('진행 중인 소설');
-    expect(novelWithProgress!.novel.data.status).toBe('연재 중');
+    expect(novelWithProgress!.title).toBe('진행 중인 소설');
+    expect(novelWithProgress!.status).toBe('연재 중');
+    expect(novelWithProgress!.author).toBe('테스트 작가');
+    expect(novelWithProgress!.totalChapters).toBe(10);
+    expect(novelWithProgress!.tropes).toEqual(['enemies-to-lovers']);
   });
 
   test('챕터 파일의 frontmatter 파싱이 정확해야 함', async () => {
