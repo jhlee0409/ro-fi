@@ -57,25 +57,7 @@ jobs:
             exit 1
           fi
 
-      - name: 📅 중복 실행 방지 체크
-        id: check_daily
-        run: |
-          today=$(date +%Y-%m-%d)
-          last_commit_date=$(git log -1 --format=%cd --date=short 2>/dev/null || echo "2000-01-01")
-
-          echo "오늘 날짜: $today"
-          echo "마지막 커밋 날짜: $last_commit_date"
-
-          if [ "$today" = "$last_commit_date" ]; then
-            echo "already_ran=true" >> $GITHUB_OUTPUT
-            echo "⏭️ 오늘 이미 실행됨 - 건너뛰기"
-          else
-            echo "already_ran=false" >> $GITHUB_OUTPUT
-            echo "✅ 오늘 첫 실행 - 계속 진행"
-          fi
-
       - name: 🌹 Claude Code 로맨스 판타지 자동 생성
-        if: steps.check_daily.outputs.already_ran == 'false' || github.event.inputs.force_mode == 'true'
         uses: anthropics/claude-code-action@beta
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
