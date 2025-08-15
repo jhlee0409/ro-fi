@@ -403,8 +403,16 @@ wordCount: [실제 글자 수]
       log(`Gemini AI 콘텐츠 생성 중... (시도 ${attempt}/${maxRetries})`);
       const result = await model.generateContent(prompt);
       const response = await result.response;
+      let content = response.text();
+      
+      // Gemini AI 응답에서 코드 블록 마커 제거
+      content = content.replace(/^```[\s\S]*?\n/, ''); // 시작 코드 블록 제거
+      content = content.replace(/\n```\s*$/, ''); // 끝 코드 블록 제거
+      content = content.replace(/```\s*\n\s*```\s*$/, ''); // 빈 코드 블록 제거
+      content = content.trim(); // 앞뒤 공백 제거
+      
       log('✅ 콘텐츠 생성 완료');
-      return response.text();
+      return content;
     } catch (error) {
       log(`❌ Gemini AI 생성 중 오류 (시도 ${attempt}/${maxRetries}): ${error.message}`);
 
@@ -547,20 +555,15 @@ Gemini AI 완전 자동 생성"`);
 title: "새로운 로맨스 판타지"
 slug: "${novelSlug}"
 author: Gemini AI
-status: "ongoing"
+status: ongoing
 summary: >-
   Gemini AI가 자동 생성한 새로운 로맨스 판타지 소설입니다.
-tropes:
-  - 로맨스
-  - 판타지
+tropes: 로맨스, 판타지
 publishedDate: '${new Date().toISOString().split('T')[0]}'
 totalChapters: 1
 rating: 0
 coverImage: /images/covers/${novelSlug}.jpg
-tags:
-  - 로맨스
-  - 판타지
-  - 여성향
+tags: 로맨스, 판타지, 여성향
 genre: 로맨스 판타지
 targetAudience: 20-30대 여성
 expectedLength: 60-80화
