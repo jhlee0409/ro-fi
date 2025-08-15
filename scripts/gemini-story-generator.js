@@ -1,9 +1,13 @@
 #!/usr/bin/env node
 
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-const fs = require('fs').promises;
-const path = require('path');
-const { execSync } = require('child_process');
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { promises as fs } from 'fs';
+import path from 'path';
+import { execSync } from 'child_process';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Gemini API 설정
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -400,8 +404,8 @@ async function main() {
 }
 
 // 스크립트 실행
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   main();
 }
 
-module.exports = { main, analyzeCurrentState, determineAction, generateContent, saveAndCommit };
+export { main, analyzeCurrentState, determineAction, generateContent, saveAndCommit };
