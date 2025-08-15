@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs';
 import { join } from 'path';
-import * as matter from 'gray-matter';
-import type { Novel, Chapter, NovelState } from './types/index.js';
+import matter from 'gray-matter';
+import type { Novel, Chapter, NovelState } from './types/index.ts';
 
 interface NovelFile {
   slug: string;
@@ -122,15 +122,15 @@ export class NovelDetector {
   async getOldestUpdatedNovel() {
     try {
       const activeNovels = await this.getActiveNovels();
-      const oldestNovel = null;
-      const oldestDate = null;
+      let oldestNovel = null;
+      let oldestDate = null;
 
       for (const novel of activeNovels) {
         const progress = await this.getNovelWithProgress(novel.slug);
         if (progress) {
           if (oldestDate === null || progress.lastUpdated < oldestDate) {
-            const oldestDate = progress.lastUpdated;
-            const oldestNovel = progress;
+            oldestDate = progress.lastUpdated;
+            oldestNovel = progress;
           }
         }
       }

@@ -14,7 +14,8 @@ export default defineConfig({
       '**/*.spec.ts', // Exclude Playwright spec files
       '**/logs/**',
       '**/tmp/**',
-      '**/backup/**'
+      '**/backup/**',
+      '**/.api-backup-*/**' // Exclude API backup test files
     ],
     
     // Force exit after tests complete
@@ -44,7 +45,7 @@ export default defineConfig({
     },
     
     // 리포터 최적화
-    reporter: process.env.CI ? ['json', 'github-actions'] : ['default'],
+    reporters: process.env.CI ? ['json', 'github-actions'] : ['default'],
     
     // 메모리 관리
     clearMocks: true,

@@ -21,26 +21,50 @@ if (!apiKey) {
 console.log(`🔑 API 키 확인: ${apiKey.substring(0, 10)}...${apiKey.substring(apiKey.length - 4)}`);
 
 const genAI = new GoogleGenerativeAI(apiKey);
-const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
 
 // API 키 유효성 검증
 async function validateApiKey() {
-  try {
-    log('API 키 유효성 검증 중...');
-    const result = await model.generateContent('안녕하세요');
-    const response = await result.response;
-    log('✅ API 키 유효성 확인 완료');
-    return true;
-  } catch (error) {
-    log(`❌ API 키 유효성 검증 실패: ${error.message}`);
-    if (error.message.includes('API_KEY_INVALID')) {
-      console.error('🔍 문제 해결 방법:');
-      console.error('1. Google AI Studio에서 올바른 API 키를 발급받았는지 확인');
-      console.error('2. API 키가 올바르게 복사되었는지 확인');
-      console.error('3. API 키에 Gemini API 사용 권한이 있는지 확인');
+  const maxRetries = 3;
+  const retryDelay = 2000; // 2초
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      log(`API 키 유효성 검증 중... (시도 ${attempt}/${maxRetries})`);
+      const result = await model.generateContent('안녕하세요');
+      const response = await result.response;
+      log('✅ API 키 유효성 확인 완료');
+      return true;
+    } catch (error) {
+      log(`❌ API 키 유효성 검증 실패 (시도 ${attempt}/${maxRetries}): ${error.message}`);
+
+      if (error.message.includes('API_KEY_INVALID')) {
+        console.error('🔍 문제 해결 방법:');
+        console.error('1. Google AI Studio에서 올바른 API 키를 발급받았는지 확인');
+        console.error('2. API 키가 올바르게 복사되었는지 확인');
+        console.error('3. API 키에 Gemini API 사용 권한이 있는지 확인');
+        return false;
+      }
+
+      if (error.message.includes('overloaded') || error.message.includes('503')) {
+        if (attempt < maxRetries) {
+          log(`🔄 서비스 과부하 감지. ${retryDelay / 1000}초 후 재시도...`);
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
+          continue;
+        } else {
+          log('❌ 최대 재시도 횟수 초과. 서비스가 과부하 상태입니다.');
+          console.error('🔍 문제 해결 방법:');
+          console.error('1. 잠시 후 다시 시도해주세요');
+          console.error('2. Gemini API 서비스 상태를 확인해주세요');
+          return false;
+        }
+      }
+
+      return false;
     }
-    return false;
   }
+
+  return false;
 }
 
 // 로깅 함수
@@ -308,13 +332,32 @@ wordCount: [실제 글자 수]
 
 생성된 마크다운 파일의 전체 내용을 그대로 출력해주세요.`;
 
-  try {
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    return response.text();
-  } catch (error) {
-    log(`Gemini AI 생성 중 오류: ${error.message}`);
-    throw error;
+  const maxRetries = 3;
+  const retryDelay = 3000; // 3초
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      log(`Gemini AI 콘텐츠 생성 중... (시도 ${attempt}/${maxRetries})`);
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      log('✅ 콘텐츠 생성 완료');
+      return response.text();
+    } catch (error) {
+      log(`❌ Gemini AI 생성 중 오류 (시도 ${attempt}/${maxRetries}): ${error.message}`);
+
+      if (error.message.includes('overloaded') || error.message.includes('503')) {
+        if (attempt < maxRetries) {
+          log(`🔄 서비스 과부하 감지. ${retryDelay / 1000}초 후 재시도...`);
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
+          continue;
+        } else {
+          log('❌ 최대 재시도 횟수 초과. 서비스가 과부하 상태입니다.');
+          throw new Error(`Gemini API 서비스 과부하: ${error.message}`);
+        }
+      }
+
+      throw error;
+    }
   }
 }
 

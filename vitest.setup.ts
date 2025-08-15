@@ -6,7 +6,7 @@ afterAll(async () => {
   await new Promise(resolve => setTimeout(resolve, 100));
   
   // Clear all timers
-  if (globalThis.clearInterval) {
+  if (typeof globalThis.clearInterval === 'function') {
     for (let i = 1; i < 10000; i++) {
       clearInterval(i);
       clearTimeout(i);
@@ -14,7 +14,7 @@ afterAll(async () => {
   }
   
   // Force garbage collection if available
-  if (global.gc) {
+  if (typeof global.gc === 'function') {
     global.gc();
   }
 });

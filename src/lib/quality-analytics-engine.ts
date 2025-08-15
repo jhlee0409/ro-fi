@@ -435,8 +435,6 @@ export class QualityAnalyticsEngine {
       dimensions: scores, // 테스트에서 요구하는 구조
       score: Math.round(totalScore), // 호환성
       breakdown: scores, // 호환성
-      dimensions: scores,
-      breakdown: scores, // 호환성
       improvements,
       grade: this.getQualityGrade(totalScore),
     };
@@ -525,6 +523,10 @@ export class QualityAnalyticsEngine {
    * 독자 참여도 평가
    */
   assessEngagement(content) {
+    if (!content || typeof content !== 'string') {
+      return 50; // Default score for invalid content
+    }
+    
     let score = 55;
 
     // 대화의 비율
@@ -545,6 +547,10 @@ export class QualityAnalyticsEngine {
    * 페이싱 평가
    */
   assessPacing(content, context) {
+    if (!content || typeof content !== 'string') {
+      return 50; // Default score for invalid content
+    }
+    
     const wordCount = content.split(/\s+/).length;
     const chapterNumber = context.chapterNumber || 1;
 
@@ -1472,7 +1478,7 @@ export class QualityAnalyticsEngine {
   }
 
   // 동기 버전의 assessQuality 메서드 (테스트용)
-  assessQuality(content, context = {}) {
+  assessQualitySync(content, context = {}) {
     if (!content) {
       return {
         overall: 50,
