@@ -12,6 +12,13 @@ Token optimization: For complex tasks, consider using `gemini -p "{prompt conten
 
 항상 기능을 구현하기 전에 테스트코드를 완벽하게 짜고 레드-그린 테스트 진행해줘
 
+## Critical Schema Compliance
+
+**Content Schema Validation**: All MD file generation must comply with `src/content/config.ts` schema:
+- Novels: title, slug, author, summary, status (enum), tropes (array), publishedDate, totalChapters, rating
+- Chapters: title, novel, chapterNumber, publicationDate, wordCount, summary, rating
+- ❌ Never include: coverImage, tags, genre, targetAudience, expectedLength (schema violations)
+
 ## Project Overview
 
 ro-fan is an AI-powered romance fantasy novel platform that combines modern web technologies with sophisticated AI automation for fully automated story creation and publishing.
@@ -44,8 +51,8 @@ Create a self-sustaining romance fantasy novel platform that generates high-qual
   - Gemini: 감성적 표현, 창의적 문체, 긴 컨텍스트 처리에 최적화
   - 한국어 로맨스 판타지 생성에 특별히 최적화된 프롬프트 시스템
 - Content Management: Gray Matter for markdown processing
-- Automation: 7 specialized AI engines (3,300+ lines of code)
-- Scheduling: GitHub Actions (4 workflows, 1-day intervals)
+- Automation: 8+ specialized AI engines with enterprise-grade deployment/monitoring
+- Scheduling: GitHub Actions (automated daily execution)
 
 ### Development Stack
 
