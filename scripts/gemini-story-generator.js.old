@@ -366,15 +366,6 @@ async function saveAndCommit(content, action, novel) {
   log('파일 저장 및 커밋 중...');
 
   try {
-    // Git 사용자 설정 (CI 환경에서 필요)
-    try {
-      execSync('git config user.email "ro-fi-automation@noreply.github.com"');
-      execSync('git config user.name "RO-FI AI Automation"');
-      log('✅ Git 사용자 정보 설정 완료');
-    } catch (configError) {
-      log(`⚠️ Git 설정 경고: ${configError.message}`);
-      // 설정 실패해도 계속 진행 (로컬에서는 이미 설정되어 있을 수 있음)
-    }
     if (action === 'complete') {
       // 완결 처리
       const chapterFilename = `${novel.slug}-ch${novel.totalChapters + 1}.md`;
