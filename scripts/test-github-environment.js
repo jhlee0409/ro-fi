@@ -6,10 +6,16 @@
  */
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 import dotenv from 'dotenv';
 
-// 환경변수 로드
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const PROJECT_ROOT = join(__dirname, '..');
+
+// 환경변수 로드 (GitHub Actions와 로컬 환경 모두 지원)
+dotenv.config({ path: join(PROJECT_ROOT, '.env.local') });
 
 async function testGitHubEnvironment() {
   console.log('🔍 GitHub Actions 환경 테스트 시작\n');
