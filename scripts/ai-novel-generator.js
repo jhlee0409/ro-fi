@@ -613,12 +613,7 @@ class FileManager {
       tropes: metadata.tropes || [],
       publishedDate: new Date().toISOString().split('T')[0],
       totalChapters: 1,
-      rating: 0,
-      coverImage: `/images/covers/${metadata.slug}.jpg`,
-      tags: ['로맨스', '판타지', '여성향'],
-      genre: '로맨스 판타지',
-      targetAudience: '20-30대 여성',
-      expectedLength: '60-80화'
+      rating: 0
     };
 
     const content = matter.stringify('', frontmatter);

@@ -463,7 +463,7 @@ async function saveAndCommit(content, action, novel) {
       // 소설 메타데이터 업데이트
       const novelPath = `src/content/novels/${novel.slug}.md`;
       let novelContent = await readFile(novelPath);
-      novelContent = novelContent.replace(/status: "ongoing"/, 'status: "completed"');
+      novelContent = novelContent.replace(/status: "연재 중"/, 'status: "완결"');
       novelContent = novelContent.replace(
         /totalChapters: \d+/,
         `totalChapters: ${novel.totalChapters + 1}`
@@ -554,19 +554,15 @@ Gemini AI 완전 자동 생성"`);
       const novelMetadata = `---
 title: "새로운 로맨스 판타지"
 slug: "${novelSlug}"
-author: Gemini AI
-status: ongoing
-summary: >-
-  Gemini AI가 자동 생성한 새로운 로맨스 판타지 소설입니다.
-tropes: 로맨스, 판타지
-publishedDate: '${new Date().toISOString().split('T')[0]}'
+author: "Gemini AI"
+status: "연재 중"
+summary: "Gemini AI가 자동 생성한 새로운 로맨스 판타지 소설입니다."
+tropes:
+  - "로맨스"
+  - "판타지"
+publishedDate: "${new Date().toISOString().split('T')[0]}"
 totalChapters: 1
 rating: 0
-coverImage: /images/covers/${novelSlug}.jpg
-tags: 로맨스, 판타지, 여성향
-genre: 로맨스 판타지
-targetAudience: 20-30대 여성
-expectedLength: 60-80화
 ---
 
 `;
