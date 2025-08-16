@@ -9,8 +9,8 @@ inputs:
     required: false
     default: 'true'
   
-  anthropic-api-key:
-    description: 'Anthropic API 키 (AI 서비스용)'
+  gemini-api-key:
+    description: 'Gemini API 키 (AI 서비스용)'
     required: false
     default: ''
   
@@ -76,10 +76,10 @@ runs:
         echo "✅ 의존성 설치 완료"
 
     - name: 🔐 환경 변수 설정
-      if: inputs.anthropic-api-key != ''
+      if: inputs.gemini-api-key != ''
       shell: bash
       run: |
-        echo "ANTHROPIC_API_KEY=${{ inputs.anthropic-api-key }}" >> $GITHUB_ENV
+        echo "GEMINI_API_KEY=${{ inputs.gemini-api-key }}" >> $GITHUB_ENV
         echo "NODE_ENV=production" >> $GITHUB_ENV
         echo "✅ AI 서비스 환경 변수 설정 완료"
 
@@ -91,7 +91,7 @@ runs:
         echo "📦 Node.js: $(node --version)"
         echo "🔧 pnpm: $(pnpm --version)"
         echo "📚 의존성 설치: ${{ inputs.install-deps }}"
-        echo "🔐 AI API 키: ${{ inputs.anthropic-api-key != '' && '설정됨' || '미설정' }}"
+        echo "🔐 AI API 키: ${{ inputs.gemini-api-key != '' && '설정됨' || '미설정' }}"
         echo "🎯 준비 완료!"
 
 branding:

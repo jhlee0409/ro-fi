@@ -14,13 +14,13 @@ const tropesCollection = defineCollection({
 const novelsCollection = defineCollection({
   type: 'content',
   schema: z.object({
-    title: z.string(),
-    slug: z.string().optional(),
-    author: z.string().default('클로드 소네트 AI'),
+    title: z.string().min(5, "제목은 최소 5자 이상이어야 합니다"),
+    slug: z.string().min(3, "slug는 최소 3자 이상이어야 합니다").regex(/^[a-z0-9-]+$/, "slug는 영문 소문자, 숫자, 하이픈만 사용 가능합니다"),
+    author: z.string().default('Gemini AI'),
     coverImage: z.string().optional(),
-    summary: z.string(),
+    summary: z.string().min(50, "줄거리는 최소 50자 이상이어야 합니다").refine(val => !val.includes("자동 생성"), "줄거리에 '자동 생성' 문구가 포함될 수 없습니다"),
     status: z.enum(['연재 중', '완결', '휴재']).default('연재 중'),
-    tropes: z.array(z.string()).default([]), // tropes 컬렉션과의 관계
+    tropes: z.array(z.string()).min(2, "최소 2개 이상의 트로프가 필요합니다").refine(val => !(val.length === 2 && val.includes("로맨스") && val.includes("판타지")), "트로프가 너무 일반적입니다. 구체적인 트로프를 사용해주세요"), // tropes 컬렉션과의 관계
     publishedDate: z.coerce.date().default(() => new Date()),
     totalChapters: z.number().default(0),
     rating: z.number().min(0).max(5).optional().default(0), // 평점 필드 추가

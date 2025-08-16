@@ -71,7 +71,7 @@ jobs:
           while [ $attempt -le $max_attempts ]; do
             echo "시도 $attempt/$max_attempts"
 
-            if node scripts/gemini-story-generator.js; then
+            if node scripts/ai-novel-generator.js --mode auto --creativity high --verbose; then
               echo "Gemini AI 생성 성공"
               break
             else

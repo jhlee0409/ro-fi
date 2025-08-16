@@ -1,0 +1,148 @@
+{
+  "worldSettings": {
+    "name": "엘프 왕국",
+    "magicSystem": {
+      "type": "정령 기반 마법",
+      "rules": [
+        "숲의 정령의 가호로 마법 능력 각성",
+        "예언과 관련된 힘"
+      ],
+      "limitations": [
+        "혈통의 순수성 중시",
+        "금지된 숲의 존재"
+      ]
+    },
+    "geography": [
+      "엘프 왕국",
+      "금지된 숲",
+      "드래곤의 영역"
+    ],
+    "politics": [
+      "엘프와 드래곤 간의 휴전 협정",
+      "순혈 엘프 중심의 사회"
+    ],
+    "culture": [
+      "순수 혈통 중시",
+      "반쪽 엘프 차별"
+    ]
+  },
+  "characters": {
+    "protagonist": {
+      "name": "리아",
+      "age": 18,
+      "appearance": {
+        "hair": "푸른 기가 도는 은발",
+        "eyes": "정보 없음",
+        "build": "정보 없음"
+      },
+      "personality": [
+        "소극적",
+        "고독함",
+        "긍정적"
+      ],
+      "abilities": [
+        "잠재된 마법 능력",
+        "예언의 아이"
+      ],
+      "background": "반쪽 엘프로 멸시받으며 궁궐에서 허드렛일 담당",
+      "currentState": {
+        "location": "금지된 숲, 고대 유적",
+        "emotion": "놀라움, 불안",
+        "motivation": "자신의 운명을 알고 싶어함",
+        "newRealizations": [
+          "자신의 마법 능력 자각"
+        ]
+      }
+    },
+    "love_interest": {
+      "name": "에시온",
+      "age": "정보 없음",
+      "appearance": {
+        "hair": "정보 없음",
+        "eyes": "차가운 눈빛",
+        "build": "정보 없음"
+      },
+      "personality": [
+        "차가움",
+        "강인함",
+        "신비로움"
+      ],
+      "abilities": [
+        "뛰어난 검술",
+        "마법 능력"
+      ],
+      "background": "엘프 왕국 최정예 기사단장",
+      "currentState": {
+        "location": "금지된 숲, 고대 유적",
+        "emotion": "긴장, 경계",
+        "motivation": "리아를 돕고 예언을 실현하려 함",
+        "newRealizations": [
+          "드래곤의 예상보다 빠른 움직임"
+        ]
+      }
+    },
+    "supporting": [
+      {
+        "name": "엘레나",
+        "role": "궁궐 시녀장",
+        "relationship": "리아를 멸시함"
+      }
+    ]
+  },
+  "plot": {
+    "mainArc": "리아의 능력 각성과 예언 실현, 그리고 에시온과의 로맨스",
+    "currentPhase": "리아의 능력 각성 완료, 드래곤과의 갈등 발생",
+    "completedEvents": [
+      "리아의 18번째 생일",
+      "드래곤과의 휴전 협정 연회",
+      "정전 사건",
+      "리아의 숲의 정령과의 만남"
+    ],
+    "activeConflicts": [
+      "엘프 왕국 내부의 차별",
+      "드래곤과의 불안정한 휴전",
+      "리아의 예언과 관련된 갈등",
+      "드래곤의 출현으로 인한 위기"
+    ],
+    "foreshadowing": [
+      "반복되는 악몽",
+      "예언의 내용",
+      "에시온의 등장",
+      "드래곤과의 전쟁 가능성"
+    ],
+    "themes": [
+      "능력 각성",
+      "복수와 구원",
+      "신분 차이",
+      "로맨스"
+    ]
+  },
+  "metadata": {
+    "created": "2025-08-16T07:09:29.727Z",
+    "lastUpdated": "2025-08-16T07:09:56.424Z",
+    "version": "1.0.0",
+    "novelSlug": "elf-shadow-moonlight-bloom",
+    "currentChapter": 2
+  },
+  "timeline": [
+    {
+      "chapter": 1,
+      "title": "달빛 속에서 깨어나다",
+      "summary": "첫 만남: 리아과 에시온",
+      "keyEvents": [
+        "스토리 진행"
+      ],
+      "date": "2025-08-16T07:09:29.727Z"
+    },
+    {
+      "chapter": 2,
+      "title": "2화: 금지된 숲의 속삭임",
+      "summary": "리아는 에시온의 도움으로 금지된 숲의 고대 유적에서 잠재된 마법 능력을 깨운다. 그러나 드래곤의 갑작스러운 출현으로 위기에 처한다.",
+      "keyEvents": [
+        "리아의 마법 능력 각성",
+        "드래곤의 출현"
+      ],
+      "date": "2025-08-16T07:09:56.424Z"
+    }
+  ]
+}

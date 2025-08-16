@@ -290,16 +290,16 @@ ${prompt}
 - **목표 독자**: 20-30대 한국 여성 (로맨스 판타지 마니아)
 - **연재 목표**: 일일 조회수 10만+ 달성 가능한 작품
 
-## 📋 필수 출력 형식
+## 📋 필수 출력 형식 (정확히 준수 필수!)
 
 === METADATA ===
-TITLE: [독자들이 클릭하지 않을 수 없는 매력적인 제목]
-SLUG: [영문-소문자-하이픈-url-safe]
-SUMMARY: [SNS 공유되고 싶어지는 설득력 있는 200자 소개글]
+TITLE: [독자들이 클릭하지 않을 수 없는 창의적이고 매력적인 제목 - 최소 10자 이상]
+SLUG: [의미있는-영문-소문자-하이픈-구분]
+SUMMARY: [SNS에서 바이럴될 만큼 흥미진진한 200자 이상의 상세한 줄거리 소개]
 TROPES: [${tropes.map(t => `"${t}"`).join(', ')}]
 
 === CHAPTER 1 ===
-CHAPTER_TITLE: [1화 제목 - 독자 관심 유발]
+CHAPTER_TITLE: [1화 제목 - 독자의 호기심을 강하게 자극하는 제목]
 WORD_COUNT: [정확한 글자 수]
 
 [5000-6000자의 완벽한 1화 본문]
@@ -555,7 +555,131 @@ IS_FINAL: [이것이 최종화면 true, 아니면 false]
       }
     }
 
+    // slug가 없거나 부적절한 경우 제목에서 자동 생성
+    if (!metadata.slug || metadata.slug.startsWith('novel-')) {
+      metadata.slug = this.generateSlugFromTitle(metadata.title);
+    }
+
+    // 품질 검증 및 기본값 설정
+    metadata.title = metadata.title || '새로운 로맨스 판타지';
+    metadata.summary = metadata.summary || '흥미진진한 로맨스 판타지 이야기가 펼쳐집니다.';
+    metadata.tropes = metadata.tropes || ['로맨스', '판타지'];
+
+    // 품질 검증
+    this.validateMetadataQuality(metadata);
+
     return metadata;
+  }
+
+  validateMetadataQuality(metadata) {
+    const issues = [];
+
+    // 제목 품질 검증
+    if (!metadata.title || metadata.title.length < 5) {
+      issues.push('제목이 너무 짧습니다 (최소 5자)');
+    }
+    if (metadata.title === '새로운 로맨스 판타지' || metadata.title.includes('새로운')) {
+      issues.push('제목이 너무 일반적입니다');
+    }
+
+    // 줄거리 품질 검증
+    if (!metadata.summary || metadata.summary.length < 50) {
+      issues.push('줄거리가 너무 짧습니다 (최소 50자)');
+    }
+    if (metadata.summary.includes('Gemini AI가 자동 생성한')) {
+      issues.push('줄거리가 자동 생성 텍스트입니다');
+    }
+
+    // Slug 품질 검증
+    if (!metadata.slug || metadata.slug.startsWith('novel-')) {
+      issues.push('Slug가 자동 생성 형태입니다');
+    }
+
+    // 트로프 품질 검증
+    if (!metadata.tropes || metadata.tropes.length < 2) {
+      issues.push('트로프가 부족합니다 (최소 2개)');
+    }
+    const genericTropes = ['로맨스', '판타지'];
+    if (metadata.tropes.every(trope => genericTropes.includes(trope))) {
+      issues.push('트로프가 너무 일반적입니다');
+    }
+
+    if (issues.length > 0) {
+      throw new Error(`메타데이터 품질 검증 실패: ${issues.join(', ')}`);
+    }
+  }
+
+  generateSlugFromTitle(title) {
+    if (!title) {
+      // 랜덤 로맨스 판타지 slug 생성
+      const themes = ['mystic-love', 'dragon-heart', 'magic-academy', 'royal-romance', 'time-traveler'];
+      return themes[Math.floor(Math.random() * themes.length)] + '-' + Date.now().toString().slice(-6);
+    }
+
+    // 한글 제목 -> 영문 slug 변환 매핑
+    const koreanToEnglish = {
+      // 일반 단어
+      '황제': 'emperor', '마녀': 'witch', '기사': 'knight', '공주': 'princess',
+      '드래곤': 'dragon', '마법': 'magic', '사랑': 'love', '운명': 'destiny',
+      '그림자': 'shadow', '꽃': 'flower', '달': 'moon', '별': 'star',
+      '아카데미': 'academy', '학원': 'academy', '궁전': 'palace', '성': 'castle',
+      
+      // 색깔
+      '황금': 'golden', '은빛': 'silver', '잿빛': 'ash', '푸른': 'blue',
+      '붉은': 'red', '검은': 'black', '하얀': 'white',
+      
+      // 동작/상태
+      '피어나는': 'blooming', '빛나는': 'shining', '숨겨진': 'hidden',
+      '잃어버린': 'lost', '선택받은': 'chosen', '저주받은': 'cursed',
+      
+      // 관계
+      '와': 'and', '의': 'of', '에서': 'in', '속에서': 'in', '로': 'to'
+    };
+
+    let slug = title.toLowerCase();
+    
+    // 한글 단어를 영문으로 변환
+    for (const [korean, english] of Object.entries(koreanToEnglish)) {
+      slug = slug.replace(new RegExp(korean, 'g'), english);
+    }
+    
+    // 남은 한글을 로마자로 변환 (간단한 변환)
+    const hangulToRoman = {
+      'ㄱ': 'g', 'ㄴ': 'n', 'ㄷ': 'd', 'ㄹ': 'r', 'ㅁ': 'm',
+      'ㅂ': 'b', 'ㅅ': 's', 'ㅇ': '', 'ㅈ': 'j', 'ㅊ': 'ch',
+      'ㅋ': 'k', 'ㅌ': 't', 'ㅍ': 'p', 'ㅎ': 'h',
+      'ㅏ': 'a', 'ㅑ': 'ya', 'ㅓ': 'eo', 'ㅕ': 'yeo', 'ㅗ': 'o',
+      'ㅛ': 'yo', 'ㅜ': 'u', 'ㅠ': 'yu', 'ㅡ': 'eu', 'ㅣ': 'i'
+    };
+    
+    // 한글 자모 분해 및 변환 (단순화된 버전)
+    slug = slug.replace(/[가-힣]/g, (char) => {
+      // 간단한 한글 -> 영문 변환 (음성적 근사)
+      const charCode = char.charCodeAt(0) - 44032;
+      const jong = charCode % 28;
+      const jung = (charCode - jong) / 28 % 21;
+      const cho = ((charCode - jong) / 28 - jung) / 21;
+      
+      const choMap = ['g','kk','n','d','tt','r','m','b','pp','s','ss','','j','jj','ch','k','t','p','h'];
+      const jungMap = ['a','ae','ya','yae','eo','e','yeo','ye','o','wa','wae','oe','yo','u','wo','we','wi','yu','eu','yi','i'];
+      const jongMap = ['','g','kk','gs','n','nj','nh','d','r','rg','rm','rb','rs','rt','rp','rh','m','b','bs','s','ss','ng','j','ch','k','t','p','h'];
+      
+      return (choMap[cho] || '') + (jungMap[jung] || '') + (jongMap[jong] || '');
+    });
+    
+    // 특수문자 제거 및 정규화
+    slug = slug
+      .replace(/[^a-z0-9\s-]/g, '') // 영문, 숫자, 공백, 하이픈만 남김
+      .replace(/\s+/g, '-') // 공백을 하이픈으로
+      .replace(/-+/g, '-') // 연속 하이픈 제거
+      .replace(/^-|-$/g, ''); // 시작/끝 하이픈 제거
+    
+    // 빈 slug나 너무 짧은 경우 기본값 사용
+    if (!slug || slug.length < 3) {
+      slug = 'romance-fantasy-' + Date.now().toString().slice(-6);
+    }
+    
+    return slug;
   }
 
   parseChapter(chapterText, novelSlug, chapterNumber, isCompletion = false) {
@@ -641,19 +765,28 @@ class FileManager {
       chapterNumber: chapter.chapterNumber 
     });
 
-    const frontmatter = {
-      title: chapter.title,
+    // undefined 값 체크 및 제거
+    const cleanFrontmatter = {};
+    const rawFrontmatter = {
+      title: chapter.title || `${chapter.chapterNumber}화`,
       novel: chapter.novel,
       chapterNumber: chapter.chapterNumber,
       publicationDate: new Date().toISOString().split('T')[0],
-      wordCount: chapter.wordCount,
+      wordCount: chapter.wordCount || 0,
       contentRating: '15+',
-      emotionalTone: this.detectEmotionalTone(chapter.content),
-      keyEvents: this.extractKeyEvents(chapter.content),
+      emotionalTone: this.detectEmotionalTone(chapter.content) || '달콤한',
+      keyEvents: this.extractKeyEvents(chapter.content) || ['스토리 진행'],
       characterDevelopment: '캐릭터 발전 사항'
     };
 
-    const content = matter.stringify(chapter.content, frontmatter);
+    // undefined 값 제거
+    for (const [key, value] of Object.entries(rawFrontmatter)) {
+      if (value !== undefined && value !== null) {
+        cleanFrontmatter[key] = value;
+      }
+    }
+
+    const content = matter.stringify(chapter.content || '', cleanFrontmatter);
     const filename = `${chapter.novel}-ch${chapter.chapterNumber}.md`;
     const filepath = join(CONFIG.CHAPTER_DIR, filename);
 
@@ -733,17 +866,19 @@ class FileManager {
     // 간단한 키워드 기반 이벤트 추출
     const events = [];
     
-    if (content.includes('만남') || content.includes('첫')) {
-      events.push('첫 만남');
-    }
-    if (content.includes('갈등') || content.includes('오해')) {
-      events.push('갈등 발생');
-    }
-    if (content.includes('고백') || content.includes('사랑')) {
-      events.push('감정 표현');
-    }
-    if (content.includes('위기') || content.includes('위험')) {
-      events.push('위기 상황');
+    if (content && typeof content === 'string') {
+      if (content.includes('만남') || content.includes('첫')) {
+        events.push('첫 만남');
+      }
+      if (content.includes('갈등') || content.includes('오해')) {
+        events.push('갈등 발생');
+      }
+      if (content.includes('고백') || content.includes('사랑')) {
+        events.push('감정 표현');
+      }
+      if (content.includes('위기') || content.includes('위험')) {
+        events.push('위기 상황');
+      }
     }
 
     return events.length > 0 ? events : ['스토리 진행'];

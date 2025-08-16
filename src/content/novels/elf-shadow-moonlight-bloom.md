@@ -13,7 +13,7 @@ tropes:
   - 복수와구원
   - 신분차이
 publishedDate: '2025-08-16'
-totalChapters: 1
+totalChapters: 2
 rating: 0
 ---
 
