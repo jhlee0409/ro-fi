@@ -121,7 +121,7 @@
   }
   
   .novel-dialogue::before {
-    content: '"';
+    content: "\201C";
     @apply absolute -left-2 top-3 text-4xl text-rose-400 font-serif opacity-30;
   }
   
@@ -131,13 +131,13 @@
   }
   
   .novel-monologue::before {
-    content: ''';
+    content: "\2018";
     @apply absolute -left-2 top-3 text-4xl text-ink-400 font-serif opacity-30;
   }
   
   /* Action and Scene Descriptions */
   .novel-action {
-    @apply text-stone-600 italic text-sm px-5 py-4 my-5 bg-gradient-to-r from-amber-50 to-transparent border-l-3 border-amber-400 rounded-r-xl opacity-90 transition-opacity hover:opacity-100;
+    @apply text-stone-600 italic text-sm px-5 py-4 my-5 bg-gradient-to-r from-amber-50 to-transparent border-l-4 border-amber-400 rounded-r-xl opacity-90 transition-opacity hover:opacity-100;
   }
   
   /* Speaker Labels */
@@ -161,7 +161,7 @@
   }
   
   .novel-scene-break::after {
-    content: '⋆ ⋆ ⋆';
+    content: "⋆ ⋆ ⋆";
     @apply text-stone-400 text-xl tracking-widest;
   }
   
