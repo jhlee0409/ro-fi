@@ -12,7 +12,7 @@ tropes:
   - 정략결혼
   - 환생
 publishedDate: '2025-08-15'
-totalChapters: 1
+totalChapters: 2
 rating: 0
 ---
 
