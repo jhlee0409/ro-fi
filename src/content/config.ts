@@ -15,7 +15,7 @@ const novelsCollection = defineCollection({
   type: 'content',
   schema: z.object({
     title: z.string().min(5, "제목은 최소 5자 이상이어야 합니다"),
-    slug: z.string().min(3, "slug는 최소 3자 이상이어야 합니다").regex(/^[a-z0-9-]+$/, "slug는 영문 소문자, 숫자, 하이픈만 사용 가능합니다"),
+    slug: z.string().min(3, "slug는 최소 3자 이상이어야 합니다").optional(),
     author: z.string().default('Gemini AI'),
     coverImage: z.string().optional(),
     summary: z.string().min(50, "줄거리는 최소 50자 이상이어야 합니다").refine(val => !val.includes("자동 생성"), "줄거리에 '자동 생성' 문구가 포함될 수 없습니다"),
