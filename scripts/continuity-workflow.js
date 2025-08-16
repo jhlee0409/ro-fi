@@ -37,7 +37,7 @@ class ContinuityWorkflowEngine {
     
     this.genAI = new GoogleGenerativeAI(CONFIG.GEMINI_API_KEY);
     this.model = this.genAI.getGenerativeModel({ 
-      model: 'gemini-1.5-pro',
+      model: 'gemini-2.5-pro',
       generationConfig: {
         temperature: 0.75,
         maxOutputTokens: 4000,
@@ -364,13 +364,60 @@ ${targetChapter}화를 연속성을 유지하며 작성해주세요.
       const result = await this.model.generateContent(prompt);
       const responseText = result.response.text();
 
-      // JSON 파싱
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      // JSON 파싱 (더 강력한 추출)
+      let jsonMatch = responseText.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
-        throw new Error('생성된 응답에서 JSON을 찾을 수 없습니다.');
+        // 대안적 JSON 추출 시도
+        const lines = responseText.split('\n');
+        const jsonLines = [];
+        let inJson = false;
+        
+        for (const line of lines) {
+          if (line.trim().startsWith('{')) {
+            inJson = true;
+          }
+          if (inJson) {
+            jsonLines.push(line);
+          }
+          if (line.trim().endsWith('}') && inJson) {
+            break;
+          }
+        }
+        
+        if (jsonLines.length === 0) {
+          throw new Error('생성된 응답에서 JSON을 찾을 수 없습니다.');
+        }
+        
+        jsonMatch = [jsonLines.join('\n')];
       }
 
-      const generatedData = JSON.parse(jsonMatch[0]);
+      let generatedData;
+      try {
+        generatedData = JSON.parse(jsonMatch[0]);
+      } catch (parseError) {
+        // JSON 클리닝 시도
+        let cleanJson = jsonMatch[0]
+          .replace(/```json/g, '')
+          .replace(/```/g, '')
+          .replace(/^\s*[\w\s]*\{/, '{')
+          .replace(/\}[\w\s]*$/, '}')
+          .replace(/[\x00-\x1F\x7F]/g, '') // 제어 문자 제거
+          .replace(/\n/g, '\\n') // 개행 문자 이스케이프
+          .replace(/\r/g, '\\r') // 캐리지 리턴 이스케이프
+          .replace(/\t/g, '\\t') // 탭 문자 이스케이프
+          .trim();
+        
+        try {
+          generatedData = JSON.parse(cleanJson);
+        } catch (secondError) {
+          this.log.error('JSON 파싱 실패', { 
+            original: parseError.message, 
+            cleaned: secondError.message,
+            content: cleanJson.substring(0, 200) + '...'
+          });
+          throw new Error(`JSON 파싱 실패: ${secondError.message}`);
+        }
+      }
 
       // 연속성 검증
       await this.validateContinuity(continuityData, generatedData, targetChapter);

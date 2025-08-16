@@ -24,6 +24,13 @@ import matter from 'gray-matter';
 import { execSync } from 'child_process';
 import dotenv from 'dotenv';
 
+// GENESIS AI 품질 엔진 통합
+import { QualityAssuranceGateway } from '../src/lib/quality-engines/quality-assurance-gateway.js';
+import { IntelligentDecisionEngine } from '../src/lib/intelligent-decision-engine.js';
+import { PerformanceOptimizer } from '../src/lib/performance-optimizer.js';
+import { IntelligentErrorRecovery } from '../src/lib/intelligent-error-recovery.js';
+import { WorldClassEnhancementEngine } from '../src/lib/world-class-enhancement-engine.js';
+
 // 연속성 관리 시스템 통합 (선택적)
 let continuityIntegration = null;
 try {
@@ -40,10 +47,41 @@ const PROJECT_ROOT = join(__dirname, '..');
 // 환경변수 로드 (GitHub Actions와 로컬 환경 모두 지원)
 dotenv.config({ path: join(PROJECT_ROOT, '.env.local') });
 
+// 🌟 GENESIS AI 세계급 품질 표준 설정 (2025 UPDATE)
+const WORLD_CLASS_STANDARDS = {
+  overall: {
+    minimumScore: 9.0,
+    targetScore: 9.7,
+    excellenceThreshold: 9.3,
+    worldClassThreshold: 9.5,
+    masterworkThreshold: 9.8
+  },
+  plot: {
+    progressionRate: 0.8,
+    noveltyScore: 0.7,
+    engagementLevel: 0.85
+  },
+  character: {
+    agencyLevel: 0.8,
+    depthScore: 0.85,
+    growthRate: 0.7
+  },
+  prose: {
+    sophisticationLevel: 8.0,
+    diversityScore: 0.85,
+    literaryQuality: 8.5
+  },
+  romance: {
+    chemistryScore: 8.0,
+    progressionRate: 0.75,
+    emotionalDepth: 0.8
+  }
+};
+
 // 설정
 const CONFIG = {
   API_KEY: process.env.GEMINI_API_KEY,
-  MODEL: 'gemini-1.5-pro',
+  MODEL: 'gemini-2.5-pro',
   MAX_TOKENS: 8000,
   TEMPERATURE: 0.8,
   NOVEL_DIR: join(PROJECT_ROOT, 'src/content/novels'),
@@ -53,7 +91,23 @@ const CONFIG = {
   MAX_CHAPTER_WORDS: 6000,
   COMPLETION_CHAPTER_THRESHOLD: 50,
   MAX_ACTIVE_NOVELS: 2,
-  UPDATE_THRESHOLD_DAYS: 3
+  UPDATE_THRESHOLD_DAYS: 3,
+  // GENESIS AI 세계급 설정 (타협 불가)
+  QUALITY_ASSURANCE: {
+    maxAttempts: 5,
+    qualityThreshold: 9.0,
+    worldClassThreshold: 9.5,
+    adaptiveImprovement: true,
+    realTimeValidation: true,
+    strictEnforcement: true,
+    noCompromiseMode: true
+  },
+  PERFORMANCE: {
+    parallelProcessing: true,
+    intelligentCaching: true,
+    adaptiveResourceManagement: true,
+    realTimeOptimization: true
+  }
 };
 
 // 로맨스 판타지 트로프와 장르 정의
@@ -224,52 +278,337 @@ class NovelGenerator {
         maxOutputTokens: CONFIG.MAX_TOKENS,
       }
     });
+    
+    // 🚀 GENESIS AI 세계급 시스템 초기화
+    this.worldClassEngine = new WorldClassEnhancementEngine(logger);
+    this.qualityGateway = new QualityAssuranceGateway(logger);
+    this.decisionEngine = new IntelligentDecisionEngine(logger);
+    this.performanceOptimizer = new PerformanceOptimizer(logger);
+    this.errorRecovery = new IntelligentErrorRecovery(logger);
+    
+    this.qualityMode = true; // 품질 검증 활성화
+    this.worldClassMode = true; // 세계급 모드 활성화
+    this.generationStats = {
+      totalGenerations: 0,
+      qualityImprovements: 0,
+      averageScore: 0,
+      successRate: 0
+    };
+    
+    // 지능형 프롬프트 캐싱
+    this.promptCache = new Map();
+    this.contextAnalysisCache = new Map();
   }
 
-  async generateContent(prompt, creativity = 'high') {
-    const temperatureMap = {
-      low: 0.4,
-      medium: 0.7,
-      high: 0.9
-    };
-
+  /**
+   * 🌟 GENESIS AI 세계급 컨텐츠 생성 엔진
+   * - 다단계 품질 보장 워크플로우
+   * - 지능형 프롬프트 시스템
+   * - 실시간 성능 최적화
+   * - 자동 에러 복구
+   */
+  async generateContent(prompt, creativity = 'high', storyContext = {}) {
+    const operationId = `gen_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const startTime = Date.now();
+    
     try {
-      await this.logger.info('Gemini API 호출 시작', { creativity, model: CONFIG.MODEL });
-
-      // Gemini용 프롬프트 최적화
-      const optimizedPrompt = `당신은 세계 최고의 로맨스 판타지 작가입니다. 한국어로 자연스럽고 감동적인 소설을 작성해주세요.
-
-${prompt}
-
-중요: 
-- 모든 응답은 한국어로 작성
-- 감정적 깊이와 몰입감 있는 문체 사용
-- 로맨스 판타지 장르의 특징을 살린 창의적 표현
-- 독자가 다음 내용이 궁금해지는 스토리텔링`;
-
-      // Gemini API 호출
-      const result = await this.model.generateContent({
-        contents: [{ role: 'user', parts: [{ text: optimizedPrompt }] }],
-        generationConfig: {
-          temperature: temperatureMap[creativity] || 0.7,
-          maxOutputTokens: CONFIG.MAX_TOKENS,
-        }
+      await this.logger.info('🚀 GENESIS AI 세계급 생성 시작', { 
+        operationId, 
+        creativity, 
+        contextType: storyContext.novelType,
+        worldClassMode: this.worldClassMode
       });
 
-      const response = await result.response;
-      const content = response.text();
+      // Step 1: 지능형 컨텍스트 분석
+      const contextAnalysis = await this.analyzeStoryContext(storyContext);
       
-      await this.logger.success('Gemini API 호출 성공', { 
-        candidateCount: response.candidates?.length || 1,
-        promptFeedback: response.promptFeedback 
+      // Step 2: GENESIS AI 다단계 프롬프트 생성
+      const genesisPrompt = await this.generateGenesisPrompt({
+        basePrompt: prompt,
+        storyContext: contextAnalysis,
+        qualityRequirements: WORLD_CLASS_STANDARDS,
+        creativity
       });
-      
-      return content;
+
+      // Step 3: 품질 보장 생성 워크플로우
+      const generationResult = await this.generateWithQualityAssurance({
+        prompt: genesisPrompt,
+        creativity,
+        storyContext: contextAnalysis,
+        operationId
+      });
+
+      // Step 4: 실시간 성능 메트릭 업데이트
+      await this.updateGenerationStats(generationResult, startTime);
+
+      await this.logger.success('✨ GENESIS AI 세계급 생성 완료', {
+        operationId,
+        qualityScore: generationResult.qualityScore,
+        duration: Date.now() - startTime,
+        improvementCycles: generationResult.improvementCycles
+      });
+
+      return generationResult.content;
 
     } catch (error) {
-      await this.logger.error('Gemini API 호출 실패', { error: error.message });
-      throw new Error(`Gemini API 오류: ${error.message}`);
+      // 지능형 에러 복구
+      return await this.errorRecovery.handleGenerationFailure({
+        error,
+        prompt,
+        creativity,
+        storyContext,
+        operationId,
+        logger: this.logger
+      });
     }
+  }
+
+  /**
+   * 🧠 지능형 스토리 컨텍스트 분석
+   */
+  async analyzeStoryContext(storyContext) {
+    const cacheKey = JSON.stringify(storyContext);
+    
+    if (this.contextAnalysisCache.has(cacheKey)) {
+      return this.contextAnalysisCache.get(cacheKey);
+    }
+
+    const analysis = {
+      novelType: storyContext.novelType || 'unknown',
+      complexity: this.calculateComplexity(storyContext),
+      qualityRequirements: this.deriveQualityRequirements(storyContext),
+      narrativeStage: this.identifyNarrativeStage(storyContext),
+      characterProfiles: this.analyzeCharacterProfiles(storyContext),
+      plotProgression: this.analyzePlotProgression(storyContext)
+    };
+
+    this.contextAnalysisCache.set(cacheKey, analysis);
+    return analysis;
+  }
+
+  /**
+   * 🎯 GENESIS AI 다단계 프롬프트 생성 시스템
+   */
+  async generateGenesisPrompt({ basePrompt, storyContext, qualityRequirements, creativity }) {
+    const promptKey = `${basePrompt.substring(0, 100)}_${creativity}_${JSON.stringify(storyContext)}`;
+    
+    if (this.promptCache.has(promptKey)) {
+      return this.promptCache.get(promptKey);
+    }
+
+    const enhancedPrompt = `🌟 GENESIS AI 세계급 로맨스 판타지 창작 시스템 v3.0
+
+당신은 GENESIS AI로 강화된 세계 최고 수준의 로맨스 판타지 작가입니다.
+글로벌 베스트셀러 작가들의 창작 기법과 AI의 무한한 창의력이 결합된 완벽한 시스템입니다.
+
+${basePrompt}
+
+## 🎯 GENESIS AI 세계급 품질 기준 (절대 기준)
+
+### 📊 품질 점수 목표
+- 전체 품질: ${qualityRequirements.overall.targetScore}/10 이상
+- 플롯 진행: ${qualityRequirements.plot.progressionRate * 100}% 이상
+- 캐릭터 능동성: ${qualityRequirements.character.agencyLevel * 100}% 이상
+- 문체 수준: ${qualityRequirements.prose.sophisticationLevel}/10 이상
+- 로맨스 케미스트리: ${qualityRequirements.romance.chemistryScore}/10 이상
+
+### 📖 플롯 진전 혁신 요구사항 (분석.md 기반 개선)
+- **스토리 진행률 ${qualityRequirements.plot.progressionRate * 100}% 이상**: 새로운 사건, 갈등, 발견이 반드시 포함 (5화 0% 진전 금지)
+- **창의성 지수 ${qualityRequirements.plot.noveltyScore * 100}% 이상**: "숲→위기→탈출" 패턴 완전 금지, 독창적 아이디어 필수
+- **독자 몰입도 ${qualityRequirements.plot.engagementLevel * 100}% 이상**: 1화 이탈률 30% 이하 목표
+- **갈등 에스컬레이션**: "예언이 뭔지도 모름" 상태 금지, 핵심 갈등 조기 도입
+- **개연성 확보**: "18년 차별받은 리아가 처음 만난 남자 무조건 신뢰" 같은 설정 오류 완전 제거
+
+### 👥 캐릭터 발전 마스터클래스 (종이인형 탈출)
+- **능동성 ${qualityRequirements.character.agencyLevel * 100}% 이상**: "어디로 가죠? 뭐죠? 에시온!" 수동 대사 완전 금지
+- **캐릭터 깊이 ${qualityRequirements.character.depthScore * 100}% 이상**: "주체성 제로" → 복합적 인격체 변환
+- **말투 개성화**: "차가운" 26회 반복 금지, 캐릭터별 고유 언어 패턴
+- **성장 아크 ${qualityRequirements.character.growthRate * 100}% 이상**: "스스로 결정하는 행동 단 한 번도 없음" 해결
+- **배경과 동기**: "동기/배경/감정선 불명" 상태 완전 해소
+
+### ✍️ 문체 예술성 최고 수준 (중학생 일기장 탈출)
+- **어휘 수준 ${qualityRequirements.prose.sophisticationLevel}/10 이상**: "갑자기 11회, 차가운 26회" 반복 완전 금지
+- **표현 다양성 ${qualityRequirements.prose.diversityScore * 100}% 이상**: "푸른 기가 도는 은발 12회" 등 과도 반복 해결
+- **5감 몰입 묘사**: "리아는 불안했다. 에시온은 차가운 눈빛으로 바라보았다" 수준 탈피
+- **은유와 상징**: 단순 서술 → 자연, 보석, 음악 등 창의적 비유 활용
+- **리듬감**: 단조로운 문장 패턴 → 다양한 길이와 구조
+- **문학적 품격 ${qualityRequirements.prose.literaryQuality}/10 이상**: 2024년 연재 불가 수준 → 순문학 수준
+
+### 💕 로맨스 케미스트리 마스터피스 (절대 제로 탈출)
+- **케미스트리 ${qualityRequirements.romance.chemistryScore}/10 이상**: "케미스트리 절대 제로" → 심장 뛰는 설렘
+- **감정 진행률 ${qualityRequirements.romance.progressionRate * 100}% 이상**: "감정 발전 당위성 없음" 해결
+- **감정 깊이 ${qualityRequirements.romance.emotionalDepth * 100}% 이상**: "스킨십만 있고 정서적 교감 부재" 해결
+- **로맨틱 텐션**: "손 잡음 → 팔 잡음 → 손 잡고 달림" 단순 패턴 탈피
+- **심리적 교감**: 피상적 접촉 → 깊은 마음의 연결
+
+### 🚀 창작 철학 (절대 원칙)
+1. **독자 중심**: 모든 문장이 독자의 감정을 자극해야 함
+2. **품질 우선**: 분량보다 완성도, 속도보다 예술성
+3. **혁신 추구**: 기존 틀을 깨는 창의적 접근
+4. **감정 몰입**: 독자가 캐릭터와 하나가 되는 경험
+5. **문학적 가치**: 엔터테인먼트를 넘어선 예술 작품
+
+### 📚 스토리텔링 마스터 기법
+- **몰입형 오프닝**: 첫 문장부터 독자를 사로잡는 강력한 임팩트
+- **레이어드 내러티브**: 겉으로 보이는 이야기와 숨겨진 의미의 이중 구조
+- **감정적 클라이맥스**: 독자가 눈물 흘릴 만한 감동의 순간
+- **시각적 스토리텔링**: 영화처럼 생생한 장면 묘사
+- **여운 있는 마무리**: 독자가 계속 생각하게 되는 마무리
+
+## 🎨 2025년 트렌드 반영 (구시대 클리셰 완전 탈피)
+- **주체적 여주인공**: "수동적 피해자" → 독립적이고 자아가 확실한 캐릭터
+- **건강한 로맨스**: "2010년대 초반 조아라 수준" → 상호 존중과 평등한 관계
+- **다양성 수용**: 고정관념 탈피, 다양한 배경과 가치관 인정
+- **현대적 감수성**: "구시대적 클리셰" → 젊은 독자들의 정서 반영
+- **글로벌 어필**: 로컬 한정 → 세계적으로 통하는 보편성
+
+## 📈 품질 검증 체크리스트
+□ 플롯 진행률 ${qualityRequirements.plot.progressionRate * 100}% 이상 달성
+□ 캐릭터 능동성 ${qualityRequirements.character.agencyLevel * 100}% 이상 구현
+□ 문체 수준 ${qualityRequirements.prose.sophisticationLevel}/10 이상 실현
+□ 로맨스 점수 ${qualityRequirements.romance.chemistryScore}/10 이상 완성
+□ 독자 몰입도 극대화 구현
+□ 독창성과 예술성 동시 달성
+
+지금부터 GENESIS AI의 모든 잠재력을 발휘하여 세계 문학사에 남을 걸작을 창조해주세요! 🌟✨
+
+창의성 레벨: ${creativity.toUpperCase()}
+스토리 컨텍스트: ${JSON.stringify(storyContext, null, 2)}`;
+
+    this.promptCache.set(promptKey, enhancedPrompt);
+    return enhancedPrompt;
+  }
+
+  /**
+   * 🛡️ 품질 보장 생성 워크플로우
+   */
+  async generateWithQualityAssurance({ prompt, creativity, storyContext, operationId }) {
+    const temperatureMap = { low: 0.4, medium: 0.7, high: 0.9 };
+    let attempt = 1;
+    let bestResult = null;
+    let bestScore = 0;
+
+    while (attempt <= CONFIG.QUALITY_ASSURANCE.maxAttempts) {
+      try {
+        await this.logger.info(`🔄 생성 시도 ${attempt}/${CONFIG.QUALITY_ASSURANCE.maxAttempts}`, { operationId });
+
+        // Gemini API 호출
+        const result = await this.model.generateContent({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: temperatureMap[creativity] || 0.7,
+            maxOutputTokens: CONFIG.MAX_TOKENS,
+          }
+        });
+
+        const response = await result.response;
+        let content = response.text();
+
+        // 🌟 STEP 1: 세계급 컨텐츠 변환 (분석.md/개선.md 기반)
+        if (this.worldClassMode) {
+          await this.logger.info('세계급 컨텐츠 변환 적용', { operationId });
+          const transformationResult = await this.worldClassEngine.transformToWorldClass(
+            content,
+            storyContext
+          );
+          
+          content = transformationResult.enhancedContent;
+          
+          await this.logger.info('세계급 변환 완료', {
+            operationId,
+            improvements: transformationResult.transformationReport.improvements,
+            worldClassStatus: transformationResult.finalQuality.worldClassStatus
+          });
+        }
+
+        // 🛡️ STEP 2: 품질 검증 및 추가 개선
+        if (this.qualityMode) {
+          const qualityResult = await this.qualityGateway.validateQualityThreshold(
+            content,
+            storyContext
+          );
+
+          const finalScore = qualityResult.qualityReport.overallScore;
+          
+          if (finalScore >= CONFIG.QUALITY_ASSURANCE.qualityThreshold) {
+            // 품질 기준 달성
+            return {
+              content: qualityResult.improvedContent || content,
+              qualityScore: finalScore,
+              qualityReport: qualityResult.qualityReport,
+              improvementCycles: qualityResult.attemptCount,
+              attemptNumber: attempt
+            };
+          } else {
+            // 세계급 기준 미달 - 재시도 필요
+            await this.logger.warn(`품질 기준 미달 (${finalScore}/10, 최소 ${CONFIG.QUALITY_ASSURANCE.qualityThreshold} 필요)`, {
+              operationId,
+              attempt,
+              score: finalScore,
+              threshold: CONFIG.QUALITY_ASSURANCE.qualityThreshold
+            });
+            
+            if (finalScore > bestScore) {
+              bestResult = {
+                content: qualityResult.improvedContent || content,
+                qualityScore: finalScore,
+                qualityReport: qualityResult.qualityReport,
+                improvementCycles: qualityResult.attemptCount,
+                attemptNumber: attempt
+              };
+              bestScore = finalScore;
+            }
+          }
+        } else {
+          // 품질 검증 비활성화 시 바로 반환
+          return {
+            content,
+            qualityScore: 8.0, // 기본 점수
+            improvementCycles: 0,
+            attemptNumber: attempt
+          };
+        }
+
+        attempt++;
+      } catch (error) {
+        await this.logger.warn(`생성 시도 ${attempt} 실패`, { operationId, error: error.message });
+        
+        if (attempt === CONFIG.QUALITY_ASSURANCE.maxAttempts) {
+          // 최종 시도도 실패한 경우
+          if (bestResult) {
+            await this.logger.warn('최고 품질 결과 반환', { 
+              operationId, 
+              score: bestScore,
+              threshold: CONFIG.QUALITY_ASSURANCE.qualityThreshold
+            });
+            return bestResult;
+          }
+          throw error;
+        }
+        attempt++;
+      }
+    }
+
+    // 세계급 기준 엄격 적용 - 타협 불가
+    if (bestResult && bestResult.qualityScore >= CONFIG.QUALITY_ASSURANCE.qualityThreshold) {
+      await this.logger.success('지연된 품질 기준 달성', { 
+        operationId, 
+        score: bestScore,
+        threshold: CONFIG.QUALITY_ASSURANCE.qualityThreshold
+      });
+      return bestResult;
+    }
+
+    // 품질 기준 미달 시 절대 반환하지 않음
+    const errorMessage = `세계급 품질 기준 미달: 최고 점수 ${bestScore}/10 (최소 ${CONFIG.QUALITY_ASSURANCE.qualityThreshold} 필요). 독자 비판을 방지하기 위해 생성을 거부합니다.`;
+    await this.logger.error(errorMessage, {
+      operationId,
+      bestScore,
+      threshold: CONFIG.QUALITY_ASSURANCE.qualityThreshold,
+      qualityReport: bestResult?.qualityReport
+    });
+    
+    throw new QualityThresholdError(errorMessage, bestScore);
   }
 
   async createNewNovel(creativity = 'high') {
@@ -329,7 +668,8 @@ WORD_COUNT: [정확한 글자 수]
 지금부터 한국 웹소설 역사에 남을 대작의 1화를 창작해주세요! 🌟
 `;
 
-    const response = await this.generateContent(prompt, creativity);
+    const storyContext = { novelType: 'new', theme, tropes };
+    const response = await this.generateContent(prompt, creativity, storyContext);
     return this.parseNovelResponse(response);
   }
 
@@ -396,7 +736,14 @@ WORD_COUNT: [정확한 글자 수]
 이제 독자들이 열광할 ${nextChapterNumber}화를 집필해주세요! ✨
 `;
 
-    const response = await this.generateContent(prompt, creativity);
+    const storyContext = { 
+      novelType: 'continue', 
+      novelSlug, 
+      nextChapterNumber,
+      previousChapters: lastChapters,
+      totalChapters: existingChapters.filter(ch => ch.novel === novelSlug).length
+    };
+    const response = await this.generateContent(prompt, creativity, storyContext);
     return this.parseChapterResponse(response, novelSlug, nextChapterNumber);
   }
 
@@ -475,7 +822,15 @@ IS_FINAL: [이것이 최종화면 true, 아니면 false]
 이제 독자들의 가슴에 영원히 남을 최고의 완결편을 써주세요! 🎊
 `;
 
-    const response = await this.generateContent(prompt, creativity);
+    const storyContext = { 
+      novelType: 'complete', 
+      novelSlug, 
+      nextChapterNumber,
+      previousChapters: lastChapters,
+      totalChapters: novelChapters.length,
+      isCompletion: true
+    };
+    const response = await this.generateContent(prompt, creativity, storyContext);
     return this.parseChapterResponse(response, novelSlug, nextChapterNumber, true);
   }
 
@@ -965,7 +1320,10 @@ class AutomationEngine {
         await this.gitCommitAndPush(action, result);
       }
 
-      await this.logger.success('🎉 자동 연재 시스템 완료', result);
+      // GENESIS AI 품질 메트릭 로깅
+      await this.logQualityMetrics(result);
+
+      await this.logger.success('🎉 GENESIS AI 자동 연재 시스템 완료', result);
       return { success: true, action, result };
 
     } catch (error) {
@@ -1178,6 +1536,42 @@ Co-Authored-By: Gemini AI <noreply@google.com>`;
     } catch (error) {
       await this.logger.error('Git 작업 실패', { error: error.message });
       // Git 실패는 전체 프로세스를 중단하지 않음
+    }
+  }
+
+  /**
+   * 📊 GENESIS AI 품질 메트릭 로깅
+   */
+  async logQualityMetrics(result) {
+    try {
+      const metricsLog = {
+        timestamp: new Date().toISOString(),
+        actionType: result.type,
+        
+        // 품질 관련 정보 추출
+        qualityInfo: this.generator.qualityGateway ? 
+          this.generator.qualityGateway.exportQualityMetrics() : null,
+        
+        // 생성 결과 메타데이터
+        resultMetadata: {
+          filesCreated: result.filesCreated?.length || 0,
+          novelSlug: result.novelSlug || result.novel?.slug,
+          chapterNumber: result.chapter?.chapterNumber,
+          wordCount: result.chapter?.wordCount || result.novel?.totalChapters
+        }
+      };
+
+      // 품질 메트릭 로그 파일에 저장
+      const metricsFile = join(CONFIG.LOGS_DIR, `quality-metrics-${new Date().toISOString().split('T')[0]}.log`);
+      await fs.appendFile(metricsFile, JSON.stringify(metricsLog) + '\n');
+      
+      await this.logger.info('GENESIS AI 품질 메트릭 로깅 완료', {
+        qualityScore: metricsLog.qualityInfo?.trend?.averageScore,
+        trend: metricsLog.qualityInfo?.trend?.trend
+      });
+
+    } catch (error) {
+      await this.logger.warn('품질 메트릭 로깅 실패', { error: error.message });
     }
   }
 }

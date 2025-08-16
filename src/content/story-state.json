@@ -1,0 +1,114 @@
+{
+  "novel": "time-guardian-fate-thread",
+  "title": "시간의 수호자와 운명의 실",
+  "lastUpdated": "2025-08-16",
+  "currentChapter": 4,
+  
+  "currentSituation": {
+    "time": "4화 다음 날 정오 예정",
+    "location": "병원 중환자실 → 시계탑 광장으로 이동 예정",
+    "activeScene": "레오나가 미스터리 전화 받고 시계탑으로 가기로 결심한 직후"
+  },
+  
+  "characterStates": {
+    "레오나": {
+      "condition": "정상",
+      "location": "병원 근처",
+      "emotion": "불안, 결심",
+      "currentGoal": "카엘을 구하기 위해 시계탑 광장으로 가기",
+      "능력상태": "정상 (시간 되돌리기 가능)"
+    },
+    "카엘": {
+      "condition": "혼수상태",
+      "location": "병원 중환자실",
+      "emotion": "의식 없음",
+      "currentGoal": "없음 (의식 잃음)",
+      "능력상태": "상실 (검은 그림자 공격으로 능력 잃고 혼수)"
+    }
+  },
+  
+  "activeConflicts": [
+    {
+      "type": "external",
+      "description": "검은 그림자가 카엘을 공격해 혼수상태로 만듦",
+      "status": "진행중",
+      "nextAction": "미스터리 인물과 시계탑에서 만남"
+    },
+    {
+      "type": "internal", 
+      "description": "레오나의 능력으로도 카엘을 구할 수 없다는 무력감",
+      "status": "진행중"
+    },
+    {
+      "type": "romantic",
+      "description": "카엘에 대한 사랑과 그를 위험에 빠뜨린 죄책감",
+      "status": "진행중"
+    }
+  ],
+  
+  "pendingEvents": [
+    {
+      "event": "시계탑 광장에서 미스터리 인물과 만남",
+      "scheduledTime": "다음 날 정오",
+      "importance": "critical",
+      "description": "미스터리 전화로 약속된 만남, 카엘을 구할 수 있다고 함"
+    }
+  ],
+  
+  "cliffhangers": [
+    {
+      "description": "미스터리 전화 - 카엘을 구하려면 정오에 시계탑으로 오라",
+      "intensity": "high",
+      "mustResolveInNextChapter": true
+    },
+    {
+      "description": "검은 그림자의 정체와 목적",
+      "intensity": "medium", 
+      "mustResolveInNextChapter": false
+    }
+  ],
+  
+  "unsolvedMysteries": [
+    {
+      "mystery": "검은 그림자의 정체",
+      "clues": ["시간 조작에 영향받지 않음", "카엘을 공격함", "레오나 능력에 관심"]
+    },
+    {
+      "mystery": "미스터리 전화 주인의 정체",
+      "clues": ["카엘을 구할 수 있다고 함", "레오나 능력에 대해 알고 있음"]
+    },
+    {
+      "mystery": "시간 정지 현상의 원인",
+      "clues": ["레오나만 움직일 수 있음", "점점 길어지고 있음"]
+    }
+  ],
+  
+  "worldState": {
+    "timeAnomalies": "지속적 시간 정지 현상",
+    "publicAwareness": "일반인들은 인지하지 못함",
+    "abilityUsers": "레오나, 카엘(능력상실), 검은그림자(?)"
+  },
+  
+  "plotProgress": {
+    "setup": "완료 (1-2화)",
+    "conflict": "진행중 (3-4화)",
+    "climax": "다음화예정 (5화)",
+    "resolution": "미정 (6화이후)"
+  },
+  
+  "nextChapterRequirements": {
+    "mustStartWith": "레오나가 시계탑 광장에 도착하는 장면",
+    "mustInclude": [
+      "미스터리 인물과의 만남",
+      "카엘을 구하는 방법 제시",
+      "검은 그림자 정체 관련 단서"
+    ],
+    "mustNotForget": [
+      "카엘은 여전히 혼수상태",
+      "4화 미스터리 전화 약속",
+      "레오나의 불안과 결심"
+    ],
+    "targetLength": "2500자 이상",
+    "tonalDirection": "긴장감 있는 드라마, 감정적 절정"
+  }
+}
