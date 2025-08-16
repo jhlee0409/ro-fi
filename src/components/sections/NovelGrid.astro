@@ -1,6 +1,6 @@
 ---
 /**
- * 연재 소설 그리드 섹션
+ * 연재 소설 그리드 섹션 - 2025 Modern Design
  */
 import type { NovelStats } from '../../lib/data-services';
 
@@ -11,108 +11,141 @@ interface Props {
 const { novels } = Astro.props;
 ---
 
-<section class="py-20 bg-gradient-to-b from-gray-50 to-white">
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-    <!-- 섹션 헤더 -->
+<section class="py-20 bg-white">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Section Header -->
     <div class="text-center mb-16">
-      <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-        현재 연재 중인 소설
+      <div class="inline-flex items-center justify-center px-4 py-2 bg-rose-50 border border-rose-200 rounded-full text-sm font-medium text-rose-700 mb-4">
+        <span class="mr-2">📚</span>
+        현재 연재 중
+      </div>
+      <h2 class="text-4xl sm:text-5xl font-display font-bold text-ink-900 mb-4">
+        인기 로맨스 판타지
       </h2>
-      <p class="text-xl text-gray-600 max-w-2xl mx-auto">
-        AI가 완벽한 연속성으로 창작하는 로맨스 판타지 세계를 만나보세요
+      <p class="text-xl text-stone-600 max-w-2xl mx-auto font-display">
+        AI가 매일 새로운 챕터로 이어가는 몰입감 넘치는 이야기들
       </p>
     </div>
 
     {novels.length === 0 ? (
-      <!-- 빈 상태 -->
+      <!-- Empty State -->
       <div class="text-center py-16">
-        <div class="text-6xl mb-6">📖</div>
-        <h3 class="text-2xl font-semibold text-gray-900 mb-4">곧 새로운 소설이 시작됩니다</h3>
-        <p class="text-gray-600">AI가 새로운 로맨스 판타지 세계를 준비 중입니다</p>
+        <div class="inline-flex items-center justify-center w-20 h-20 bg-stone-100 rounded-full mb-6">
+          <span class="text-4xl">📖</span>
+        </div>
+        <h3 class="text-2xl font-display font-semibold text-ink-900 mb-4">곧 새로운 소설이 시작됩니다</h3>
+        <p class="text-stone-600">AI가 새로운 로맨스 판타지 세계를 준비 중입니다</p>
       </div>
     ) : (
-      <!-- 소설 그리드 -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <!-- Novel Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {novels.map((novel) => (
-          <div class="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden transform hover:-translate-y-2">
-            <!-- 소설 커버 -->
-            <div class="relative h-64 bg-gradient-to-br from-purple-400 via-pink-500 to-red-400 overflow-hidden">
+          <article class="group relative bg-white border border-stone-200 rounded-3xl overflow-hidden hover:shadow-modern transition-all duration-500">
+            <!-- Novel Cover -->
+            <div class="relative aspect-[3/4] bg-gradient-to-br from-rose-100 to-ink-100 overflow-hidden">
               {novel.data.coverImage ? (
                 <img
                   src={novel.data.coverImage}
                   alt={novel.data.title}
-                  class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                  loading="lazy"
                 />
               ) : (
-                <div class="w-full h-full flex items-center justify-center text-white text-6xl font-bold group-hover:scale-110 transition-transform duration-500">
-                  {novel.data.title[0]}
+                <div class="w-full h-full flex items-center justify-center">
+                  <span class="text-6xl font-display font-bold bg-gradient-to-br from-rose-400 to-ink-600 bg-clip-text text-transparent">
+                    {novel.data.title[0]}
+                  </span>
                 </div>
               )}
-              <!-- 오버레이 -->
-              <div class="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-all duration-300"></div>
-
-              <!-- 상태 뱃지 -->
+              
+              <!-- Gradient Overlay -->
+              <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              
+              <!-- Status Badge -->
               <div class="absolute top-4 left-4">
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                <span class={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium backdrop-blur-sm ${
+                  novel.data.status === '연재 중' 
+                    ? 'bg-teal-500/90 text-white' 
+                    : novel.data.status === '완결'
+                    ? 'bg-ink-600/90 text-white'
+                    : 'bg-stone-500/90 text-white'
+                }`}>
                   {novel.data.status}
                 </span>
               </div>
 
-              <!-- 챕터 수 -->
+              <!-- Chapter Count -->
               <div class="absolute top-4 right-4">
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/90 text-gray-800">
+                <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-white/90 backdrop-blur-sm text-ink-900">
                   {novel.chaptersCount}화
                 </span>
               </div>
+
+              <!-- Quick Read Button (Hover) -->
+              <div class="absolute inset-x-4 bottom-4 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-2 group-hover:translate-y-0">
+                <a
+                  href={`/novels/${novel.slug}`}
+                  class="block w-full px-4 py-3 bg-white/95 backdrop-blur-sm rounded-xl text-center font-semibold text-ink-900 hover:bg-white transition-colors"
+                >
+                  바로 읽기 →
+                </a>
+              </div>
             </div>
 
-            <!-- 소설 정보 -->
+            <!-- Novel Info -->
             <div class="p-6 space-y-4">
               <div>
-                <h3 class="text-xl font-bold text-gray-900 group-hover:text-purple-600 transition-colors mb-2">
+                <h3 class="text-xl font-display font-bold text-ink-900 group-hover:text-rose-600 transition-colors mb-2">
                   <a href={`/novels/${novel.slug}`} class="block">
                     {novel.data.title}
                   </a>
                 </h3>
-                <p class="text-sm text-gray-500 mb-3">by {novel.data.author}</p>
-                <p class="text-gray-600 text-sm leading-relaxed line-clamp-3">
+                <p class="text-sm text-stone-500 mb-3 font-medium">{novel.data.author}</p>
+                <p class="text-stone-600 text-sm leading-relaxed line-clamp-2">
                   {novel.data.summary}
                 </p>
               </div>
 
-              <!-- 트렌드 태그 -->
+              <!-- Trope Tags -->
               <div class="flex flex-wrap gap-2">
                 {novel.data.tropes?.slice(0, 3).map((trope) => (
-                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                    #{trope}
+                  <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-rose-50 text-rose-700 border border-rose-100">
+                    {trope}
                   </span>
                 ))}
               </div>
 
-              <!-- 액션 버튼 -->
-              <div class="pt-4">
-                <a
-                  href={`/novels/${novel.slug}`}
-                  class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 transition-all duration-200 transform hover:scale-105"
-                >
-                  읽기 시작하기
-                </a>
+              <!-- Stats -->
+              <div class="flex items-center justify-between pt-3 border-t border-stone-100">
+                <div class="flex items-center space-x-4 text-xs text-stone-500">
+                  <span class="flex items-center">
+                    <span class="mr-1">⭐</span>
+                    {novel.data.rating || '9.0'}
+                  </span>
+                  <span class="flex items-center">
+                    <span class="mr-1">📅</span>
+                    {novel.lastUpdate?.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }) || '오늘'}
+                  </span>
+                </div>
+                <svg class="w-5 h-5 text-stone-400 group-hover:text-rose-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                </svg>
               </div>
             </div>
-          </div>
+          </article>
         ))}
       </div>
     )}
 
-    <!-- 더보기 버튼 -->
-    <div class="text-center mt-12">
+    <!-- View All Button -->
+    <div class="text-center mt-16">
       <a
         href="/novels"
-        class="inline-flex items-center px-6 py-3 border border-purple-600 rounded-lg text-purple-600 font-medium hover:bg-purple-600 hover:text-white transition-all duration-200"
+        class="inline-flex items-center px-8 py-4 bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-2xl text-ink-900 font-semibold transition-all duration-300 hover:shadow-soft group"
       >
         모든 소설 보기
-        <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+        <svg class="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
         </svg>
       </a>
     </div>
@@ -120,9 +153,9 @@ const { novels } = Astro.props;
 </section>
 
 <style>
-  .line-clamp-3 {
+  .line-clamp-2 {
     display: -webkit-box;
-    -webkit-line-clamp: 3;
+    -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }

@@ -1,3 +1,6 @@
+@import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;500;600;700;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -49,187 +52,229 @@
   }
 }
 
+/* 2025 Modern Base Styles */
 @layer base {
   * {
     @apply border-border;
   }
-  body {
-    @apply bg-background text-foreground;
-  }
-}
-
-/* 로맨스 판타지 테마 컬러 */
-@layer base {
-  :root {
-    --romance-pink: 322 100% 85%;
-    --romance-purple: 262 83% 58%;
-    --fantasy-blue: 217 91% 60%;
-    --fantasy-violet: 263 70% 50%;
-    --gold-accent: 45 93% 58%;
-    --rose-accent: 344 80% 67%;
-  }
-}
-
-/* Magic UI 호환성 */
-@layer utilities {
-  .shimmer {
-    background: linear-gradient(
-      110deg,
-      #000103 45%,
-      #1e2631 55%,
-      #000103 65%
-    );
-    background-size: 200% 100%;
-    animation: shimmer 2s linear infinite;
-  }
   
-  .text-shimmer {
-    background: linear-gradient(
-      110deg,
-      #e779c1 45%,
-      #221a3a 55%,
-      #e779c1 65%
-    );
-    background-size: 200% 100%;
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    animation: shimmer 2s linear infinite;
-  }
-}
-
-/* Framer Motion 애니메이션 최적화 */
-@layer base {
-  .will-change-transform {
-    will-change: transform;
-  }
-  
-  .will-change-auto {
-    will-change: auto;
-  }
-}
-
-/* 소설 포맷 전용 스타일 */
-@layer components {
-  /* 대화체 스타일 (> "내용") */
-  .novel-dialogue {
-    @apply text-emerald-700 dark:text-emerald-300 font-medium px-6 py-4 my-5 bg-emerald-50 dark:bg-emerald-900/20 border-l-4 border-emerald-500 rounded-r-lg shadow-sm;
-  }
-  
-  /* 독백체 스타일 (> _'내용'_) */
-  .novel-monologue {
-    @apply text-purple-700 dark:text-purple-300 italic font-medium px-6 py-4 my-5 bg-purple-50 dark:bg-purple-900/20 border-l-4 border-purple-500 rounded-r-lg shadow-sm;
-  }
-  
-  /* 액션/상황 변화 스타일 (> [내용]) */
-  .novel-action {
-    @apply text-amber-700 dark:text-amber-400 italic text-sm px-4 py-3 my-4 bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 rounded-r-md opacity-90;
-  }
-  
-  /* 화자 설명 스타일 */
-  .novel-speaker {
-    @apply text-gray-600 dark:text-gray-400 text-sm mt-2 mb-4 ml-4 italic;
-  }
-  
-  /* 강조 대화체 (감정이 격한 대사) */
-  .novel-dialogue-emphasis {
-    @apply text-red-600 dark:text-red-300 font-bold px-6 py-4 my-5 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded-r-lg shadow-md;
-  }
-  
-  /* 일반 서술 */
-  .novel-narrative {
-    @apply text-gray-900 dark:text-gray-100 leading-relaxed my-6 text-justify;
-  }
-  
-  /* 장면 전환 */
-  .novel-scene-break {
-    @apply my-12 border-0 text-center;
-  }
-  
-  /* 소설 콘텐츠 컨테이너 */
-  .novel-content {
-    @apply max-w-none space-y-4;
-  }
-  
-  /* 중요 키워드 강조 */
-  .novel-content strong {
-    @apply font-bold text-gray-900 dark:text-gray-100 bg-yellow-100 dark:bg-yellow-900/30 px-1 py-0.5 rounded;
-  }
-  
-  /* 이탤릭 텍스트 */
-  .novel-content em {
-    @apply italic text-purple-600 dark:text-purple-400 font-medium;
-  }
-  
-  /* 가독성 향상 */
-  .novel-content blockquote:hover {
-    @apply transform scale-[1.02] transition-transform duration-200;
-  }
-  
-  .novel-content p {
-    scroll-margin-top: 6rem;
-  }
-}
-
-/* 소설 읽기 경험 최적화 */
-@layer components {
-  .reading-content {
-    @apply text-lg leading-relaxed;
-    font-family: 'Noto Serif KR', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
-    line-height: 1.8;
-    letter-spacing: -0.02em;
-    word-spacing: 0.1em;
-  }
-  
-  /* 가독성 향상을 위한 단락 간격 */
-  .reading-content p {
-    @apply mb-6;
-  }
-  
-  /* 소설 전용 타이포그래피 */
-  .novel-typography {
-    font-feature-settings: "kern" 1, "liga" 1;
+  html {
+    font-feature-settings: "rlig" 1, "calt" 1, "kern" 1;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply bg-white text-ink-900 font-display;
+    font-feature-settings: "kern" 1, "liga" 1;
+  }
+  
+  /* Modern Typography Scale */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display font-bold tracking-tight;
+  }
+  
+  h1 {
+    @apply text-4xl sm:text-5xl lg:text-6xl;
+  }
+  
+  h2 {
+    @apply text-3xl sm:text-4xl;
+  }
+  
+  h3 {
+    @apply text-2xl sm:text-3xl;
+  }
+  
+  /* Selection Styling */
+  ::selection {
+    @apply bg-rose-200 text-ink-900;
+  }
+  
+  ::-moz-selection {
+    @apply bg-rose-200 text-ink-900;
   }
 }
 
-/* 로딩 애니메이션 */
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
+/* 2025 Reading Experience Components */
+@layer components {
+  /* Primary Reading Typography */
+  .reading-content {
+    @apply font-reading text-reading leading-loose text-ink-800;
+    font-feature-settings: "kern" 1, "liga" 1, "clig" 1;
+    text-rendering: optimizeLegibility;
+    hyphens: auto;
+    word-break: keep-all;
+    overflow-wrap: break-word;
   }
-  to {
-    transform: rotate(360deg);
+  
+  /* Enhanced Novel Content Styles */
+  .novel-content {
+    @apply max-w-none space-y-6;
+  }
+  
+  /* 2025 Modern Dialogue Styles */
+  .novel-dialogue {
+    @apply relative text-ink-800 font-medium px-6 py-5 my-6 bg-gradient-to-r from-rose-50 to-transparent border-l-4 border-rose-400 rounded-r-2xl shadow-soft transition-all duration-300 hover:shadow-modern;
+  }
+  
+  .novel-dialogue::before {
+    content: '"';
+    @apply absolute -left-2 top-3 text-4xl text-rose-400 font-serif opacity-30;
+  }
+  
+  /* Modern Monologue Styles */
+  .novel-monologue {
+    @apply relative text-ink-700 italic font-medium px-6 py-5 my-6 bg-gradient-to-r from-ink-50 to-transparent border-l-4 border-ink-400 rounded-r-2xl shadow-soft;
+  }
+  
+  .novel-monologue::before {
+    content: ''';
+    @apply absolute -left-2 top-3 text-4xl text-ink-400 font-serif opacity-30;
+  }
+  
+  /* Action and Scene Descriptions */
+  .novel-action {
+    @apply text-stone-600 italic text-sm px-5 py-4 my-5 bg-gradient-to-r from-amber-50 to-transparent border-l-3 border-amber-400 rounded-r-xl opacity-90 transition-opacity hover:opacity-100;
+  }
+  
+  /* Speaker Labels */
+  .novel-speaker {
+    @apply text-stone-500 text-sm mt-3 mb-4 ml-4 italic font-medium;
+  }
+  
+  /* Emphasized Dialogue */
+  .novel-dialogue-emphasis {
+    @apply relative text-ink-900 font-bold px-6 py-5 my-6 bg-gradient-to-r from-rose-100 to-transparent border-l-4 border-rose-600 rounded-r-2xl shadow-modern;
+  }
+  
+  /* Narrative Text */
+  .novel-narrative {
+    @apply text-ink-800 leading-relaxed my-6 text-justify;
+  }
+  
+  /* Scene Breaks */
+  .novel-scene-break {
+    @apply my-16 border-0 text-center;
+  }
+  
+  .novel-scene-break::after {
+    content: '⋆ ⋆ ⋆';
+    @apply text-stone-400 text-xl tracking-widest;
+  }
+  
+  /* Enhanced Text Styling */
+  .novel-content strong {
+    @apply font-bold text-ink-900 bg-amber-100 px-1.5 py-0.5 rounded-md;
+  }
+  
+  .novel-content em {
+    @apply italic text-rose-600 font-medium;
+  }
+  
+  /* Hover Effects */
+  .novel-content blockquote:hover {
+    @apply transform scale-[1.01] transition-transform duration-300;
+  }
+  
+  /* Reading Progress Enhancement */
+  .novel-content p {
+    scroll-margin-top: 8rem;
+    @apply mb-6;
   }
 }
 
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
+/* Reading Experience Optimizations */
+@layer components {
+  /* Chapter Navigation */
+  .chapter-nav {
+    @apply sticky top-0 z-50 bg-white/80 backdrop-blur-sm border-b border-stone-200;
   }
-  50% {
-    opacity: .5;
+  
+  /* Reading Settings Panel */
+  .reading-settings {
+    @apply fixed right-4 top-1/2 transform -translate-y-1/2 bg-white rounded-2xl shadow-modern border border-stone-200 p-4 space-y-4;
+  }
+  
+  /* Font Size Controls */
+  .font-size-sm .reading-content {
+    @apply text-reading-sm;
+  }
+  
+  .font-size-lg .reading-content {
+    @apply text-reading-lg;
+  }
+  
+  .font-size-xl .reading-content {
+    @apply text-reading-xl;
+  }
+  
+  /* Dark Mode Reading */
+  .dark .reading-content {
+    @apply text-stone-200;
+  }
+  
+  .dark .novel-dialogue {
+    @apply bg-gradient-to-r from-rose-900/20 to-transparent border-rose-400 text-stone-200;
+  }
+  
+  .dark .novel-monologue {
+    @apply bg-gradient-to-r from-ink-800/20 to-transparent border-ink-400 text-stone-300;
+  }
+  
+  .dark .novel-action {
+    @apply bg-gradient-to-r from-amber-900/20 to-transparent border-amber-400 text-stone-400;
   }
 }
 
-@keyframes bounce {
-  0%, 100% {
-    transform: translateY(-25%);
-    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+/* Modern Animations and Transitions */
+@layer utilities {
+  /* Smooth Entrance Animations */
+  .animate-fade-in-up {
+    animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
   }
-  50% {
-    transform: none;
-    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  
+  .animate-stagger-1 {
+    animation-delay: 0.1s;
+  }
+  
+  .animate-stagger-2 {
+    animation-delay: 0.2s;
+  }
+  
+  .animate-stagger-3 {
+    animation-delay: 0.3s;
+  }
+  
+  /* Modern Shimmer Effect */
+  .shimmer-modern {
+    background: linear-gradient(
+      110deg,
+      transparent 40%,
+      rgba(255, 255, 255, 0.5) 50%,
+      transparent 60%
+    );
+    background-size: 200% 100%;
+    animation: shimmer-modern 2s linear infinite;
+  }
+  
+  /* Gradient Text */
+  .text-gradient-rose {
+    @apply bg-gradient-to-r from-rose-500 to-ink-600 bg-clip-text text-transparent;
+  }
+  
+  .text-gradient-ink {
+    @apply bg-gradient-to-r from-ink-600 to-ink-800 bg-clip-text text-transparent;
   }
 }
 
-/* 부드러운 읽기 경험을 위한 애니메이션 */
+/* Modern Keyframes */
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(30px);
   }
   to {
     opacity: 1;
@@ -237,93 +282,159 @@
   }
 }
 
-.fade-in-up {
-  animation: fadeInUp 0.6s ease-out;
+@keyframes shimmer-modern {
+  from {
+    background-position: -200% 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
 }
 
-/* 모바일 반응형 디자인 */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes glow-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Responsive Design - Mobile-First */
 @layer components {
-  /* 모바일 대화체 최적화 */
+  /* Mobile Optimizations (320px - 640px) */
   @media (max-width: 640px) {
+    .reading-content {
+      @apply text-base leading-relaxed;
+      line-height: 1.7;
+    }
+    
     .novel-dialogue,
     .novel-dialogue-emphasis,
     .novel-monologue {
-      @apply px-4 py-3 text-base;
+      @apply px-4 py-4 text-base mx-2;
     }
     
     .novel-action {
-      @apply px-3 py-2 text-sm;
+      @apply px-3 py-3 text-sm mx-2;
     }
     
     .novel-narrative {
-      @apply text-base leading-relaxed;
+      @apply text-base leading-relaxed px-2;
     }
     
-    .reading-content {
-      @apply text-base;
-      line-height: 1.7;
+    .chapter-nav {
+      @apply px-4 py-3;
     }
   }
   
-  /* 태블릿 최적화 */
+  /* Tablet Optimizations (641px - 1024px) */
   @media (min-width: 641px) and (max-width: 1024px) {
+    .reading-content {
+      @apply text-lg leading-relaxed;
+      line-height: 1.75;
+    }
+    
     .novel-dialogue,
     .novel-dialogue-emphasis,
     .novel-monologue {
-      @apply px-5 py-3;
-    }
-    
-    .reading-content {
-      @apply text-lg;
-      line-height: 1.75;
+      @apply px-5 py-4;
     }
   }
   
-  /* 데스크톱 */
+  /* Desktop Optimizations (1025px+) */
   @media (min-width: 1025px) {
     .reading-content {
-      @apply text-lg;
+      @apply text-reading leading-loose;
       line-height: 1.8;
+    }
+    
+    /* Desktop-specific reading enhancements */
+    .novel-content {
+      max-width: 70ch; /* Optimal reading line length */
+    }
+  }
+  
+  /* Large Desktop (1440px+) */
+  @media (min-width: 1440px) {
+    .reading-content {
+      @apply text-reading-lg;
+      line-height: 1.85;
     }
   }
 }
 
-/* 접근성 개선 */
+/* Accessibility and Performance */
 @layer base {
-  /* 키보드 네비게이션을 위한 포커스 스타일 */
-  .novel-content *:focus {
-    @apply outline-none ring-2 ring-purple-500 ring-offset-2 rounded;
+  /* Focus Management */
+  .novel-content *:focus-visible {
+    @apply outline-none ring-2 ring-rose-500 ring-offset-2 rounded-lg;
   }
   
-  /* 스크린 리더 지원 */
+  /* Screen Reader Support */
   .sr-only {
-    @apply absolute w-px h-px p-0 -m-px overflow-hidden;
+    @apply absolute w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0;
     clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
   }
   
-  /* 고대비 모드 */
+  /* High Contrast Mode */
   @media (prefers-contrast: high) {
     .novel-dialogue {
-      @apply border-l-8 bg-emerald-100 dark:bg-emerald-800;
+      @apply border-l-8 bg-rose-200 text-ink-950;
     }
     
     .novel-monologue {
-      @apply border-l-8 bg-purple-100 dark:bg-purple-800;
+      @apply border-l-8 bg-ink-200 text-ink-950;
     }
     
     .novel-action {
-      @apply border-l-8 bg-amber-100 dark:bg-amber-800;
+      @apply border-l-8 bg-amber-200 text-ink-950;
     }
   }
   
-  /* 동작 감소 모드 */
+  /* Reduced Motion */
   @media (prefers-reduced-motion: reduce) {
-    .fade-in-up,
+    .animate-fade-in-up,
+    .animate-float,
+    .animate-glow-pulse,
     * {
       animation: none !important;
       transition: none !important;
     }
+  }
+  
+  /* Dark Mode Preferences */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+    }
+  }
+}
+
+/* Print Styles */
+@media print {
+  .chapter-nav,
+  .reading-settings,
+  .no-print {
+    display: none !important;
+  }
+  
+  .reading-content {
+    @apply text-black font-serif text-sm leading-relaxed;
+  }
+  
+  .novel-dialogue,
+  .novel-monologue,
+  .novel-action {
+    @apply bg-none border-l-2 border-black shadow-none;
   }
 }

@@ -1,6 +1,6 @@
 ---
 /**
- * 메인 페이지 히어로 섹션
+ * 메인 페이지 히어로 섹션 - 2025 Modern Design
  */
 interface Props {
   totalNovels: number;
@@ -10,86 +10,99 @@ interface Props {
 const { totalNovels, totalChapters } = Astro.props;
 ---
 
-<section class="relative min-h-screen flex items-center justify-center overflow-hidden">
-  <!-- 배경 그라디언트 -->
-  <div class="absolute inset-0 bg-gradient-to-br from-purple-900 via-pink-900 to-indigo-900"></div>
-
-  <!-- 배경 파티클 효과 -->
-  <div class="absolute inset-0 overflow-hidden">
-    {[...Array(50)].map((_, i) => (
-      <div
-        class="absolute w-1 h-1 bg-white rounded-full opacity-20 animate-pulse"
-        style={{
-          left: `${Math.random() * 100}%`,
-          top: `${Math.random() * 100}%`,
-          animationDelay: `${Math.random() * 3}s`,
-          animationDuration: `${2 + Math.random() * 3}s`
-        }}
-      ></div>
-    ))}
+<section class="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-b from-stone-50 to-white">
+  <!-- Modern Gradient Mesh Background -->
+  <div class="absolute inset-0">
+    <div class="absolute top-0 -left-4 w-96 h-96 bg-rose-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float"></div>
+    <div class="absolute top-0 -right-4 w-96 h-96 bg-ink-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float" style="animation-delay: 2s;"></div>
+    <div class="absolute -bottom-8 left-20 w-96 h-96 bg-amber-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float" style="animation-delay: 4s;"></div>
   </div>
 
-  <!-- 중앙 컨텐츠 -->
+  <!-- Subtle Grid Pattern -->
+  <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%239CA3AF" fill-opacity="0.03"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-50"></div>
+
+  <!-- Main Content -->
   <div class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
     <div class="space-y-8">
-      <!-- 메인 제목 -->
+      <!-- Badge -->
+      <div class="inline-flex items-center px-4 py-2 bg-white/80 backdrop-blur-sm border border-stone-200 rounded-full text-sm font-medium text-stone-600 shadow-soft">
+        <span class="relative flex h-2 w-2 mr-2">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-teal-500"></span>
+        </span>
+        매일 새로운 스토리 업데이트
+      </div>
+
+      <!-- Main Title -->
       <div class="space-y-4">
-        <h1 class="text-4xl sm:text-6xl lg:text-7xl font-bold text-white leading-tight">
-          <span class="block bg-gradient-to-r from-pink-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent">
-            AI가 창조하는
+        <h1 class="text-5xl sm:text-6xl lg:text-7xl font-display font-bold text-ink-900 leading-tight tracking-tight">
+          <span class="block">AI가 창조하는</span>
+          <span class="block bg-gradient-to-r from-rose-500 to-ink-600 bg-clip-text text-transparent">
+            로맨스 판타지
           </span>
-          <span class="block">로맨스 판타지</span>
         </h1>
-        <p class="text-xl sm:text-2xl text-purple-100 max-w-3xl mx-auto leading-relaxed">
-          클로드 AI가 매일 새벽 2시, 완벽한 스토리 연속성으로 새로운 로맨스 판타지 세계를 선사합니다
+        <p class="text-xl sm:text-2xl text-stone-600 max-w-3xl mx-auto leading-relaxed font-display">
+          매일 새로운 로맨스 판타지 세계를 만나보세요
         </p>
       </div>
 
-      <!-- 통계 카드 -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-12">
-        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
-          <div class="text-3xl sm:text-4xl font-bold text-white mb-2">{totalNovels}</div>
-          <div class="text-purple-200">연재 소설</div>
+      <!-- Stats Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-12 max-w-3xl mx-auto">
+        <div class="group bg-white/60 backdrop-blur-sm border border-stone-200 rounded-2xl p-6 hover:bg-white hover:shadow-modern transition-all duration-300">
+          <div class="text-3xl sm:text-4xl font-display font-bold bg-gradient-to-r from-ink-600 to-ink-800 bg-clip-text text-transparent mb-2">
+            {totalNovels}
+          </div>
+          <div class="text-stone-600 font-medium">연재 소설</div>
         </div>
-        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
-          <div class="text-3xl sm:text-4xl font-bold text-white mb-2">{totalChapters}</div>
-          <div class="text-purple-200">총 챕터</div>
+        <div class="group bg-white/60 backdrop-blur-sm border border-stone-200 rounded-2xl p-6 hover:bg-white hover:shadow-modern transition-all duration-300">
+          <div class="text-3xl sm:text-4xl font-display font-bold bg-gradient-to-r from-rose-500 to-rose-700 bg-clip-text text-transparent mb-2">
+            {totalChapters}
+          </div>
+          <div class="text-stone-600 font-medium">총 챕터</div>
         </div>
-        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
-          <div class="text-3xl sm:text-4xl font-bold text-white mb-2">100%</div>
-          <div class="text-purple-200">AI 자동 생성</div>
+        <div class="group bg-white/60 backdrop-blur-sm border border-stone-200 rounded-2xl p-6 hover:bg-white hover:shadow-modern transition-all duration-300">
+          <div class="text-3xl sm:text-4xl font-display font-bold bg-gradient-to-r from-amber-500 to-amber-700 bg-clip-text text-transparent mb-2">
+            100%
+          </div>
+          <div class="text-stone-600 font-medium">AI 자동 생성</div>
         </div>
       </div>
 
-      <!-- CTA 버튼 -->
+      <!-- CTA Buttons -->
       <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mt-12">
         <a
           href="/novels"
-          class="group relative px-8 py-4 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full text-white font-semibold text-lg hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-2xl"
+          class="group relative px-8 py-4 bg-ink-900 hover:bg-ink-950 text-white rounded-2xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-modern hover:shadow-glow"
         >
-          <span class="relative z-10">소설 읽어보기</span>
-          <div class="absolute inset-0 bg-gradient-to-r from-pink-400 to-purple-500 rounded-full blur opacity-30 group-hover:opacity-50 transition-opacity"></div>
+          <span class="relative z-10 flex items-center">
+            소설 읽어보기
+            <svg class="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+            </svg>
+          </span>
         </a>
         <a
           href="#latest"
-          class="px-8 py-4 border-2 border-white/30 rounded-full text-white font-semibold text-lg hover:bg-white/10 transition-all duration-300"
+          class="px-8 py-4 bg-white/80 backdrop-blur-sm border-2 border-stone-200 hover:border-ink-300 rounded-2xl text-ink-900 font-semibold text-lg hover:bg-white transition-all duration-300 shadow-soft hover:shadow-modern"
         >
           최신 업데이트 보기
         </a>
       </div>
 
-      <!-- 자동 생성 안내 -->
-      <div class="mt-8 flex items-center justify-center space-x-3 text-purple-200">
-        <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-        <span class="text-sm">매일 새벽 2시 새로운 에피소드 자동 업데이트</span>
+      <!-- Live Indicator -->
+      <div class="mt-8 flex items-center justify-center space-x-3 text-stone-500">
+        <div class="flex items-center space-x-2">
+          <div class="w-2 h-2 bg-teal-500 rounded-full animate-pulse"></div>
+          <span class="text-sm font-medium">실시간 AI 생성 중</span>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- 스크롤 다운 표시 -->
-  <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-    <div class="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center">
-      <div class="w-1 h-3 bg-white/50 rounded-full mt-2 animate-pulse"></div>
+  <!-- Scroll Indicator -->
+  <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2">
+    <div class="w-6 h-10 border-2 border-stone-300 rounded-full flex justify-center p-2">
+      <div class="w-1 h-2 bg-stone-400 rounded-full animate-bounce"></div>
     </div>
   </div>
 </section>
