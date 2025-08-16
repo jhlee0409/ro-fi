@@ -44,6 +44,20 @@ enhanced-*.temp
 .context-cache/
 .memory-store/
 
+# AI Generated content temp files
+*.temp.md
+*-temp-*.md
+story-generation-*.json
+chapter-draft-*.md
+quality-report-*.json
+analysis-temp.md
+
+# Development artifacts
+logs/
+*.debug.log
+performance-*.json
+benchmark-*.json
+
 # IDE and editor settings
 .vscode/
 .idea/
