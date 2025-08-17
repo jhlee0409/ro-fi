@@ -60,14 +60,6 @@ function getParagraphClass(content: string): string {
 ---
 
 <div class={`simple-chapter-reader reading-content ${className}`}>
-  <!-- Chapter Title -->
-  <header class="chapter-header mb-12 text-center">
-    <h1 class="text-3xl sm:text-4xl font-display font-bold text-ink-900 mb-4 leading-tight">
-      {chapterTitle}
-    </h1>
-    <div class="w-24 h-1 bg-gradient-to-r from-rose-400 to-ink-500 mx-auto rounded-full"></div>
-  </header>
-
   <!-- Chapter Content -->
   <article class="chapter-content space-y-6 max-w-4xl mx-auto">
     {paragraphs.map((paragraph, index) => {
