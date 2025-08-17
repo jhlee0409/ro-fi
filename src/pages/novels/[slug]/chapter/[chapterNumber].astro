@@ -372,7 +372,11 @@ const progress = ((currentIndex + 1) / currentAllChapters.length * 100).toFixed(
         const target = e.target as HTMLElement;
         const size = target.dataset.size;
         if (chapterContent && size) {
-          chapterContent.style.fontSize = size + 'px';
+          // SimpleChapterReader 내부의 모든 p 태그에 적용
+          const paragraphs = chapterContent.querySelectorAll('p');
+          paragraphs.forEach(p => {
+            p.style.fontSize = size + 'px';
+          });
         }
 
         // 활성 버튼 스타일 업데이트
@@ -397,7 +401,11 @@ const progress = ((currentIndex + 1) / currentAllChapters.length * 100).toFixed(
         const target = e.target as HTMLElement;
         const height = target.dataset.height;
         if (chapterContent && height) {
-          chapterContent.style.lineHeight = height;
+          // SimpleChapterReader 내부의 모든 p 태그에 적용
+          const paragraphs = chapterContent.querySelectorAll('p');
+          paragraphs.forEach(p => {
+            p.style.lineHeight = height;
+          });
         }
 
         // 활성 버튼 스타일 업데이트
@@ -425,16 +433,28 @@ const progress = ((currentIndex + 1) / currentAllChapters.length * 100).toFixed(
         // 테마 스타일 적용
         if (theme === 'light' && mainContent && chapterContent && navbar) {
           mainContent.className = 'pt-16 min-h-screen bg-white transition-colors duration-300';
-          chapterContent.className = 'prose prose-lg max-w-none leading-relaxed text-gray-900';
           navbar.className = 'fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-lg border-b border-gray-200 transition-all duration-300';
+          // SimpleChapterReader 내부 텍스트 색상 변경
+          const paragraphs = chapterContent.querySelectorAll('p');
+          paragraphs.forEach(p => {
+            p.style.color = '#1f2937'; // text-gray-800
+          });
         } else if (theme === 'sepia' && mainContent && chapterContent && navbar) {
           mainContent.className = 'pt-16 min-h-screen bg-amber-50 transition-colors duration-300';
-          chapterContent.className = 'prose prose-lg max-w-none leading-relaxed text-amber-900';
           navbar.className = 'fixed top-0 left-0 right-0 z-50 bg-amber-50/95 backdrop-blur-lg border-b border-amber-200 transition-all duration-300';
+          // SimpleChapterReader 내부 텍스트 색상 변경
+          const paragraphs = chapterContent.querySelectorAll('p');
+          paragraphs.forEach(p => {
+            p.style.color = '#92400e'; // text-amber-900
+          });
         } else if (theme === 'dark' && mainContent && chapterContent && navbar) {
           mainContent.className = 'pt-16 min-h-screen bg-gray-900 transition-colors duration-300';
-          chapterContent.className = 'prose prose-lg max-w-none leading-relaxed text-gray-100';
           navbar.className = 'fixed top-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-lg border-b border-gray-700 transition-all duration-300';
+          // SimpleChapterReader 내부 텍스트 색상 변경
+          const paragraphs = chapterContent.querySelectorAll('p');
+          paragraphs.forEach(p => {
+            p.style.color = '#f3f4f6'; // text-gray-100
+          });
         }
 
         // 활성 버튼 스타일 업데이트
@@ -568,15 +588,37 @@ const progress = ((currentIndex + 1) / currentAllChapters.length * 100).toFixed(
       const savedTheme = localStorage.getItem('reading-theme');
 
       if (savedFontSize && chapterContent) {
-        chapterContent.style.fontSize = savedFontSize + 'px';
+        // SimpleChapterReader 내부 p 태그들에 적용
+        const paragraphs = chapterContent.querySelectorAll('p');
+        paragraphs.forEach(p => {
+          p.style.fontSize = savedFontSize + 'px';
+        });
         const fontBtn = document.querySelector(`[data-size="${savedFontSize}"]`) as HTMLElement;
-        fontBtn?.click();
+        if (fontBtn) {
+          fontSizeButtons.forEach(b => {
+            b.classList.remove('active', 'bg-purple-600', 'text-white');
+            b.classList.add('bg-gray-100');
+          });
+          fontBtn.classList.add('active', 'bg-purple-600', 'text-white');
+          fontBtn.classList.remove('bg-gray-100');
+        }
       }
 
       if (savedLineHeight && chapterContent) {
-        chapterContent.style.lineHeight = savedLineHeight;
+        // SimpleChapterReader 내부 p 태그들에 적용
+        const paragraphs = chapterContent.querySelectorAll('p');
+        paragraphs.forEach(p => {
+          p.style.lineHeight = savedLineHeight;
+        });
         const lineBtn = document.querySelector(`[data-height="${savedLineHeight}"]`) as HTMLElement;
-        lineBtn?.click();
+        if (lineBtn) {
+          lineHeightButtons.forEach(b => {
+            b.classList.remove('active', 'bg-purple-600', 'text-white');
+            b.classList.add('bg-gray-100');
+          });
+          lineBtn.classList.add('active', 'bg-purple-600', 'text-white');
+          lineBtn.classList.remove('bg-gray-100');
+        }
       }
 
       if (savedTheme) {
