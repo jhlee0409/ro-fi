@@ -51,10 +51,10 @@ class ContinuityWorkflowEngine {
 
   createLogger() {
     return {
-      info: (msg, data = {}) => console.log(`[${new Date().toISOString()}] ℹ️  ${msg}`, data),
-      success: (msg, data = {}) => console.log(`[${new Date().toISOString()}] ✅ ${msg}`, data),
-      warn: (msg, data = {}) => console.log(`[${new Date().toISOString()}] ⚠️  ${msg}`, data),
-      error: (msg, data = {}) => console.log(`[${new Date().toISOString()}] ❌ ${msg}`, data)
+      info: (_msg, _data = {}) => {}, // console.log(`[${new Date().toISOString()}] ℹ️  ${msg}`, data),
+      success: (_msg, _data = {}) => {}, // console.log(`[${new Date().toISOString()}] ✅ ${msg}`, data),
+      warn: (_msg, _data = {}) => {}, // console.log(`[${new Date().toISOString()}] ⚠️  ${msg}`, data),
+      error: (_msg, _data = {}) => {} // console.log(`[${new Date().toISOString()}] ❌ ${msg}`, data)
     };
   }
 
@@ -235,9 +235,10 @@ class ContinuityWorkflowEngine {
       });
 
       return continuityData;
-    } catch (error) {
-      this.log.error('연속성 정보 추출 실패', { error: error.message });
-      throw error;
+    } catch (_error) {
+    // Intentionally unused error variable
+      this.log.error('연속성 정보 추출 실패', { error: _error.message });
+      throw _error;
     }
   }
 
@@ -249,7 +250,7 @@ class ContinuityWorkflowEngine {
       const continuityPath = path.join(CONFIG.CONTINUITY_DATA, `${novelSlug}.json`);
       const data = await fs.readFile(continuityPath, 'utf-8');
       return JSON.parse(data);
-    } catch (error) {
+    } catch (_) {
       this.log.warn('연속성 데이터 없음, 추출 시작', { novelSlug });
       return await this.extractContinuityFromNovel(novelSlug);
     }
@@ -396,7 +397,7 @@ ${targetChapter}화를 연속성을 유지하며 작성해주세요.
         generatedData = JSON.parse(jsonMatch[0]);
       } catch (parseError) {
         // JSON 클리닝 시도
-        let cleanJson = jsonMatch[0]
+        const cleanJson = jsonMatch[0]
           .replace(/```json/g, '')
           .replace(/```/g, '')
           .replace(/^\s*[\w\s]*\{/, '{')
@@ -435,9 +436,10 @@ ${targetChapter}화를 연속성을 유지하며 작성해주세요.
       });
 
       return generatedData;
-    } catch (error) {
-      this.log.error('연속성 기반 챕터 생성 실패', { error: error.message });
-      throw error;
+    } catch (_error) {
+    // Intentionally unused error variable
+      this.log.error('연속성 기반 챕터 생성 실패', { error: _error.message });
+      throw _error;
     }
   }
 
@@ -538,8 +540,9 @@ ${targetChapter}화를 연속성을 유지하며 작성해주세요.
         novel: novelSlug, 
         totalChapters: frontmatter.totalChapters 
       });
-    } catch (error) {
-      this.log.error('소설 메타데이터 업데이트 실패', { error: error.message });
+    } catch (_error) {
+    // Intentionally unused error variable
+      this.log.error('소설 메타데이터 업데이트 실패', { error: _error.message });
     }
   }
 
@@ -620,8 +623,9 @@ ${targetChapter}화를 연속성을 유지하며 작성해주세요.
       } catch (pushError) {
         this.log.warn('Git 푸시 실패 (로컬 커밋은 성공)', { error: pushError.message });
       }
-    } catch (error) {
-      this.log.error('Git 작업 실패', { error: error.message });
+    } catch (_error) {
+    // Intentionally unused error variable
+      this.log.error('Git 작업 실패', { error: _error.message });
     }
   }
 
@@ -668,9 +672,10 @@ ${targetChapter}화를 연속성을 유지하며 작성해주세요.
       });
 
       return { success: true, chaptersGenerated: chapterCount };
-    } catch (error) {
-      this.log.error('💥 연속성 워크플로우 실패', { error: error.message });
-      throw error;
+    } catch (_error) {
+    // Intentionally unused error variable
+      this.log.error('💥 연속성 워크플로우 실패', { error: _error.message });
+      throw _error;
     }
   }
 }
@@ -682,19 +687,18 @@ async function main() {
     const novelSlug = args[0] || 'elf-shadow-moonlight-bloom';
     const chapterCount = parseInt(args[1]) || 5;
 
-    console.log(`
-🚀 연속성 기반 소설 연재 워크플로우
-📚 소설: ${novelSlug}
-📖 생성 챕터 수: ${chapterCount}개
-⏰ 시작 시간: ${new Date().toLocaleString('ko-KR')}
-`);
+    // console.log(`🚀 연속성 기반 소설 연재 워크플로우
+// 📚 소설: ${novelSlug}
+// 📖 생성 챕터 수: ${chapterCount}개
+// ⏰ 시작 시간: ${new Date().toLocaleString('ko-KR')}`);
 
     const engine = new ContinuityWorkflowEngine();
     await engine.runContinuityWorkflow(novelSlug, chapterCount);
 
-    console.log('\n✅ 모든 작업이 성공적으로 완료되었습니다!');
-  } catch (error) {
-    console.error('\n❌ 워크플로우 실행 실패:', error.message);
+    // console.log('\n✅ 모든 작업이 성공적으로 완료되었습니다!');
+  } catch (_error) {
+    // Intentionally unused error variable
+    // console.error('\n❌ 워크플로우 실행 실패:', _error.message);
     process.exit(1);
   }
 }

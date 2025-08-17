@@ -11,7 +11,7 @@
  */
 
 import { EnhancedContext } from './enhanced-context-manager.js';
-import { Novel, Chapter } from './types/index.js';
+import { Novel, _Chapter } from './_types/index.js';
 
 /**
  * 프롬프트 템플릿 카테고리
@@ -78,7 +78,7 @@ interface PromptTemplate {
   name: string;
   description: string;
   system: string;
-  context: (state: any) => string;
+  context: (state: unknown) => string;
   instruction: string;
   examples?: string[];
   variables: string[];
@@ -110,7 +110,7 @@ interface CharacterInfo {
 
 interface RelationshipInfo {
   characters: [string, string];
-  type: 'romantic' | 'friendship' | 'rivalry' | 'family';
+  _type: 'romantic' | 'friendship' | 'rivalry' | 'family';
   level: number; // 0-100
   status: string;
   tension: number;
@@ -288,7 +288,7 @@ export class PromptTemplateEngine {
 고백하는 인물: ${state.characters.find(c => c.role === 'protagonist')?.name}
 상대방: ${state.characters.find(c => c.role === 'love_interest')?.name}
 감정 상태: ${state.currentMood}
-관계 진행도: ${state.relationships.find(r => r.type === 'romantic')?.level || 0}%
+관계 진행도: ${state.relationships.find(r => r._type === 'romantic')?.level || 0}%
 `,
           instruction: `
 마음에 와닿는 고백 장면을 작성해주세요:
@@ -363,7 +363,7 @@ export class PromptTemplateEngine {
           system: `설레고 유쾌한 로맨스 대화를 만드는 전문가입니다.`,
           context: (state: TemplateContext) => `
 주인공들: ${state.characters.filter(c => ['protagonist', 'love_interest'].includes(c.role)).map(c => c.name).join('과 ')}
-관계 단계: ${state.relationships.find(r => r.type === 'romantic')?.status || '초기'}
+관계 단계: ${state.relationships.find(r => r._type === 'romantic')?.status || '초기'}
 분위기: ${state.worldState.setting}에서 ${state.worldState.timeOfDay}
 `,
           instruction: `
@@ -543,7 +543,7 @@ export class PromptTemplateEngine {
           system: `순수하고 아름다운 사랑의 감정을 표현하는 전문가입니다.`,
           context: (state: TemplateContext) => `
 사랑하는 이: ${state.characters.find(c => c.role === 'love_interest')?.name}
-사랑의 단계: ${state.relationships.find(r => r.type === 'romantic')?.level || 0}%
+사랑의 단계: ${state.relationships.find(r => r._type === 'romantic')?.level || 0}%
 현재 상황: ${state.plotPoint}
 `,
           instruction: `
@@ -822,7 +822,7 @@ export class PromptTemplateEngine {
           system: `가슴 설레는 첫 키스의 순간을 아름답게 그려내는 작가입니다.`,
           context: (state: TemplateContext) => `
 키스 상황: ${state.plotPoint}
-관계 진전도: ${state.relationships.find(r => r.type === 'romantic')?.level || 0}%
+관계 진전도: ${state.relationships.find(r => r._type === 'romantic')?.level || 0}%
 분위기: ${state.worldState.setting}에서 ${state.currentMood}
 `,
           instruction: `
@@ -898,7 +898,7 @@ export class PromptTemplateEngine {
           context: (state: TemplateContext) => `
 최종 상황: ${state.plotPoint}
 주인공들: ${state.characters.filter(c => ['protagonist', 'love_interest'].includes(c.role)).map(c => c.name).join('과 ')}
-완성된 관계: ${state.relationships.find(r => r.type === 'romantic')?.level || 100}%
+완성된 관계: ${state.relationships.find(r => r._type === 'romantic')?.level || 100}%
 `,
           instruction: `
 완벽한 해피 엔딩을 작성해주세요:
@@ -939,7 +939,7 @@ export class PromptTemplateEngine {
     }
 
     // 프롬프트 구성
-    const prompt = this.buildPrompt(template, context, enhancedContext);
+    const prompt = this.buildPrompt(template, _context, enhancedContext);
 
     // 캐시 저장
     this.templateCache.set(cacheKey, prompt);
@@ -1001,7 +1001,7 @@ export class PromptTemplateEngine {
   /**
    * 창의성 향상
    */
-  private enhanceForCreativity(prompt: string, creativityMode: any): string {
+  private enhanceForCreativity(prompt: string, creativityMode: { isActive: boolean; investmentLevel: string; trigger: string }): string {
     if (creativityMode.investmentLevel === 'unlimited') {
       return `🚀 UNLIMITED CREATIVITY MODE
 비용 신경쓰지 말고 독자를 완전히 놀라게 하세요!
@@ -1039,7 +1039,7 @@ ${prompt}
     if (parts.length !== 2) return null;
 
     const [category, name] = parts;
-    const categoryTemplates = (this.templates as any)[category];
+    const categoryTemplates = (this.templates as Record<string, Record<string, PromptTemplate>>)[category];
     
     if (!categoryTemplates) return null;
 
@@ -1063,7 +1063,7 @@ ${prompt}
       case 'resolution':
         return 'episode.resolution';
       case 'dialogue':
-        const romanticLevel = context.relationships.find(r => r.type === 'romantic')?.level || 0;
+        const romanticLevel = context.relationships.find(r => r._type === 'romantic')?.level || 0;
         if (romanticLevel > 80) return 'dialogue.confession';
         if (romanticLevel > 40) return 'dialogue.flirting';
         return 'dialogue.conflict';
@@ -1084,7 +1084,7 @@ ${prompt}
   /**
    * 템플릿 성능 분석
    */
-  analyzeTemplatePerformance(): any {
+  analyzeTemplatePerformance(): unknown {
     return {
       totalTemplates: Object.keys(this.templates).length,
       cacheSize: this.templateCache.size,
@@ -1106,7 +1106,7 @@ ${prompt}
     return `${templateId}-${contextHash}`;
   }
 
-  private hashObject(obj: any): string {
+  private hashObject(obj: unknown): string {
     const str = JSON.stringify(obj);
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
@@ -1130,7 +1130,7 @@ ${prompt}
   /**
    * 시스템 상태 통계 (파이프라인 호환성)
    */
-  getStats(): any {
+  getStats(): unknown {
     return this.analyzeTemplatePerformance();
   }
 }

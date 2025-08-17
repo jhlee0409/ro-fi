@@ -218,8 +218,8 @@ export class SafeDataService {
   static async safeGetNovelStats(novels?: CollectionEntry<'novels'>[]): Promise<NovelStats[]> {
     try {
       return await NovelDataService.getNovelStats(novels);
-    } catch (error) {
-      console.error('Failed to get novel stats:', error);
+    } catch (_error) {
+      // console.error('Failed to get novel stats:', _error);
       return [];
     }
   }
@@ -230,8 +230,8 @@ export class SafeDataService {
   static async safeGetLatestChapters(limit: number = 3): Promise<ChapterWithNovel[]> {
     try {
       return await NovelDataService.getLatestChapters(limit);
-    } catch (error) {
-      console.error('Failed to get latest chapters:', error);
+    } catch (_error) {
+      // console.error('Failed to get latest chapters:', _error);
       return [];
     }
   }
@@ -242,8 +242,8 @@ export class SafeDataService {
   static async safeGetPlatformStats() {
     try {
       return await NovelDataService.getPlatformStats();
-    } catch (error) {
-      console.error('Failed to get platform stats:', error);
+    } catch (_error) {
+      // console.error('Failed to get platform stats:', _error);
       return {
         totalNovels: 0,
         activeNovels: 0,

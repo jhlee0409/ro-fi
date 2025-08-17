@@ -145,9 +145,9 @@ export class QualityAssuranceGateway {
       
       return qualityReport;
       
-    } catch (error) {
-      await this.logger.error('QualityAssuranceGateway: 품질 분석 실패', { error: error.message });
-      throw new QualityAnalysisError('품질 분석 중 오류 발생', error);
+    } catch (_error) {
+      await this.logger.error('QualityAssuranceGateway: 품질 분석 실패', { error: _error.message });
+      throw new QualityAnalysisError('품질 분석 중 오류 발생', _error);
     }
   }
 
@@ -206,9 +206,9 @@ export class QualityAssuranceGateway {
         attemptCount: this.improvementAttempts
       };
       
-    } catch (error) {
-      await this.logger.error('QualityAssuranceGateway: 품질 개선 실패', { error: error.message });
-      throw error;
+    } catch (_error) {
+      await this.logger.error('QualityAssuranceGateway: 품질 개선 실패', { error: _error.message });
+      throw _error;
     }
   }
 
@@ -257,9 +257,9 @@ export class QualityAssuranceGateway {
         attemptCount: 0
       };
       
-    } catch (error) {
-      await this.logger.error('품질 검증 실패', { error: error.message });
-      throw error;
+    } catch (_error) {
+      await this.logger.error('품질 검증 실패', { error: _error.message });
+      throw _error;
     }
   }
 
@@ -511,9 +511,9 @@ export class QualityAssuranceGateway {
       
       return content;
       
-    } catch (error) {
+    } catch (_error) {
       await this.logger.error(`개선 전략 적용 실패: ${engine}.${method}`, { 
-        error: error.message 
+        error: _error.message 
       });
       return content; // 실패 시 원본 반환
     }

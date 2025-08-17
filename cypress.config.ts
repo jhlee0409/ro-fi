@@ -79,6 +79,7 @@ export default defineConfig({
       on('task', {
         // 로그 출력
         log(message: string) {
+          // eslint-disable-next-line no-console
           console.log(message);
           return null;
         },

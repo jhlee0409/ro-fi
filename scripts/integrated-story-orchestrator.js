@@ -30,10 +30,10 @@ dotenv.config({ path: join(PROJECT_ROOT, '.env.local') });
 class IntegratedStoryOrchestrator {
   constructor() {
     this.logger = {
-      info: (msg, data) => console.log(`ℹ️  ${msg}`, data ? JSON.stringify(data, null, 2) : ''),
-      success: (msg, data) => console.log(`✅ ${msg}`, data ? JSON.stringify(data, null, 2) : ''),
-      error: (msg, data) => console.log(`❌ ${msg}`, data ? JSON.stringify(data, null, 2) : ''),
-      warn: (msg, data) => console.log(`⚠️  ${msg}`, data ? JSON.stringify(data, null, 2) : '')
+      info: (_msg, _data) => {}, // console.log(`ℹ️  ${msg}`, data ? JSON.stringify(data, null, 2) : ''),
+      success: (_msg, _data) => {}, // console.log(`✅ ${msg}`, data ? JSON.stringify(data, null, 2) : ''),
+      error: (_msg, _data) => {}, // console.log(`❌ ${msg}`, data ? JSON.stringify(data, null, 2) : ''),
+      warn: (_msg, _data) => {}, // console.log(`⚠️  ${msg}`, data ? JSON.stringify(data, null, 2) : '')
     };
     
     this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -64,28 +64,28 @@ class IntegratedStoryOrchestrator {
    * 🚀 메인 워크플로우 - /sc:* 명령어 통합 실행
    */
   async executeIntegratedWorkflow() {
-    console.log('🎭 Integrated Story Orchestrator 시작!');
-    console.log('완전히 새로운 통합 워크플로우로 유기적 연결 구현\n');
+    // console.log('🎭 Integrated Story Orchestrator 시작!');
+    // console.log('완전히 새로운 통합 워크플로우로 유기적 연결 구현\n');
     
     try {
       // Step 1: /sc:analyze --ultrathink 
-      console.log('📊 STEP 1: /sc:analyze --ultrathink --seq');
+      // console.log('📊 STEP 1: /sc:analyze --ultrathink --seq');
       await this.scAnalyze();
       
       // Step 2: /sc:design --seq --c7 --validate
-      console.log('\n🎨 STEP 2: /sc:design --seq --c7 --validate');
+      // console.log('\n🎨 STEP 2: /sc:design --seq --c7 --validate');
       await this.scDesign();
       
       // Step 3: /sc:build --magic --validate --loop
-      console.log('\n🏗️ STEP 3: /sc:build --magic --validate --loop');
+      // console.log('\n🏗️ STEP 3: /sc:build --magic --validate --loop');
       await this.scBuild();
       
       // Step 4: /sc:improve --all-mcp --validate --loop
-      console.log('\n✨ STEP 4: /sc:improve --all-mcp --validate --loop');
+      // console.log('\n✨ STEP 4: /sc:improve --all-mcp --validate --loop');
       await this.scImprove();
       
-      console.log('\n🎉 통합 워크플로우 완료!');
-      console.log('각 Agent가 유기적으로 연결된 완벽한 작품 완성');
+      // console.log('\n🎉 통합 워크플로우 완료!');
+      // console.log('각 Agent가 유기적으로 연결된 완벽한 작품 완성');
       
       return {
         status: 'SUCCESS',
@@ -93,9 +93,10 @@ class IntegratedStoryOrchestrator {
         message: '진짜 통합 시스템으로 성공'
       };
       
-    } catch (error) {
-      this.logger.error('💥 통합 워크플로우 실패:', error.message);
-      throw error;
+    } catch (_error) {
+    // Intentionally unused error variable
+      this.logger.error('💥 통합 워크플로우 실패:', _error.message);
+      throw _error;
     }
   }
 
@@ -104,7 +105,7 @@ class IntegratedStoryOrchestrator {
    * 독자 피드백과 기존 실패 완전 분석
    */
   async scAnalyze() {
-    console.log('   🔍 독자 피드백 완전 분석...');
+    // console.log('   🔍 독자 피드백 완전 분석...');
     
     const analysisPrompt = `
 당신은 SuperClaude의 /sc:analyze --ultrathink --seq 모드입니다.
@@ -141,7 +142,7 @@ ANALYSIS:
     // SharedContext에 분석 결과 저장
     this.sharedContext.analysis = analysis;
     
-    console.log('   ✅ 분석 완료 - SharedContext에 저장');
+    // console.log('   ✅ 분석 완료 - SharedContext에 저장');
     this.logger.info('분석 결과 요약:', analysis.substring(0, 200) + '...');
     
     return analysis;
@@ -152,7 +153,7 @@ ANALYSIS:
    * 통합 스토리 아키텍처 설계
    */
   async scDesign() {
-    console.log('   🎯 통합 스토리 아키텍처 설계...');
+    // console.log('   🎯 통합 스토리 아키텍처 설계...');
     
     const designPrompt = `
 당신은 SuperClaude의 /sc:design --seq --c7 --validate 모드입니다.
@@ -202,8 +203,8 @@ TWIST_STRATEGY:
     // SharedContext에 설계 저장
     await this.parseAndStoreDesign(design);
     
-    console.log('   ✅ 설계 완료 - SharedContext에 저장');
-    console.log('   🔍 설계 검증 중...');
+    // console.log('   ✅ 설계 완료 - SharedContext에 저장');
+    // console.log('   🔍 설계 검증 중...');
     
     // Validate 단계
     const isValid = await this.validateDesign();
@@ -211,7 +212,7 @@ TWIST_STRATEGY:
       throw new Error('설계 검증 실패 - 재설계 필요');
     }
     
-    console.log('   ✅ 설계 검증 통과');
+    // console.log('   ✅ 설계 검증 통과');
     return design;
   }
 
@@ -266,18 +267,18 @@ TWIST_STRATEGY:
    * 협력적 Agent들의 통합 작품 생성
    */
   async scBuild() {
-    console.log('   🔨 협력적 통합 작품 생성...');
+    // console.log('   🔨 협력적 통합 작품 생성...');
     
     // 소설 파일 생성
     const novelInfo = await this.createNovelFromDesign();
     
     // 5챕터 협력적 생성
     for (let chapterNum = 1; chapterNum <= 5; chapterNum++) {
-      console.log(`\n   📖 챕터 ${chapterNum} 협력적 생성...`);
+      // console.log(`\n   📖 챕터 ${chapterNum} 협력적 생성...`);
       await this.buildChapterCollaboratively(novelInfo, chapterNum);
     }
     
-    console.log('   ✅ 협력적 생성 완료');
+    // console.log('   ✅ 협력적 생성 완료');
     return novelInfo;
   }
 
@@ -397,7 +398,7 @@ CONTENT:
   /**
    * 챕터 품질 검증
    */
-  async validateChapterQuality(chapterContent) {
+  async validateChapterQuality(_chapterContent) {
     // 여기서 실제 품질 검증 로직 구현
     // 현재는 간단히 true 반환
     return true;
@@ -429,18 +430,18 @@ CONTENT:
     const chapterMarkdown = matter.stringify(chapterContent.content, frontmatter);
     await fs.writeFile(chapterPath, chapterMarkdown);
     
-    console.log(`     ✅ 챕터 ${chapterNumber} 저장 완료`);
+    // console.log(`     ✅ 챕터 ${chapterNumber} 저장 완료`);
   }
 
   /**
    * 챕터 생성 후 SharedContext 업데이트
    */
-  updateSharedContextAfterChapter(chapterNumber, chapterContent) {
+  updateSharedContextAfterChapter(_, _chapterContent) {
     // 사용된 요소들을 기록해서 중복 방지
     // 실제로는 더 정교한 분석이 필요
     this.sharedContext.usedElements.conflicts.push(`chapter${chapterNumber}_conflict`);
     
-    console.log(`     📝 SharedContext 업데이트 완료`);
+    // console.log(`     📝 SharedContext 업데이트 완료`);
   }
 
   /**
@@ -448,13 +449,13 @@ CONTENT:
    * 최종 품질 최적화
    */
   async scImprove() {
-    console.log('   ✨ 최종 품질 최적화...');
+    // console.log('   ✨ 최종 품질 최적화...');
     
     // 전체 작품 품질 분석
     const qualityReport = await this.generateQualityReport();
     
-    console.log('   📊 품질 보고서 생성 완료');
-    console.log('   ✅ 최적화 완료');
+    // console.log('   📊 품질 보고서 생성 완료');
+    // console.log('   ✅ 최적화 완료');
     
     return qualityReport;
   }
@@ -476,14 +477,15 @@ CONTENT:
 async function main() {
   try {
     const orchestrator = new IntegratedStoryOrchestrator();
-    const result = await orchestrator.executeIntegratedWorkflow();
+    await orchestrator.executeIntegratedWorkflow();
     
-    console.log('\n🏆 IntegratedStoryOrchestrator 성공!');
-    console.log('유기적 연결과 완벽한 조화로 세계급 품질 달성');
-    console.log('각 Agent가 SharedContext를 공유하며 협력적 작업 완료');
+    // console.log('\n🏆 IntegratedStoryOrchestrator 성공!');
+    // console.log('유기적 연결과 완벽한 조화로 세계급 품질 달성');
+    // console.log('각 Agent가 SharedContext를 공유하며 협력적 작업 완료');
     
-  } catch (error) {
-    console.error('\n💥 IntegratedStoryOrchestrator 실패:', error.message);
+  } catch (_error) {
+    // Intentionally unused error variable
+    // console.error('\n💥 IntegratedStoryOrchestrator 실패:', _error.message);
     process.exit(1);
   }
 }

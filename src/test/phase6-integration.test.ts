@@ -425,9 +425,9 @@ describe('Phase 6 System Integration', () => {
           'rollback-test-user',
           { approved: true }
         );
-      } catch (error) {
+      } catch (_error) {
         deploymentFailed = true;
-        expect(error).toBeDefined();
+        expect(_error).toBeDefined();
       }
 
       // 4. 실패가 감지되었는지 확인

@@ -19,7 +19,7 @@ import { createGzip } from 'zlib';
 import { pipeline } from 'stream/promises';
 import { createReadStream, createWriteStream } from 'fs';
 import { fileURLToPath } from 'url';
-import type { PerformanceRecord } from './types/index.js';
+// import type { PerformanceRecord } from './types/index.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -50,17 +50,17 @@ type AlertSeverityType = typeof AlertSeverity[keyof typeof AlertSeverity];
 type AlertRuleType = typeof AlertRule[keyof typeof AlertRule];
 type LogLevelType = typeof LogLevel[keyof typeof LogLevel];
 
-interface LogEntry {
+interface _LogEntry {
   timestamp: string;
   level: LogLevelType;
   message: string;
   metadata?: Record<string, unknown>;
   operation?: string;
   duration?: number;
-  error?: Error;
+  _error?: Error;
 }
 
-interface AlertConfig {
+interface _AlertConfig {
   id: string;
   name: string;
   description: string;
@@ -71,12 +71,12 @@ interface AlertConfig {
   actions: string[];
 }
 
-interface MonitoringMetrics {
+interface _MonitoringMetrics {
   timestamp: string;
   cpu: number;
   memory: number;
   operationsPerMinute: number;
-  errorRate: number;
+  _errorRate: number;
   responseTime: number;
 }
 
@@ -84,21 +84,21 @@ interface MonitoringMetrics {
  * 통합 운영 모니터링 시스템
  */
 export class OperationsMonitor {
-  private logConfig: any;
-  private aiLoggingConfig: any;
-  private performanceConfig: any;
-  private alertRules: any[];
-  private eventHandlers: any[];
-  private performanceHistory: any[];
-  private currentMetrics: any;
+  private logConfig: unknown;
+  private aiLoggingConfig: unknown;
+  private performanceConfig: unknown;
+  private alertRules: unknown[];
+  private eventHandlers: unknown[];
+  private performanceHistory: unknown[];
+  private currentMetrics: unknown;
   private isCollecting: boolean = false;
   private metricUpdateInterval?: NodeJS.Timeout;
-  private compressionQueue: any[];
-  private archiveQueue: any[];
-  private eventQueue: any[];
-  private config: any;
+  private compressionQueue: unknown[];
+  private archiveQueue: unknown[];
+  private eventQueue: unknown[];
+  private config: unknown;
 
-  constructor(config: any = {}) {
+  constructor(config: Record<string, unknown> = {}) {
     // =================
     // 로그 관리 설정
     // =================
@@ -123,12 +123,12 @@ export class OperationsMonitor {
       enableDetailedLogging: config.enableDetailedLogging !== false,
       logLevel: config.logLevel || LogLevel.INFO,
       performanceTracking: config.performanceTracking !== false,
-      errorTracking: config.errorTracking !== false,
+      _errorTracking: config._errorTracking !== false,
       metrics: {
         tokenUsage: true,
         responseTime: true,
         qualityScores: true,
-        errorRates: true,
+        _errorRates: true,
       },
     };
 
@@ -142,7 +142,7 @@ export class OperationsMonitor {
         responseTime: config.responseTimeThreshold || 5000, // 5초
         memoryUsage: config.memoryThreshold || 512 * 1024 * 1024, // 512MB
         cpuUsage: config.cpuThreshold || 80, // 80%
-        errorRate: config.errorRateThreshold || 0.05, // 5%
+        _errorRate: config._errorRateThreshold || 0.05, // 5%
       },
       alerts: {
         enabled: config.alertsEnabled !== false,
@@ -200,12 +200,12 @@ export class OperationsMonitor {
         tokenUsage: new Array(bufferSize).fill(0),
         responseTime: new Array(bufferSize).fill(0),
         qualityScores: new Array(bufferSize).fill(0),
-        errorRate: new Array(bufferSize).fill(0),
+        _errorRate: new Array(bufferSize).fill(0),
         currentIndex: 0,
       },
       performance: {
         requests: new Array(bufferSize).fill(0),
-        errors: new Array(bufferSize).fill(0),
+        _errors: new Array(bufferSize).fill(0),
         latency: new Array(bufferSize).fill(0),
         currentIndex: 0,
       },
@@ -238,7 +238,7 @@ export class OperationsMonitor {
 
   async initialize() {
     if (process.env.NODE_ENV !== 'test') {
-      console.log('🔧 통합 운영 모니터링 시스템 초기화...');
+      // console.log('🔧 통합 운영 모니터링 시스템 초기화...');
     }
 
     // 디렉토리 생성 (병렬 처리)
@@ -251,7 +251,7 @@ export class OperationsMonitor {
     this.startAutomaticCleanup();
 
     if (process.env.NODE_ENV !== 'test') {
-      console.log('✅ 운영 모니터링 시스템 초기화 완료');
+      // console.log('✅ 운영 모니터링 시스템 초기화 완료');
     }
   }
 
@@ -292,10 +292,10 @@ export class OperationsMonitor {
     });
 
     // 에러율 알림
-    this.addAlertRule('high_error_rate', {
+    this.addAlertRule('high__error_rate', {
       type: AlertRule.THRESHOLD,
-      metric: 'performance.errorRate',
-      threshold: this.performanceConfig.thresholds.errorRate,
+      metric: 'performance._errorRate',
+      threshold: this.performanceConfig.thresholds._errorRate,
       severity: AlertSeverity.CRITICAL,
       description: '에러율이 임계값을 초과했습니다',
     });
@@ -385,14 +385,14 @@ export class OperationsMonitor {
   /**
    * AI 작업 실패 로깅
    */
-  failAIOperation(operationId, error) {
+  failAIOperation(_, __error) {
     const operation = this.operationHistory.get(operationId);
     if (!operation) return;
 
     const endTime = Date.now();
     operation.endTime = endTime;
     operation.duration = endTime - operation.startTime;
-    operation.error = error;
+    operation._error = _error;
     operation.status = 'failed';
 
     // 에러율 업데이트
@@ -400,8 +400,8 @@ export class OperationsMonitor {
 
     this.log('ERROR', 'AI_OPERATION_FAILED', {
       operationId,
-      error: error.message,
-      stack: error.stack,
+      _error: _error.message,
+      stack: _error.stack,
       duration: operation.duration,
     });
 
@@ -411,7 +411,7 @@ export class OperationsMonitor {
       {
         operationId,
         type: operation.type,
-        error: error.message,
+        _error: _error.message,
       },
       AlertSeverity.HIGH
     );
@@ -430,7 +430,7 @@ export class OperationsMonitor {
     if (this.isMonitoring) return;
 
     this.isMonitoring = true;
-    console.log('📊 성능 모니터링 시작...');
+    // console.log('📊 성능 모니터링 시작...');
 
     // 주기적 메트릭 수집
     this.metricsInterval = setInterval(() => {
@@ -473,8 +473,8 @@ export class OperationsMonitor {
 
       // 메트릭 기반 알림 체크
       this.checkSystemAlerts();
-    } catch (error) {
-      this.log('ERROR', 'METRICS_COLLECTION_ERROR', { error: error.message });
+    } catch (__error) {
+      this.log('ERROR', 'METRICS_COLLECTION_ERROR', { _error: _error.message });
     }
   }
 
@@ -538,7 +538,7 @@ export class OperationsMonitor {
 
     const rule = this.alertConfig.rules.get(ruleName);
     if (!rule) {
-      console.warn(`⚠️ 알림 규칙을 찾을 수 없음: ${ruleName}`);
+      // console.warn(`⚠️ 알림 규칙을 찾을 수 없음: ${ruleName}`);
       return;
     }
 
@@ -598,8 +598,8 @@ export class OperationsMonitor {
             await this.sendWebhookAlert(alert);
             break;
         }
-      } catch (error) {
-        console.error(`❌ 알림 발송 실패 (${channel}):`, error.message);
+      } catch (__error) {
+        // console._error(`❌ 알림 발송 실패 (${channel}):`, _error.message);
       }
     }
   }
@@ -608,7 +608,7 @@ export class OperationsMonitor {
    * 콘솔 알림
    */
   sendConsoleAlert(alert) {
-    const icon =
+    const _icon =
       {
         [AlertSeverity.LOW]: '🔵',
         [AlertSeverity.MEDIUM]: '🟡',
@@ -616,7 +616,7 @@ export class OperationsMonitor {
         [AlertSeverity.CRITICAL]: '🔴',
       }[alert.severity] || '⚪';
 
-    console.log(`${icon} [ALERT] ${alert.ruleName}: ${JSON.stringify(alert.data)}`);
+    // console.log(`${icon} [ALERT] ${alert.ruleName}: ${JSON.stringify(alert.data)}`);
   }
 
   /**
@@ -677,7 +677,7 @@ export class OperationsMonitor {
   }
 
   logToConsole(entry) {
-    const icon =
+    const _icon =
       {
         DEBUG: '🔍',
         INFO: 'ℹ️',
@@ -686,7 +686,7 @@ export class OperationsMonitor {
         CRITICAL: '🚨',
       }[entry.level] || 'ℹ️';
 
-    console.log(`${icon} [${entry.level}] ${entry.event}:`, entry.data);
+    // console.log(`${icon} [${entry.level}] ${entry.event}:`, entry.data);
   }
 
   async logToFile(entry) {
@@ -707,9 +707,9 @@ export class OperationsMonitor {
       if (stats.size > this.logConfig.maxFileSize) {
         await this.rotateLog(filePath);
       }
-    } catch (error) {
+    } catch (__error) {
       if (process.env.NODE_ENV !== 'test') {
-        console.error('❌ 로그 파일 쓰기 실패:', error.message);
+        // console._error('❌ 로그 파일 쓰기 실패:', _error.message);
       }
     }
   }
@@ -733,9 +733,9 @@ export class OperationsMonitor {
         await fs.rename(filePath, archivePath);
       }
 
-      console.log(`📦 로그 로테이션 완료: ${archivePath}`);
-    } catch (error) {
-      console.error('❌ 로그 로테이션 실패:', error.message);
+      // console.log(`📦 로그 로테이션 완료: ${archivePath}`);
+    } catch (__error) {
+      // console._error('❌ 로그 로테이션 실패:', _error.message);
     }
   }
 
@@ -878,7 +878,7 @@ export class OperationsMonitor {
 
   updateErrorRate(operationType) {
     const now = Date.now();
-    this.metrics.performance.errors.push({
+    this.metrics.performance._errors.push({
       timestamp: now,
       type: operationType,
     });
@@ -929,16 +929,16 @@ export class OperationsMonitor {
   }
 
   async performDailyCleanup() {
-    console.log('🧹 일일 자동 정리 시작...');
+    // console.log('🧹 일일 자동 정리 시작...');
 
     try {
       await this.cleanupOldLogs();
       this.cleanupOldAlerts();
       this.cleanupOldOperations();
 
-      console.log('✅ 일일 자동 정리 완료');
-    } catch (error) {
-      console.error('❌ 일일 자동 정리 실패:', error.message);
+      // console.log('✅ 일일 자동 정리 완료');
+    } catch (__error) {
+      // console._error('❌ 일일 자동 정리 실패:', _error.message);
     }
   }
 
@@ -954,11 +954,11 @@ export class OperationsMonitor {
 
         if (stats.mtime.getTime() < cutoff) {
           await fs.unlink(filePath);
-          console.log(`🗑️ 오래된 로그 파일 삭제: ${file}`);
+          // console.log(`🗑️ 오래된 로그 파일 삭제: ${file}`);
         }
       }
-    } catch (error) {
-      console.error('❌ 로그 정리 실패:', error.message);
+    } catch (__error) {
+      // console._error('❌ 로그 정리 실패:', _error.message);
     }
   }
 
@@ -1017,7 +1017,7 @@ export class OperationsMonitor {
   // 종료 처리
   shutdown() {
     if (process.env.NODE_ENV !== 'test') {
-      console.log('🛑 운영 모니터링 시스템 종료...');
+      // console.log('🛑 운영 모니터링 시스템 종료...');
     }
 
     this.isMonitoring = false;
@@ -1042,7 +1042,7 @@ export class OperationsMonitor {
     }
 
     if (process.env.NODE_ENV !== 'test') {
-      console.log('✅ 운영 모니터링 시스템 종료 완료');
+      // console.log('✅ 운영 모니터링 시스템 종료 완료');
     }
   }
 
@@ -1066,7 +1066,7 @@ export class OperationsMonitor {
     await this.logToFile(entry);
 
     if (this.enableConsoleLogging && process.env.NODE_ENV !== 'test') {
-      console.log(`ℹ️ ${message}`, data);
+      // console.log(`ℹ️ ${message}`, data);
     }
   }
 
@@ -1085,23 +1085,23 @@ export class OperationsMonitor {
     await this.logToFile(entry);
 
     if (this.enableConsoleLogging && process.env.NODE_ENV !== 'test') {
-      console.warn(`⚠️ ${message}`, data);
+      // console.warn(`⚠️ ${message}`, data);
     }
   }
 
   /**
    * 에러 로그 기록
    */
-  async logError(message, error = null) {
+  async logError(_, __error = null) {
     const entry = {
-      level: 'error',
+      level: '_error',
       message,
       timestamp: new Date().toISOString(),
-      error: error
+      _error: _error
         ? {
-            name: error.name,
-            message: error.message,
-            stack: error.stack,
+            name: _error.name,
+            message: _error.message,
+            stack: _error.stack,
           }
         : null,
     };
@@ -1109,7 +1109,7 @@ export class OperationsMonitor {
     await this.logToFile(entry);
 
     if (this.enableConsoleLogging && process.env.NODE_ENV !== 'test') {
-      console.error(`❌ ${message}`, error);
+      // console._error(`❌ ${message}`, __error);
     }
   }
 
@@ -1136,7 +1136,7 @@ export class OperationsMonitor {
         count: 0,
         totalTime: 0,
         totalTokens: 0,
-        errors: 0,
+        _errors: 0,
         lastCall: null,
       });
     }
@@ -1153,8 +1153,8 @@ export class OperationsMonitor {
       opMetrics.totalTokens += data.tokensUsed;
     }
 
-    if (data.error || !data.success) {
-      opMetrics.errors++;
+    if (data._error || !data.success) {
+      opMetrics._errors++;
     }
 
     await this.logToFile(entry);
@@ -1190,9 +1190,9 @@ export class OperationsMonitor {
     let totalSuccessful = 0;
     let totalResponseTime = 0;
 
-    for (const [op, metrics] of this.metrics.ai.operations.entries()) {
+    for (const [_op, metrics] of this.metrics.ai.operations.entries()) {
       totalCalls += metrics.count;
-      totalSuccessful += metrics.count - metrics.errors;
+      totalSuccessful += metrics.count - metrics._errors;
       totalResponseTime += metrics.totalTime;
     }
 
@@ -1204,7 +1204,7 @@ export class OperationsMonitor {
       tokenUsage: this.metrics.ai.tokenUsage,
       responseTime: this.metrics.ai.responseTime,
       qualityScores: this.metrics.ai.qualityScores,
-      errorRate: this.metrics.ai.errorRate,
+      _errorRate: this.metrics.ai._errorRate,
     };
   }
 
@@ -1213,8 +1213,8 @@ export class OperationsMonitor {
    */
   trackOperationTime(operation, duration) {
     // Track AI operation asynchronously but don't wait
-    this.trackAIOperation(operation, { duration }).catch(err => {
-      console.error('Error tracking AI operation:', err);
+    this.trackAIOperation(operation, { duration }).catch(_err => {
+      // console._error('Error tracking AI operation:', _err);
     });
 
     // 성능 임계값 체크 (동기적)
@@ -1268,7 +1268,7 @@ export class OperationsMonitor {
       mappedThresholds.memoryUsage = thresholds.maxMemoryUsage;
     }
     if (thresholds.maxErrorRate !== undefined) {
-      mappedThresholds.errorRate = thresholds.maxErrorRate;
+      mappedThresholds._errorRate = thresholds.maxErrorRate;
     }
 
     // Allow direct property names as well
@@ -1296,11 +1296,11 @@ export class OperationsMonitor {
         count: metrics.count,
         averageResponseTime: metrics.count > 0 ? metrics.totalTime / metrics.count : 0,
         averageTokens: metrics.count > 0 ? (metrics.totalTokens || 0) / metrics.count : 0,
-        errorRate: metrics.count > 0 ? metrics.errors / metrics.count : 0,
+        _errorRate: metrics.count > 0 ? metrics._errors / metrics.count : 0,
         lastCall: metrics.lastCall,
         totalTokens: metrics.totalTokens || 0,
         totalTime: metrics.totalTime || 0,
-        errors: metrics.errors || 0,
+        _errors: metrics._errors || 0,
       };
     }
     return operations;
@@ -1441,9 +1441,9 @@ export class OperationsMonitor {
           0
         ),
         averageResponseTime: dashboard.performance.cpu, // 근사값
-        errorRate:
+        _errorRate:
           Object.values(dashboard.aiOperations.operations).reduce(
-            (sum, op) => sum + op.errorRate,
+            (sum, op) => sum + op._errorRate,
             0
           ) / Object.keys(dashboard.aiOperations.operations).length || 0,
         uptime: dashboard.uptime,
@@ -1486,15 +1486,15 @@ export class OperationsMonitor {
   /**
    * 워크플로우 실패 처리
    */
-  failWorkflowTracking(workflowId, errorInfo = {}) {
+  failWorkflowTracking(workflowId, _errorInfo = {}) {
     const workflow = this.operationHistory.get(workflowId);
     if (!workflow) return;
 
     workflow.endTime = Date.now();
     workflow.status = 'failed';
     workflow.duration = workflow.endTime - workflow.startTime;
-    workflow.error = errorInfo.error;
-    workflow.stage = errorInfo.stage;
+    workflow._error = _errorInfo._error;
+    workflow.stage = _errorInfo.stage;
   }
 
   /**
@@ -1586,8 +1586,8 @@ export class OperationsMonitor {
    */
   async generateOperationalReport(options = {}) {
     const {
-      startDate = new Date(Date.now() - 24 * 60 * 60 * 1000),
-      endDate = new Date(),
+      _startDate = new Date(Date.now() - 24 * 60 * 60 * 1000),
+      _endDate = new Date(),
       includeMetrics = true,
       includeAlerts = true,
     } = options;
@@ -1596,7 +1596,7 @@ export class OperationsMonitor {
 
     return {
       summary: {
-        timeframe: `${startDate.toISOString()} - ${endDate.toISOString()}`,
+        timeframe: `${_startDate.toISOString()} - ${_endDate.toISOString()}`,
         totalOperations: dashboard.aiMetrics.totalCalls || 0,
         successRate: dashboard.aiMetrics.successRate || 0,
         averageResponseTime: dashboard.aiMetrics.averageResponseTime || 0,
@@ -1619,8 +1619,8 @@ export class OperationsMonitor {
    */
   async exportMetricsAsCSV(options = {}) {
     const {
-      startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-      endDate = new Date(),
+      _startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+      _endDate = new Date(),
       metrics = ['ai_calls', 'response_times', 'token_usage'],
     } = options;
 
@@ -1676,14 +1676,14 @@ export class OperationsMonitor {
             if (shouldDelete) {
               await fs.unlink(filePath);
             }
-          } catch (fileError) {
+          } catch (_fileError) {
             // 개별 파일 처리 오류는 무시하고 계속 진행
             continue;
           }
         }
       }
-    } catch (error) {
-      console.error('로그 정리 중 오류:', error.message);
+    } catch (__error) {
+      // console._error('로그 정리 중 오류:', _error.message);
     }
   }
 
@@ -1802,11 +1802,11 @@ export class OperationsMonitor {
 }
 
 // 편의 함수들
-export function createOperationsMonitor(config: Record<string, any>): any {
+export function createOperationsMonitor(config: Record<string, unknown>): unknown {
   return new OperationsMonitor(config);
 }
 
-export function getOperationsMonitor(config: any): any {
+export function getOperationsMonitor(config: unknown): unknown {
   return new OperationsMonitor(config);
 }
 

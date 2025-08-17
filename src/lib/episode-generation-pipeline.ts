@@ -77,8 +77,8 @@ export class EpisodeGenerationPipeline {
    * 🎯 메인 에피소드 생성 메서드
    */
   async generateEpisode(
-    novel: Novel,
-    chapterNumber: number,
+    _novel: Novel,
+    _chapterNumber: number,
     config: EpisodeGenerationConfig
   ): Promise<GenerationResult> {
     const startTime = Date.now();
@@ -148,8 +148,8 @@ export class EpisodeGenerationPipeline {
    * 🔄 단일 생성 시도 실행
    */
   private async executeGenerationAttempt(
-    novel: Novel,
-    chapterNumber: number,
+    _novel: Novel,
+    _chapterNumber: number,
     config: EpisodeGenerationConfig,
     state: PipelineState
   ): Promise<GenerationResult> {
@@ -209,8 +209,8 @@ export class EpisodeGenerationPipeline {
    * 📋 1단계: 고도화된 컨텍스트 준비
    */
   private async prepareContext(
-    novel: Novel,
-    chapterNumber: number,
+    _novel: Novel,
+    _chapterNumber: number,
     state: PipelineState
   ) {
     const context = await this.contextManager.prepareContextForChapter(
@@ -229,9 +229,9 @@ export class EpisodeGenerationPipeline {
    * 🎨 2단계: 최적 템플릿 선택
    */
   private async selectTemplate(
-    novel: Novel,
-    chapterNumber: number,
-    enhancedContext: any,
+    _novel: Novel,
+    _chapterNumber: number,
+    enhancedContext: unknown,
     config: EpisodeGenerationConfig,
     state: PipelineState
   ) {
@@ -263,7 +263,7 @@ export class EpisodeGenerationPipeline {
    */
   private async generateContent(
     prompt: string,
-    enhancedContext: any,
+    enhancedContext: unknown,
     config: EpisodeGenerationConfig,
     state: PipelineState
   ) {
@@ -301,9 +301,9 @@ export class EpisodeGenerationPipeline {
    * ✅ 4단계: 품질 검증
    */
   private async validateQuality(
-    content: string,
-    novel: Novel,
-    chapterNumber: number,
+    _content: string,
+    _novel: Novel,
+    _chapterNumber: number,
     config: EpisodeGenerationConfig,
     state: PipelineState
   ) {
@@ -335,10 +335,10 @@ export class EpisodeGenerationPipeline {
    * 📝 5단계: 챕터 객체 생성
    */
   private createChapterObject(
-    content: string,
-    novel: Novel,
-    chapterNumber: number,
-    qualityMetrics: QualityMetrics
+    _content: string,
+    _novel: Novel,
+    _chapterNumber: number,
+    _qualityMetrics: QualityMetrics
   ): Chapter {
     const wordCount = content.split(/\s+/).length;
     const emotionalTone = this.extractEmotionalTone(content);
@@ -364,7 +364,7 @@ export class EpisodeGenerationPipeline {
   /**
    * 🎯 자동 템플릿 선택 로직
    */
-  private autoSelectTemplate(novel: Novel, chapterNumber: number, context: any): string {
+  private autoSelectTemplate(_novel: Novel, _chapterNumber: number, context: { creativityMode: { isActive: boolean; trigger?: string } }): string {
     // 창의성 모드가 활성화된 경우
     if (context.creativityMode.isActive) {
       if (context.creativityMode.trigger === 'climax_moment') {
@@ -393,7 +393,7 @@ export class EpisodeGenerationPipeline {
   /**
    * 감정 톤 추출
    */
-  private extractEmotionalTone(content: string): string {
+  private extractEmotionalTone(_content: string): string {
     // 간단한 감정 분석 로직
     const emotionalWords = {
       romantic: ['사랑', '마음', '가슴', '설렘', '애정'],
@@ -424,14 +424,14 @@ export class EpisodeGenerationPipeline {
   /**
    * 파이프라인 메트릭 조회
    */
-  getMetrics(): any {
+  getMetrics(): unknown {
     return this.metrics.getReport();
   }
 
   /**
    * 시스템 상태 조회
    */
-  getSystemStatus(): any {
+  getSystemStatus(): unknown {
     return {
       contextManager: this.contextManager.getMemoryReport(),
       geminiWrapper: this.geminiWrapper.getMetrics(),
@@ -445,9 +445,9 @@ export class EpisodeGenerationPipeline {
  * 파이프라인 메트릭 관리
  */
 class PipelineMetrics {
-  private attempts: any[] = [];
-  private successes: any[] = [];
-  private failures: any[] = [];
+  private attempts: unknown[] = [];
+  private successes: unknown[] = [];
+  private failures: unknown[] = [];
 
   recordAttempt(attemptNumber: number, success: boolean, error?: Error): void {
     this.attempts.push({
@@ -458,14 +458,20 @@ class PipelineMetrics {
     });
   }
 
-  recordSuccess(result: any, totalTime: number, attempts: number): void {
+  recordSuccess(_result: unknown, totalTime: number, attempts: number): void {
+    const resultObj = result as { 
+      tokensUsed?: number; 
+      creativityActivated?: boolean; 
+      qualityMetrics?: { overallScore?: number } 
+    };
+    
     this.successes.push({
       timestamp: Date.now(),
       totalTime,
       attempts,
-      tokensUsed: result.tokensUsed,
-      creativityActivated: result.creativityActivated,
-      qualityScore: result.qualityMetrics?.overallScore
+      tokensUsed: resultObj.tokensUsed || 0,
+      creativityActivated: resultObj.creativityActivated || false,
+      qualityScore: resultObj.qualityMetrics?.overallScore || 0
     });
   }
 
@@ -478,7 +484,7 @@ class PipelineMetrics {
     });
   }
 
-  getReport(): any {
+  getReport(): unknown {
     const total = this.successes.length + this.failures.length;
     const successRate = total > 0 ? this.successes.length / total : 0;
     
@@ -502,7 +508,7 @@ class PipelineMetrics {
     };
   }
 
-  private getRecentPerformance(): any {
+  private getRecentPerformance(): unknown {
     const recent = [...this.successes, ...this.failures]
       .sort((a, b) => b.timestamp - a.timestamp)
       .slice(0, 10);

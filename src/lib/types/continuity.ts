@@ -45,11 +45,11 @@ export interface WorldBuilding {
   geography: {
     locations: Map<string, LocationState>;
     regions: string[];
-    politicalStructure: Record<string, any>;
+    politicalStructure: Record<string, unknown>;
   };
   socialHierarchy: {
     classes: string[];
-    powerStructure: Record<string, any>;
+    powerStructure: Record<string, unknown>;
     culturalRules: string[];
   };
   rules: string[]; // 불변 세계관 규칙들
@@ -220,7 +220,7 @@ export interface ValidationError {
   description: string;
   chapterNumber: number;
   suggestedFix?: string;
-  context: any;
+  context: unknown;
 }
 
 export interface ValidationWarning {
@@ -296,6 +296,10 @@ export interface GenerationResult {
     tokensUsed: number;
     validationPassed: boolean;
     attempts: number;
+    qualityScore?: number;
+    continuityScore?: number;
+    operationId?: string;
+    recoveryMode?: boolean;
   };
   context: GenerationContext;
   validationResult: ValidationResult;

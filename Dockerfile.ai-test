@@ -1,0 +1,48 @@
+# Gemini AI 로맨스 판타지 자동 생성 테스트용 Docker 파일
+FROM node:22-alpine
+
+# 작업 디렉토리 설정
+WORKDIR /app
+
+# pnpm 설치
+RUN npm install -g pnpm@8
+
+# 시스템 패키지 업데이트 및 필요 도구 설치
+RUN apk update && apk add --no-cache \
+    git \
+    curl \
+    bash \
+    ca-certificates \
+    tzdata
+
+# 타임존 설정 (한국 시간)
+ENV TZ=Asia/Seoul
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# package.json과 pnpm-lock.yaml 복사
+COPY package.json pnpm-lock.yaml ./
+
+# 의존성 설치
+RUN pnpm install --no-frozen-lockfile
+
+# 프로젝트 소스 복사
+COPY . .
+
+# 환경 변수 설정
+ENV NODE_ENV=development
+ENV GEMINI_API_KEY=""
+
+# 작업 디렉토리 권한 설정
+RUN chmod -R 755 /app
+RUN chmod +x /app/scripts/*.js
+
+# AI 생성 스크립트 실행 권한 설정
+RUN find /app/scripts -name "*.js" -type f -exec chmod +x {} \;
+
+# 기본 명령어: AI 생성 테스트
+CMD ["bash", "-c", "echo 'Gemini AI 로맨스 판타지 자동 생성 테스트 환경 준비 완료' && exec bash"]
+
+# 레이블 추가
+LABEL description="RO-FI Gemini AI Romance Fantasy Auto Generator Test Environment"
+LABEL version="1.0"
+LABEL maintainer="RO-FI Team"

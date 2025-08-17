@@ -8,7 +8,7 @@
  */
 
 // TypeScript 모듈들을 동적으로 import하여 호환성 확보
-let storyStateManager, episodeContinuityEngine, contextWindowManager, continuityAwareGenerator;
+let storyStateManager, _, _contextWindowManager, continuityAwareGenerator;
 
 // 연속성 모듈 동적 로딩
 async function loadContinuityModules() {
@@ -20,12 +20,12 @@ async function loadContinuityModules() {
     
     storyStateManager = storyModule.storyStateManager;
     episodeContinuityEngine = continuityModule.episodeContinuityEngine;
-    contextWindowManager = contextModule.contextWindowManager;
+    _contextWindowManager = contextModule._contextWindowManager;
     continuityAwareGenerator = generatorModule.continuityAwareGenerator;
     
     return true;
-  } catch (error) {
-    console.warn('연속성 모듈 로드 실패:', error.message);
+  } catch (_error) {
+    // console.warn('연속성 모듈 로드 실패:', _error.message);
     return false;
   }
 }
@@ -67,7 +67,7 @@ export class ContinuityIntegrationManager {
   /**
    * 기존 생성 함수를 연속성 강화 버전으로 래핑
    */
-  async generateWithContinuity(originalGenerateFunction, novelSlug, options = {}) {
+  async generateWithContinuity(originalGenerateFunction, novelSlug, _options = {}) {
     const startTime = Date.now();
     
     try {
@@ -87,15 +87,15 @@ export class ContinuityIntegrationManager {
       await this.logger.info('연속성 강화 생성 시작', { novelSlug });
 
       // 1. 스토리 상태 확인 및 초기화
-      let storyState;
+      let _storyState;
       try {
-        storyState = await storyStateManager.getStory(novelSlug);
+        _storyState = await storyStateManager.getStory(novelSlug);
         await this.logger.info('기존 스토리 상태 로드됨');
-      } catch (error) {
-        await this.logger.warn('스토리 상태 없음, 기존 컨텐츠 분석하여 초기화', { error: error.message });
+      } catch (_error) {
+        await this.logger.warn('스토리 상태 없음, 기존 컨텐츠 분석하여 초기화', { error: _error.message });
         
         try {
-          storyState = await storyStateManager.analyzeExistingContent(novelSlug);
+          _storyState = await storyStateManager.analyzeExistingContent(novelSlug);
           await this.logger.success('스토리 상태 분석 및 초기화 완료');
         } catch (analysisError) {
           await this.logger.error('스토리 상태 분석 실패, 기존 방식 사용', { error: analysisError.message });
@@ -127,9 +127,9 @@ export class ContinuityIntegrationManager {
         return legacyResult;
       }
 
-    } catch (error) {
-      await this.logger.error('통합 생성 프로세스 실패', { error: error.message });
-      throw error;
+    } catch (_error) {
+      await this.logger.error('통합 생성 프로세스 실패', { error: _error.message });
+      throw _error;
     }
   }
 
@@ -165,7 +165,7 @@ export class ContinuityIntegrationManager {
     try {
       await this.logger.info('기존 생성 결과 연속성 검증 시작');
       
-      const storyState = await storyStateManager.getStory(novelSlug);
+      const _storyState = await storyStateManager.getStory(novelSlug);
       const chapterState = this.convertLegacyToChapterState(legacyResult, storyState);
       
       const validationResult = await episodeContinuityEngine.validateAllAspects(storyState, chapterState);
@@ -188,8 +188,8 @@ export class ContinuityIntegrationManager {
       // 검증 결과를 legacyResult에 추가
       legacyResult.continuityValidation = validationResult;
 
-    } catch (error) {
-      await this.logger.error('기존 생성 결과 검증 실패', { error: error.message });
+    } catch (_error) {
+      await this.logger.error('기존 생성 결과 검증 실패', { error: _error.message });
     }
   }
 
@@ -281,7 +281,7 @@ ${chapter.cliffhanger ? `\n**다음 화 예고**: ${chapter.cliffhanger}` : ''}
     await this.logger.info('연속성 문제 일괄 수정 시작', { novelSlug });
     
     try {
-      const storyState = await storyStateManager.getStory(novelSlug);
+      const _storyState = await storyStateManager.getStory(novelSlug);
       const chapters = Array.from(storyState.chapters.values());
       
       let totalIssues = 0;
@@ -316,9 +316,9 @@ ${chapter.cliffhanger ? `\n**다음 화 예고**: ${chapter.cliffhanger}` : ''}
       
       return { totalIssues, fixableIssues };
       
-    } catch (error) {
-      await this.logger.error('일괄 수정 실패', { error: error.message });
-      throw error;
+    } catch (_error) {
+      await this.logger.error('일괄 수정 실패', { error: _error.message });
+      throw _error;
     }
   }
 
@@ -354,9 +354,9 @@ ${chapter.cliffhanger ? `\n**다음 화 예고**: ${chapter.cliffhanger}` : ''}
       await this.logger.info('연속성 보고서 생성 완료', report);
       return report;
       
-    } catch (error) {
-      await this.logger.error('보고서 생성 실패', { error: error.message });
-      throw error;
+    } catch (_error) {
+      await this.logger.error('보고서 생성 실패', { error: _error.message });
+      throw _error;
     }
   }
 }

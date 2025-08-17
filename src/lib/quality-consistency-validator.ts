@@ -105,26 +105,26 @@ export class QualityConsistencyValidator {
    * 🎯 메인 검증 메서드
    */
   async validateChapter(
-    chapter: Chapter,
+    _chapter: Chapter,
     novel: Novel,
-    previousChapters: Chapter[] = []
+    _previousChapters: Chapter[] = []
   ): Promise<ConsistencyValidationResult> {
     
     // 1. 기본 품질 분석
-    const qualityMetrics = await this.analyzeContentQuality(chapter.content, {
-      novel,
-      chapterNumber: chapter.chapterNumber,
+    const qualityMetrics = await this.analyzeContentQuality(_chapter._content, {
+      _novel,
+      _chapterNumber: _chapter._chapterNumber,
       targetLength: 1200
     });
 
     // 2. 일관성 검증들
-    const characterCheck = await this.validateCharacterConsistency(chapter, previousChapters);
-    const worldCheck = await this.validateWorldConsistency(chapter, novel);
-    const plotCheck = await this.validatePlotConsistency(chapter, previousChapters);
-    const styleCheck = await this.validateStyleConsistency(chapter, previousChapters);
+    const characterCheck = await this.validateCharacterConsistency(_chapter, _previousChapters);
+    const worldCheck = await this.validateWorldConsistency(_chapter, novel);
+    const plotCheck = await this.validatePlotConsistency(_chapter, _previousChapters);
+    const _styleCheck = await this.validateStyleConsistency(_chapter, _previousChapters);
 
     // 3. 위반 사항 수집
-    const violations = this.collectViolations(characterCheck, worldCheck, plotCheck, styleCheck);
+    const violations = this.collectViolations(characterCheck, worldCheck, plotCheck, _styleCheck);
 
     // 4. 개선 제안 생성
     const suggestions = this.generateImprovementSuggestions(qualityMetrics, violations);
@@ -135,7 +135,7 @@ export class QualityConsistencyValidator {
       characterCheck,
       worldCheck,
       plotCheck,
-      styleCheck
+      _styleCheck
     );
 
     // 6. 품질 히스토리 업데이트
@@ -150,7 +150,7 @@ export class QualityConsistencyValidator {
       characterConsistency: characterCheck,
       worldConsistency: worldCheck,
       plotConsistency: plotCheck,
-      styleConsistency: styleCheck,
+      styleConsistency: _styleCheck,
       violations,
       suggestions
     };
@@ -160,46 +160,46 @@ export class QualityConsistencyValidator {
    * 👤 캐릭터 일관성 검증
    */
   private async validateCharacterConsistency(
-    chapter: Chapter,
-    previousChapters: Chapter[]
+    _chapter: Chapter,
+    _previousChapters: Chapter[]
   ): Promise<ConsistencyCheck> {
     const issues: string[] = [];
     const validations: ValidationPoint[] = [];
     
     // 캐릭터 대화 패턴 분석
-    const dialogues = this.extractDialogues(chapter.content);
-    const characterNames = this.extractCharacterNames(chapter.content);
+    const _dialogues = this.extractDialogues(_chapter._content);
+    const _characterNames = this.extractCharacterNames(_chapter._content);
 
-    for (const characterName of characterNames) {
-      const profile = this.characterProfiles.get(characterName);
-      if (!profile) continue;
+    for (const _characterName of _characterNames) {
+      const _profile = this.characterProfiles.get(_characterName);
+      if (!_profile) continue;
 
       // 성격 일관성 검사
       const personalityConsistency = this.checkPersonalityConsistency(
-        characterName, 
-        chapter.content, 
-        profile
+        _characterName, 
+        _chapter._content, 
+        _profile
       );
 
       validations.push({
-        aspect: `${characterName} 성격 일관성`,
-        expected: profile.expectedBehavior,
+        aspect: `${_characterName} 성격 일관성`,
+        expected: _profile.expectedBehavior,
         actual: personalityConsistency.observedBehavior,
         passed: personalityConsistency.consistent
       });
 
       if (!personalityConsistency.consistent) {
-        issues.push(`${characterName}의 행동이 기존 성격과 일치하지 않습니다`);
+        issues.push(`${_characterName}의 행동이 기존 성격과 일치하지 않습니다`);
       }
 
       // 대화 패턴 일관성
-      const speechPattern = this.analyzeSpeechPattern(characterName, dialogues);
-      const expectedPattern = profile.speechPatterns[0];
+      const speechPattern = this.analyzeSpeechPattern(_characterName, _dialogues);
+      const expectedPattern = _profile.speechPatterns[0];
 
       if (expectedPattern && speechPattern.deviation > 0.3) {
-        issues.push(`${characterName}의 말투가 일관되지 않습니다`);
+        issues.push(`${_characterName}의 말투가 일관되지 않습니다`);
         validations.push({
-          aspect: `${characterName} 말투 일관성`,
+          aspect: `${_characterName} 말투 일관성`,
           expected: expectedPattern.pattern,
           actual: speechPattern.dominant,
           passed: false
@@ -209,8 +209,8 @@ export class QualityConsistencyValidator {
 
     // 관계 발전 일관성
     const relationshipProgression = this.validateRelationshipProgression(
-      chapter, 
-      previousChapters
+      _chapter, 
+      _previousChapters
     );
 
     if (!relationshipProgression.consistent) {
@@ -230,21 +230,21 @@ export class QualityConsistencyValidator {
    * 🌍 세계관 일관성 검증
    */
   private async validateWorldConsistency(
-    chapter: Chapter,
-    novel: Novel
+    _chapter: Chapter,
+    _novel: Novel
   ): Promise<ConsistencyCheck> {
     const issues: string[] = [];
     const validations: ValidationPoint[] = [];
 
     // 세계관 규칙 검증
-    for (const [ruleId, rule] of this.worldRules) {
-      const violations = this.checkWorldRuleViolations(chapter.content, rule);
+    for (const [__ruleId, _rule] of this.worldRules) {
+      const violations = this.checkWorldRuleViolations(_chapter._content, _rule);
       
       if (violations.length > 0) {
-        issues.push(`세계관 규칙 위반: ${rule.description}`);
+        issues.push(`세계관 규칙 위반: ${_rule.description}`);
         validations.push({
-          aspect: rule.aspect,
-          expected: rule.expected,
+          aspect: _rule.aspect,
+          expected: _rule.expected,
           actual: violations[0],
           passed: false
         });
@@ -252,13 +252,13 @@ export class QualityConsistencyValidator {
     }
 
     // 마법 시스템 일관성
-    const magicConsistency = this.validateMagicSystem(chapter.content);
+    const magicConsistency = this.validateMagicSystem(_chapter._content);
     if (!magicConsistency.consistent) {
       issues.push('마법 시스템 사용이 일관되지 않습니다');
     }
 
     // 지리적 일관성
-    const locationConsistency = this.validateLocationConsistency(chapter.content);
+    const locationConsistency = this.validateLocationConsistency(_chapter._content);
     if (!locationConsistency.consistent) {
       issues.push('장소 설정이 이전과 일치하지 않습니다');
     }
@@ -276,14 +276,14 @@ export class QualityConsistencyValidator {
    * 📖 플롯 일관성 검증
    */
   private async validatePlotConsistency(
-    chapter: Chapter,
-    previousChapters: Chapter[]
+    _chapter: Chapter,
+    _previousChapters: Chapter[]
   ): Promise<ConsistencyCheck> {
     const issues: string[] = [];
     const validations: ValidationPoint[] = [];
 
     // 시간선 일관성
-    const timelineConsistency = this.validateTimeline(chapter, previousChapters);
+    const timelineConsistency = this.validateTimeline(_chapter, _previousChapters);
     if (!timelineConsistency.consistent) {
       issues.push('시간 흐름이 일관되지 않습니다');
       validations.push({
@@ -295,13 +295,13 @@ export class QualityConsistencyValidator {
     }
 
     // 사건 인과관계
-    const causalityCheck = this.validateCausality(chapter, previousChapters);
+    const causalityCheck = this.validateCausality(_chapter, _previousChapters);
     if (!causalityCheck.consistent) {
       issues.push('사건의 인과관계가 부자연스럽습니다');
     }
 
     // 갈등 해결 논리성
-    const conflictResolution = this.validateConflictResolution(chapter.content);
+    const conflictResolution = this.validateConflictResolution(_chapter._content);
     if (!conflictResolution.logical) {
       issues.push('갈등 해결 과정이 논리적이지 않습니다');
     }
@@ -319,14 +319,14 @@ export class QualityConsistencyValidator {
    * ✍️ 문체 일관성 검증
    */
   private async validateStyleConsistency(
-    chapter: Chapter,
-    previousChapters: Chapter[]
+    _chapter: Chapter,
+    _previousChapters: Chapter[]
   ): Promise<ConsistencyCheck> {
     const issues: string[] = [];
     const validations: ValidationPoint[] = [];
 
     // 문체 패턴 분석
-    const currentStyle = this.analyzeWritingStyle(chapter.content);
+    const currentStyle = this.analyzeWritingStyle(_chapter._content);
     const expectedStyle = this.styleProfile;
 
     // 어조 일관성
@@ -347,8 +347,8 @@ export class QualityConsistencyValidator {
 
     // 감정 표현 패턴
     const emotionConsistency = this.validateEmotionExpression(
-      chapter.content, 
-      previousChapters
+      _chapter._content, 
+      _previousChapters
     );
     if (!emotionConsistency.consistent) {
       issues.push('감정 표현 패턴이 일관되지 않습니다');
@@ -371,7 +371,7 @@ export class QualityConsistencyValidator {
     characterCheck: ConsistencyCheck,
     worldCheck: ConsistencyCheck,
     plotCheck: ConsistencyCheck,
-    styleCheck: ConsistencyCheck
+    _styleCheck: ConsistencyCheck
   ): number {
     const weights = {
       quality: 0.3,
@@ -386,7 +386,7 @@ export class QualityConsistencyValidator {
       characterCheck.score * weights.character +
       worldCheck.score * weights.world +
       plotCheck.score * weights.plot +
-      styleCheck.score * weights.style
+      _styleCheck.score * weights.style
     );
   }
 
@@ -397,7 +397,7 @@ export class QualityConsistencyValidator {
     characterCheck: ConsistencyCheck,
     worldCheck: ConsistencyCheck,
     plotCheck: ConsistencyCheck,
-    styleCheck: ConsistencyCheck
+    _styleCheck: ConsistencyCheck
   ): ConsistencyViolation[] {
     const violations: ConsistencyViolation[] = [];
 
@@ -495,18 +495,18 @@ export class QualityConsistencyValidator {
    * 📊 콘텐츠 품질 분석 (내장 구현)
    */
   private async analyzeContentQuality(
-    content: string,
-    context: { novel: Novel; chapterNumber: number; targetLength: number }
+    _content: string,
+    _context: { novel: Novel; _chapterNumber: number; targetLength: number }
   ): Promise<QualityMetrics> {
-    const wordCount = content.split(/\s+/).length;
-    const sentenceCount = content.split(/[.!?]/).length;
+    const wordCount = _content.split(/\s+/).length;
+    const sentenceCount = _content.split(/[.!?]/).length;
     const avgSentenceLength = wordCount / Math.max(sentenceCount, 1);
 
     // 간단한 품질 메트릭 계산
     const readabilityScore = Math.min(100, Math.max(0, 100 - (avgSentenceLength - 15) * 2));
-    const creativityScore = this.assessCreativity(content);
+    const creativityScore = this.assessCreativity(_content);
     const consistencyScore = 85; // 기본값
-    const engagementScore = this.assessEngagement(content);
+    const engagementScore = this.assessEngagement(_content);
 
     const overallScore = (
       readabilityScore * 0.25 +
@@ -534,14 +534,14 @@ export class QualityConsistencyValidator {
   /**
    * 창의성 평가
    */
-  private assessCreativity(content: string): number {
-    const uniqueWords = new Set(content.toLowerCase().match(/\w+/g) || []).size;
-    const totalWords = (content.match(/\w+/g) || []).length;
+  private assessCreativity(_content: string): number {
+    const uniqueWords = new Set(_content.toLowerCase().match(/\w+/g) || []).size;
+    const totalWords = (_content.match(/\w+/g) || []).length;
     const vocabularyRichness = uniqueWords / Math.max(totalWords, 1);
     
     // 감정 표현의 다양성
     const emotionalWords = ['사랑', '기쁨', '슬픔', '분노', '놀라움', '두려움', '희망'];
-    const emotionalDiversity = emotionalWords.filter(word => content.includes(word)).length;
+    const emotionalDiversity = emotionalWords.filter(word => _content.includes(word)).length;
     
     return Math.min(100, (vocabularyRichness * 100 + emotionalDiversity * 10));
   }
@@ -549,13 +549,13 @@ export class QualityConsistencyValidator {
   /**
    * 몰입도 평가
    */
-  private assessEngagement(content: string): number {
-    const dialogueMatches = content.match(/"/g) || [];
-    const dialogueRatio = dialogueMatches.length / 2 / Math.max(content.split('\n').length, 1);
+  private assessEngagement(_content: string): number {
+    const dialogueMatches = _content.match(/"/g) || [];
+    const dialogueRatio = dialogueMatches.length / 2 / Math.max(_content.split('\n').length, 1);
     
     const actionWords = ['달려', '뛰어', '날아', '던져', '잡아', '놓아'];
     const actionCount = actionWords.reduce((count, word) => 
-      count + (content.match(new RegExp(word, 'g')) || []).length, 0
+      count + (_content.match(new RegExp(word, 'g')) || []).length, 0
     );
     
     return Math.min(100, dialogueRatio * 100 + actionCount * 5 + 50);
@@ -564,15 +564,15 @@ export class QualityConsistencyValidator {
   /**
    * 📚 캐릭터 프로필 업데이트
    */
-  updateCharacterProfile(name: string, profile: CharacterProfile): void {
-    this.characterProfiles.set(name, profile);
+  updateCharacterProfile(name: string, _profile: CharacterProfile): void {
+    this.characterProfiles.set(name, _profile);
   }
 
   /**
    * 🌍 세계관 규칙 추가
    */
-  addWorldRule(rule: WorldRule): void {
-    this.worldRules.set(rule.id, rule);
+  addWorldRule(_rule: WorldRule): void {
+    this.worldRules.set(_rule.id, _rule);
   }
 
   /**
@@ -626,26 +626,26 @@ export class QualityConsistencyValidator {
     };
   }
 
-  private extractDialogues(content: string): DialogueExtraction[] {
+  private extractDialogues(_content: string): DialogueExtraction[] {
     const dialoguePattern = /"([^"]+)"/g;
-    const matches = [...content.matchAll(dialoguePattern)];
+    const matches = [..._content.matchAll(dialoguePattern)];
     return matches.map(match => ({
       text: match[1],
-      position: match.index!,
-      speaker: this.identifySpeaker(content, match.index!)
+      _position: match.index!,
+      speaker: this.identifySpeaker(_content, match.index!)
     }));
   }
 
-  private extractCharacterNames(content: string): string[] {
+  private extractCharacterNames(_content: string): string[] {
     // 간단한 캐릭터 이름 추출 로직
     const knownNames = ['민준', '서연', '지우', '하은'];
-    return knownNames.filter(name => content.includes(name));
+    return knownNames.filter(name => _content.includes(name));
   }
 
   private checkPersonalityConsistency(
-    characterName: string, 
-    content: string, 
-    profile: CharacterProfile
+    _characterName: string, 
+    _content: string, 
+    _profile: CharacterProfile
   ): { consistent: boolean; observedBehavior: string } {
     // 성격 일관성 검사 로직
     return {
@@ -655,8 +655,8 @@ export class QualityConsistencyValidator {
   }
 
   private analyzeSpeechPattern(
-    characterName: string, 
-    dialogues: DialogueExtraction[]
+    _characterName: string, 
+    _dialogues: DialogueExtraction[]
   ): { dominant: string; deviation: number } {
     return {
       dominant: '정중한 말투',
@@ -665,27 +665,27 @@ export class QualityConsistencyValidator {
   }
 
   private validateRelationshipProgression(
-    chapter: Chapter, 
-    previousChapters: Chapter[]
+    _chapter: Chapter, 
+    _previousChapters: Chapter[]
   ): { consistent: boolean } {
     return { consistent: true };
   }
 
-  private checkWorldRuleViolations(content: string, rule: WorldRule): string[] {
+  private checkWorldRuleViolations(_content: string, _rule: WorldRule): string[] {
     return [];
   }
 
-  private validateMagicSystem(content: string): { consistent: boolean } {
+  private validateMagicSystem(_content: string): { consistent: boolean } {
     return { consistent: true };
   }
 
-  private validateLocationConsistency(content: string): { consistent: boolean } {
+  private validateLocationConsistency(_content: string): { consistent: boolean } {
     return { consistent: true };
   }
 
   private validateTimeline(
-    chapter: Chapter, 
-    previousChapters: Chapter[]
+    _chapter: Chapter, 
+    _previousChapters: Chapter[]
   ): { consistent: boolean; expected: string; actual: string } {
     return {
       consistent: true,
@@ -695,17 +695,17 @@ export class QualityConsistencyValidator {
   }
 
   private validateCausality(
-    chapter: Chapter, 
-    previousChapters: Chapter[]
+    _chapter: Chapter, 
+    _previousChapters: Chapter[]
   ): { consistent: boolean } {
     return { consistent: true };
   }
 
-  private validateConflictResolution(content: string): { logical: boolean } {
+  private validateConflictResolution(_content: string): { logical: boolean } {
     return { logical: true };
   }
 
-  private analyzeWritingStyle(content: string): StyleAnalysis {
+  private analyzeWritingStyle(_content: string): StyleProfile {
     return {
       formalityLevel: 0.6,
       narrativePerspective: '3인칭 전지적',
@@ -716,13 +716,13 @@ export class QualityConsistencyValidator {
   }
 
   private validateEmotionExpression(
-    content: string, 
-    previousChapters: Chapter[]
+    _content: string, 
+    _previousChapters: Chapter[]
   ): { consistent: boolean } {
     return { consistent: true };
   }
 
-  private identifySpeaker(content: string, position: number): string {
+  private identifySpeaker(_content: string, _position: number): string {
     return '미확인';
   }
 
@@ -760,11 +760,9 @@ interface StyleProfile {
   emotionalIntensity: number;
 }
 
-interface StyleAnalysis extends StyleProfile {}
-
 interface DialogueExtraction {
   text: string;
-  position: number;
+  _position: number;
   speaker: string;
 }
 

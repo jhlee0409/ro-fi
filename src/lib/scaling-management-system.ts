@@ -1,7 +1,7 @@
 /**
  * 📈 Scaling Management System
  * 자동 스케일링 및 부하 분산 관리 시스템
- * 
+ *
  * Features:
  * - 지능형 자동 스케일링
  * - 예측적 리소스 할당
@@ -10,6 +10,8 @@
  * - 장애 복구 및 복원력
  * - 성능 기반 동적 조정
  */
+
+ 
 
 import { PerformanceOptimizationEngine } from './performance-optimization-engine.js';
 
@@ -30,43 +32,43 @@ interface ScalingTrigger {
   metric: MetricType;
   operator: ComparisonOperator;
   threshold: number;
-  duration: number;        // 지속 시간 (seconds)
-  cooldown: number;        // 쿨다운 시간 (seconds)
-  priority: number;        // 우선순위 (1-10)
+  duration: number; // 지속 시간 (seconds)
+  cooldown: number; // 쿨다운 시간 (seconds)
+  priority: number; // 우선순위 (1-10)
 }
 
 interface ScalingAction {
   type: ActionType;
-  magnitude: number;       // 스케일링 크기
+  magnitude: number; // 스케일링 크기
   targetResource: ResourceType;
   maxInstances: number;
   minInstances: number;
   stepSize: number;
-  rampUpTime: number;      // 램프업 시간 (seconds)
+  rampUpTime: number; // 램프업 시간 (seconds)
 }
 
 interface ScalingConstraints {
   maxConcurrentScaling: number;
   maxScaleUpPerHour: number;
   maxScaleDownPerHour: number;
-  minStabilityPeriod: number;    // 최소 안정화 기간 (seconds)
-  budgetLimit: number;           // 예산 한도 ($/hour)
+  minStabilityPeriod: number; // 최소 안정화 기간 (seconds)
+  budgetLimit: number; // 예산 한도 ($/hour)
   maintenanceWindows: TimeWindow[];
 }
 
 interface CostOptimizationRules {
   enabled: boolean;
-  spotInstancesRatio: number;    // 스팟 인스턴스 비율 (0-1)
-  preemptibleThreshold: number;  // 선점 가능 임계값
+  spotInstancesRatio: number; // 스팟 인스턴스 비율 (0-1)
+  preemptibleThreshold: number; // 선점 가능 임계값
   rightSizingEnabled: boolean;
   scheduledScaling: ScheduledScalingRule[];
 }
 
 interface PredictiveScalingConfig {
   enabled: boolean;
-  forecastHorizon: number;       // 예측 기간 (hours)
-  learningPeriod: number;        // 학습 기간 (days)
-  confidenceThreshold: number;   // 신뢰도 임계값 (%)
+  forecastHorizon: number; // 예측 기간 (hours)
+  learningPeriod: number; // 학습 기간 (days)
+  confidenceThreshold: number; // 신뢰도 임계값 (%)
   seasonalityDetection: boolean;
   trendAnalysis: boolean;
 }
@@ -109,7 +111,7 @@ interface CapacityMetric {
   available: number;
   allocated: number;
   reserved: number;
-  utilization: number;       // 사용률 (%)
+  utilization: number; // 사용률 (%)
 }
 
 interface ResourceUtilization {
@@ -169,7 +171,7 @@ export class ScalingManagementSystem {
     this.costTracker = new CostTracker();
     this.alertManager = new AlertManager();
     this.metricsCollector = new MetricsCollector();
-    
+
     this.initializeDefaultPolicies();
     this.initializeResourcePools();
     this.startScalingLoop();
@@ -179,23 +181,23 @@ export class ScalingManagementSystem {
    * 🎯 메인 스케일링 결정 메서드
    */
   async evaluateScalingDecisions(): Promise<ScalingDecisionResult> {
-    const decisions: ScalingDecision[] = [];
+    const _decisions: ScalingDecision[] = [];
     const currentMetrics = await this.metricsCollector.collectAllMetrics();
-    
+
     // 1. 모든 리소스 풀에 대해 스케일링 평가
-    for (const [poolId, pool] of this.resourcePools) {
+    for (const [, pool] of Array.from(this.resourcePools.entries())) {
       const poolDecision = await this.evaluatePoolScaling(pool, currentMetrics);
       if (poolDecision) {
-        decisions.push(poolDecision);
+        _decisions.push(poolDecision);
       }
     }
 
     // 2. 예측적 스케일링 평가
     const predictiveDecisions = await this.evaluatePredictiveScaling(currentMetrics);
-    decisions.push(...predictiveDecisions);
+    _decisions.push(...predictiveDecisions);
 
     // 3. 비용 최적화 고려
-    const costOptimizedDecisions = this.applyCostOptimization(decisions);
+    const costOptimizedDecisions = this.applyCostOptimization(_decisions);
 
     // 4. 제약 조건 검증
     const validatedDecisions = this.validateScalingConstraints(costOptimizedDecisions);
@@ -208,7 +210,7 @@ export class ScalingManagementSystem {
       executionResults,
       metrics: currentMetrics,
       costImpact: this.calculateCostImpact(validatedDecisions),
-      recommendations: this.generateScalingRecommendations(currentMetrics)
+      recommendations: this.generateScalingRecommendations(currentMetrics),
     };
   }
 
@@ -219,27 +221,26 @@ export class ScalingManagementSystem {
     pool: ResourcePool,
     metrics: SystemMetrics
   ): Promise<ScalingDecision | null> {
-    
-    const policies = this.getApplicablePolicies(pool.type);
+    const policies = this.getApplicablePolicies();
     let bestDecision: ScalingDecision | null = null;
     let highestPriority = 0;
 
     for (const policy of policies) {
       for (const trigger of policy.triggers) {
-        const shouldTrigger = this.evaluateTrigger(trigger, metrics, pool);
-        
+        const shouldTrigger = this.evaluateTrigger(trigger, metrics);
+
         if (shouldTrigger && trigger.priority > highestPriority) {
-          const action = this.selectBestAction(policy.actions, pool, metrics);
-          
+          const action = this.selectBestAction(policy.actions);
+
           if (action) {
             bestDecision = {
               poolId: pool.id,
               action,
               policy: policy.name,
               trigger: trigger.metric,
-              urgency: this.calculateUrgency(trigger, metrics),
+              urgency: this.calculateUrgency(trigger),
               estimatedImpact: await this.estimateImpact(action, pool),
-              costEstimate: this.estimateActionCost(action, pool)
+              costEstimate: this.estimateActionCost(action, pool),
             };
             highestPriority = trigger.priority;
           }
@@ -253,14 +254,14 @@ export class ScalingManagementSystem {
   /**
    * 🔮 예측적 스케일링 평가
    */
-  private async evaluatePredictiveScaling(metrics: SystemMetrics): Promise<ScalingDecision[]> {
-    const decisions: ScalingDecision[] = [];
+  private async evaluatePredictiveScaling(_metrics: SystemMetrics): Promise<ScalingDecision[]> {
+    const _decisions: ScalingDecision[] = [];
 
-    for (const [poolId, model] of this.predictiveModels) {
+    for (const [poolId, model] of Array.from(this.predictiveModels.entries())) {
       if (!model) continue;
 
       // 모델 업데이트
-      await this.updatePredictiveModel(model, metrics);
+      await this.updatePredictiveModel(model, _metrics);
 
       // 예측 생성
       const forecasts = await this.generateForecasts(model, 4); // 4시간 예측
@@ -268,27 +269,23 @@ export class ScalingManagementSystem {
       // 예측 기반 스케일링 결정
       for (const forecast of forecasts) {
         if (forecast.confidence > model.parameters.confidenceThreshold) {
-          const predictiveDecision = this.createPredictiveDecision(
-            poolId,
-            forecast,
-            model
-          );
-          
+          const predictiveDecision = this.createPredictiveDecision(poolId, forecast, model);
+
           if (predictiveDecision) {
-            decisions.push(predictiveDecision);
+            _decisions.push(predictiveDecision);
           }
         }
       }
     }
 
-    return decisions;
+    return _decisions;
   }
 
   /**
    * 💰 비용 최적화 적용
    */
-  private applyCostOptimization(decisions: ScalingDecision[]): ScalingDecision[] {
-    return decisions.map(decision => {
+  private applyCostOptimization(_decisions: ScalingDecision[]): ScalingDecision[] {
+    return _decisions.map(decision => {
       const pool = this.resourcePools.get(decision.poolId);
       if (!pool) return decision;
 
@@ -315,13 +312,13 @@ export class ScalingManagementSystem {
   /**
    * ✅ 스케일링 제약 조건 검증
    */
-  private validateScalingConstraints(decisions: ScalingDecision[]): ScalingDecision[] {
+  private validateScalingConstraints(_decisions: ScalingDecision[]): ScalingDecision[] {
     const validDecisions: ScalingDecision[] = [];
 
-    for (const decision of decisions) {
+    for (const decision of _decisions) {
       const pool = this.resourcePools.get(decision.poolId);
       const policy = this.scalingPolicies.get(decision.policy);
-      
+
       if (!pool || !policy) continue;
 
       // 예산 제한 확인
@@ -329,7 +326,7 @@ export class ScalingManagementSystem {
         this.alertManager.sendAlert({
           level: 'warning',
           message: `스케일링이 예산 한도를 초과합니다: ${decision.costEstimate} > ${policy.constraints.budgetLimit}`,
-          poolId: decision.poolId
+          poolId: decision.poolId,
         });
         continue;
       }
@@ -343,9 +340,9 @@ export class ScalingManagementSystem {
       // 시간당 스케일링 제한 확인
       const recentScaling = this.getRecentScalingCount(decision.poolId, 3600);
       const isScaleUp = decision.action.type === 'scale_up';
-      const maxPerHour = isScaleUp ? 
-        policy.constraints.maxScaleUpPerHour : 
-        policy.constraints.maxScaleDownPerHour;
+      const maxPerHour = isScaleUp
+        ? policy.constraints.maxScaleUpPerHour
+        : policy.constraints.maxScaleDownPerHour;
 
       if (recentScaling >= maxPerHour) {
         continue;
@@ -353,8 +350,10 @@ export class ScalingManagementSystem {
 
       // 안정화 기간 확인
       const lastScaling = this.getLastScalingEvent(decision.poolId);
-      if (lastScaling && 
-          Date.now() - lastScaling.timestamp.getTime() < policy.constraints.minStabilityPeriod * 1000) {
+      if (
+        lastScaling &&
+        Date.now() - lastScaling.timestamp.getTime() < policy.constraints.minStabilityPeriod * 1000
+      ) {
         continue;
       }
 
@@ -372,32 +371,33 @@ export class ScalingManagementSystem {
   /**
    * 🚀 스케일링 결정 실행
    */
-  private async executeScalingDecisions(decisions: ScalingDecision[]): Promise<ScalingExecutionResult[]> {
+  private async executeScalingDecisions(
+    _decisions: ScalingDecision[]
+  ): Promise<ScalingExecutionResult[]> {
     const results: ScalingExecutionResult[] = [];
 
-    for (const decision of decisions) {
+    for (const decision of _decisions) {
       try {
         const result = await this.executeScalingAction(decision);
         results.push(result);
-        
+
         // 스케일링 이벤트 기록
         this.recordScalingEvent(decision, result);
-        
-        // 성능 엔진에 변경 사항 알림
-        await this.performanceEngine.handleScalingEvent(decision, result);
-        
+
+        // 성능 엔진에 변경 사항 알림 (향후 구현 예정)
+        // await this.performanceEngine.handleScalingEvent(decision, result);
       } catch (error) {
         results.push({
           decision,
           success: false,
           error: error instanceof Error ? error.message : 'Unknown error',
-          timestamp: new Date()
+          timestamp: new Date(),
         });
 
         this.alertManager.sendAlert({
           level: 'error',
           message: `스케일링 실행 실패: ${error}`,
-          poolId: decision.poolId
+          poolId: decision.poolId,
         });
       }
     }
@@ -414,21 +414,19 @@ export class ScalingManagementSystem {
       throw new Error(`Pool not found: ${decision.poolId}`);
     }
 
-    const startTime = Date.now();
-    
     switch (decision.action.type) {
       case 'scale_up':
         return await this.scaleUp(pool, decision);
-      
+
       case 'scale_down':
         return await this.scaleDown(pool, decision);
-      
+
       case 'replace_instances':
         return await this.replaceInstances(pool, decision);
-      
+
       case 'rebalance':
         return await this.rebalancePool(pool, decision);
-      
+
       default:
         throw new Error(`Unknown action type: ${decision.action.type}`);
     }
@@ -437,31 +435,33 @@ export class ScalingManagementSystem {
   /**
    * 📈 스케일 업 실행
    */
-  private async scaleUp(pool: ResourcePool, decision: ScalingDecision): Promise<ScalingExecutionResult> {
+  private async scaleUp(
+    pool: ResourcePool,
+    decision: ScalingDecision
+  ): Promise<ScalingExecutionResult> {
     const action = decision.action;
     const instancesToAdd = Math.min(action.magnitude, action.maxInstances - pool.instances.length);
-    
+
     if (instancesToAdd <= 0) {
       return {
         decision,
         success: false,
         error: 'Maximum instances reached',
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     }
 
     const newInstances: Instance[] = [];
-    
+
     for (let i = 0; i < instancesToAdd; i++) {
       try {
         const instance = await this.createInstance(pool, action);
         newInstances.push(instance);
         pool.instances.push(instance);
-        
+
         // 점진적 트래픽 라우팅
         await this.graduallyRouteTraffic(instance, action.rampUpTime);
-        
-      } catch (error) {
+      } catch {
         // 부분 성공도 기록
         break;
       }
@@ -472,23 +472,29 @@ export class ScalingManagementSystem {
       success: newInstances.length > 0,
       instancesChanged: newInstances.length,
       newInstances: newInstances.map(i => i.id),
-      timestamp: new Date()
+      timestamp: new Date(),
     };
   }
 
   /**
    * 📉 스케일 다운 실행
    */
-  private async scaleDown(pool: ResourcePool, decision: ScalingDecision): Promise<ScalingExecutionResult> {
+  private async scaleDown(
+    pool: ResourcePool,
+    decision: ScalingDecision
+  ): Promise<ScalingExecutionResult> {
     const action = decision.action;
-    const instancesToRemove = Math.min(action.magnitude, pool.instances.length - action.minInstances);
-    
+    const instancesToRemove = Math.min(
+      action.magnitude,
+      pool.instances.length - action.minInstances
+    );
+
     if (instancesToRemove <= 0) {
       return {
         decision,
         success: false,
         error: 'Minimum instances reached',
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     }
 
@@ -500,15 +506,14 @@ export class ScalingManagementSystem {
       try {
         // 트래픽 드레이닝
         await this.drainTraffic(instance);
-        
+
         // 인스턴스 종료
         await this.terminateInstance(instance);
-        
+
         // 풀에서 제거
         pool.instances = pool.instances.filter(i => i.id !== instance.id);
         terminatedInstances.push(instance.id);
-        
-      } catch (error) {
+      } catch {
         // 부분 성공도 기록
         break;
       }
@@ -519,52 +524,58 @@ export class ScalingManagementSystem {
       success: terminatedInstances.length > 0,
       instancesChanged: terminatedInstances.length,
       terminatedInstances,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
   }
 
   /**
    * 🔄 인스턴스 교체 실행
    */
-  private async replaceInstances(pool: ResourcePool, decision: ScalingDecision): Promise<ScalingExecutionResult> {
+  private async replaceInstances(
+    pool: ResourcePool,
+    decision: ScalingDecision
+  ): Promise<ScalingExecutionResult> {
     // Blue-Green 또는 Rolling 업데이트 구현
     return {
       decision,
       success: true,
       instancesChanged: 0,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
   }
 
   /**
    * ⚖️ 풀 리밸런싱 실행
    */
-  private async rebalancePool(pool: ResourcePool, decision: ScalingDecision): Promise<ScalingExecutionResult> {
+  private async rebalancePool(
+    pool: ResourcePool,
+    decision: ScalingDecision
+  ): Promise<ScalingExecutionResult> {
     // 가용 영역 간 인스턴스 재분배
     return {
       decision,
       success: true,
       instancesChanged: 0,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
   }
 
   /**
    * 📊 스케일링 추천사항 생성
    */
-  private generateScalingRecommendations(metrics: SystemMetrics): ScalingRecommendation[] {
+  private generateScalingRecommendations(_metrics: SystemMetrics): ScalingRecommendation[] {
     const recommendations: ScalingRecommendation[] = [];
 
     // 비용 최적화 추천
-    const costRecommendations = this.generateCostOptimizationRecommendations(metrics);
+    const costRecommendations = this.generateCostOptimizationRecommendations(_metrics);
     recommendations.push(...costRecommendations);
 
     // 성능 최적화 추천
-    const performanceRecommendations = this.generatePerformanceRecommendations(metrics);
+    const performanceRecommendations = this.generatePerformanceRecommendations(_metrics);
     recommendations.push(...performanceRecommendations);
 
     // 예측적 스케일링 추천
-    const predictiveRecommendations = this.generatePredictiveRecommendations(metrics);
+    const predictiveRecommendations = this.generatePredictiveRecommendations(_metrics);
     recommendations.push(...predictiveRecommendations);
 
     return recommendations.sort((a, b) => b.priority - a.priority);
@@ -582,7 +593,7 @@ export class ScalingManagementSystem {
           threshold: 80,
           duration: 300,
           cooldown: 600,
-          priority: 8
+          priority: 8,
         },
         {
           metric: 'memory_utilization',
@@ -590,8 +601,8 @@ export class ScalingManagementSystem {
           threshold: 85,
           duration: 180,
           cooldown: 600,
-          priority: 9
-        }
+          priority: 9,
+        },
       ],
       actions: [
         {
@@ -601,8 +612,8 @@ export class ScalingManagementSystem {
           maxInstances: 20,
           minInstances: 2,
           stepSize: 1,
-          rampUpTime: 300
-        }
+          rampUpTime: 300,
+        },
       ],
       constraints: {
         maxConcurrentScaling: 3,
@@ -610,14 +621,14 @@ export class ScalingManagementSystem {
         maxScaleDownPerHour: 5,
         minStabilityPeriod: 300,
         budgetLimit: 100,
-        maintenanceWindows: []
+        maintenanceWindows: [],
       },
       costOptimization: {
         enabled: true,
         spotInstancesRatio: 0.3,
         preemptibleThreshold: 70,
         rightSizingEnabled: true,
-        scheduledScaling: []
+        scheduledScaling: [],
       },
       predictiveSettings: {
         enabled: true,
@@ -625,8 +636,8 @@ export class ScalingManagementSystem {
         learningPeriod: 7,
         confidenceThreshold: 75,
         seasonalityDetection: true,
-        trendAnalysis: true
-      }
+        trendAnalysis: true,
+      },
     };
 
     this.scalingPolicies.set('default', defaultPolicy);
@@ -641,16 +652,16 @@ export class ScalingManagementSystem {
         cpu: { total: 0, available: 0, allocated: 0, reserved: 0, utilization: 0 },
         memory: { total: 0, available: 0, allocated: 0, reserved: 0, utilization: 0 },
         storage: { total: 0, available: 0, allocated: 0, reserved: 0, utilization: 0 },
-        network: { total: 0, available: 0, allocated: 0, reserved: 0, utilization: 0 }
+        network: { total: 0, available: 0, allocated: 0, reserved: 0, utilization: 0 },
       },
       utilizationMetrics: {
         current: { timestamp: new Date(), metrics: new Map() },
         historical: [],
         trends: { direction: 'stable', rate: 0, confidence: 0 },
-        predictions: []
+        predictions: [],
       },
       scalingHistory: [],
-      healthStatus: 'healthy'
+      healthStatus: 'healthy',
     };
 
     this.resourcePools.set('main', defaultPool);
@@ -662,6 +673,7 @@ export class ScalingManagementSystem {
       try {
         await this.evaluateScalingDecisions();
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error('Scaling evaluation error:', error);
       }
     }, 30000);
@@ -671,17 +683,18 @@ export class ScalingManagementSystem {
       try {
         await this.updateAllPredictiveModels();
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error('Predictive model update error:', error);
       }
     }, 300000);
   }
 
   // 스텁 메서드들
-  private getApplicablePolicies(resourceType: ResourceType): ScalingPolicy[] {
+  private getApplicablePolicies(): ScalingPolicy[] {
     return Array.from(this.scalingPolicies.values());
   }
 
-  private evaluateTrigger(trigger: ScalingTrigger, metrics: SystemMetrics, pool: ResourcePool): boolean {
+  private evaluateTrigger(trigger: ScalingTrigger, metrics: SystemMetrics): boolean {
     const metricValue = metrics.getMetric(trigger.metric);
     if (metricValue === undefined) return false;
 
@@ -697,43 +710,59 @@ export class ScalingManagementSystem {
     }
   }
 
-  private selectBestAction(actions: ScalingAction[], pool: ResourcePool, metrics: SystemMetrics): ScalingAction | null {
+  private selectBestAction(actions: ScalingAction[]): ScalingAction | null {
     return actions[0] || null;
   }
 
-  private calculateUrgency(trigger: ScalingTrigger, metrics: SystemMetrics): number {
+  private calculateUrgency(trigger: ScalingTrigger): number {
     return trigger.priority * 10;
   }
 
-  private async estimateImpact(action: ScalingAction, pool: ResourcePool): Promise<any> {
+  private async estimateImpact(
+    _action: ScalingAction,
+    _pool: ResourcePool
+  ): Promise<ScalingImpact> {
     return { performance: 20, cost: 10 };
   }
 
-  private estimateActionCost(action: ScalingAction, pool: ResourcePool): number {
+  private estimateActionCost(action: ScalingAction, _pool: ResourcePool): number {
     return action.magnitude * 5; // $5 per instance/hour 추정
   }
 
-  private async updatePredictiveModel(model: PredictiveModel, metrics: SystemMetrics): Promise<void> {
+  private async updatePredictiveModel(
+    _model: PredictiveModel,
+    _metrics: SystemMetrics
+  ): Promise<void> {
     // 모델 업데이트 로직
   }
 
-  private async generateForecasts(model: PredictiveModel, hours: number): Promise<Forecast[]> {
+  private async generateForecasts(_model: PredictiveModel, _hours: number): Promise<Forecast[]> {
     return []; // 예측 생성 로직
   }
 
-  private createPredictiveDecision(poolId: string, forecast: Forecast, model: PredictiveModel): ScalingDecision | null {
+  private createPredictiveDecision(
+    _poolId: string,
+    _forecast: Forecast,
+    _model: PredictiveModel
+  ): ScalingDecision | null {
     return null; // 예측 기반 결정 생성
   }
 
-  private optimizeWithSpotInstances(decision: ScalingDecision, costRules: CostOptimizationRules): ScalingDecision {
+  private optimizeWithSpotInstances(
+    decision: ScalingDecision,
+    _costRules: CostOptimizationRules
+  ): ScalingDecision {
     return decision;
   }
 
-  private optimizeInstanceSizing(decision: ScalingDecision, pool: ResourcePool): ScalingDecision {
+  private optimizeInstanceSizing(decision: ScalingDecision, _pool: ResourcePool): ScalingDecision {
     return decision;
   }
 
-  private applyScheduledScaling(decision: ScalingDecision, rules: ScheduledScalingRule[]): ScalingDecision {
+  private applyScheduledScaling(
+    decision: ScalingDecision,
+    _rules: ScheduledScalingRule[]
+  ): ScalingDecision {
     return decision;
   }
 
@@ -741,23 +770,23 @@ export class ScalingManagementSystem {
     return 0;
   }
 
-  private getRecentScalingCount(poolId: string, timeWindow: number): number {
+  private getRecentScalingCount(_poolId: string, _timeWindow: number): number {
     return 0;
   }
 
-  private getLastScalingEvent(poolId: string): ScalingEvent | null {
+  private getLastScalingEvent(_poolId: string): ScalingEvent | null {
     return null;
   }
 
-  private isInMaintenanceWindow(windows: TimeWindow[]): boolean {
+  private isInMaintenanceWindow(_windows: TimeWindow[]): boolean {
     return false;
   }
 
-  private recordScalingEvent(decision: ScalingDecision, result: ScalingExecutionResult): void {
+  private recordScalingEvent(_decision: ScalingDecision, _result: ScalingExecutionResult): void {
     // 이벤트 기록
   }
 
-  private async createInstance(pool: ResourcePool, action: ScalingAction): Promise<Instance> {
+  private async createInstance(_pool: ResourcePool, _action: ScalingAction): Promise<Instance> {
     return {
       id: `instance-${Date.now()}`,
       type: 'standard',
@@ -768,11 +797,11 @@ export class ScalingManagementSystem {
       costPerHour: 0.1,
       utilization: { cpu: 0, memory: 0, network: 0 },
       launchTime: new Date(),
-      healthChecks: []
+      healthChecks: [],
     };
   }
 
-  private async graduallyRouteTraffic(instance: Instance, rampUpTime: number): Promise<void> {
+  private async graduallyRouteTraffic(_instance: Instance, _rampUpTime: number): Promise<void> {
     // 점진적 트래픽 라우팅
   }
 
@@ -780,32 +809,34 @@ export class ScalingManagementSystem {
     return pool.instances.slice(0, count);
   }
 
-  private async drainTraffic(instance: Instance): Promise<void> {
+  private async drainTraffic(_instance: Instance): Promise<void> {
     // 트래픽 드레이닝
   }
 
-  private async terminateInstance(instance: Instance): Promise<void> {
+  private async terminateInstance(_instance: Instance): Promise<void> {
     // 인스턴스 종료
   }
 
-  private calculateCostImpact(decisions: ScalingDecision[]): CostImpact {
+  private calculateCostImpact(_decisions: ScalingDecision[]): CostImpact {
     return {
       hourlyIncrease: 0,
       dailyEstimate: 0,
       monthlyEstimate: 0,
-      savings: 0
+      savings: 0,
     };
   }
 
-  private generateCostOptimizationRecommendations(metrics: SystemMetrics): ScalingRecommendation[] {
+  private generateCostOptimizationRecommendations(
+    _metrics: SystemMetrics
+  ): ScalingRecommendation[] {
     return [];
   }
 
-  private generatePerformanceRecommendations(metrics: SystemMetrics): ScalingRecommendation[] {
+  private generatePerformanceRecommendations(_metrics: SystemMetrics): ScalingRecommendation[] {
     return [];
   }
 
-  private generatePredictiveRecommendations(metrics: SystemMetrics): ScalingRecommendation[] {
+  private generatePredictiveRecommendations(_metrics: SystemMetrics): ScalingRecommendation[] {
     return [];
   }
 
@@ -823,13 +854,15 @@ export class ScalingManagementSystem {
       totalInstances: this.getTotalInstances(),
       systemHealth: this.calculateSystemHealth(),
       costEfficiency: this.calculateCostEfficiency(),
-      recentScalingEvents: this.getRecentScalingEvents(24)
+      recentScalingEvents: this.getRecentScalingEvents(24),
     };
   }
 
   private getTotalInstances(): number {
-    return Array.from(this.resourcePools.values())
-      .reduce((total, pool) => total + pool.instances.length, 0);
+    return Array.from(this.resourcePools.values()).reduce(
+      (total, pool) => total + pool.instances.length,
+      0
+    );
   }
 
   private calculateSystemHealth(): 'healthy' | 'warning' | 'critical' {
@@ -842,15 +875,22 @@ export class ScalingManagementSystem {
     return 85;
   }
 
-  private getRecentScalingEvents(hours: number): ScalingEvent[] {
-    const cutoff = new Date(Date.now() - hours * 60 * 60 * 1000);
+  private getRecentScalingEvents(_hours: number): ScalingEvent[] {
+    const cutoff = new Date(Date.now() - _hours * 60 * 60 * 1000);
     return this.scalingHistory.filter(event => event.timestamp > cutoff);
   }
 }
 
 // 타입 정의들
 type ScalingType = 'reactive' | 'predictive' | 'scheduled' | 'hybrid';
-type MetricType = 'cpu_utilization' | 'memory_utilization' | 'disk_utilization' | 'network_io' | 'request_rate' | 'response_time' | 'error_rate';
+type MetricType =
+  | 'cpu_utilization'
+  | 'memory_utilization'
+  | 'disk_utilization'
+  | 'network_io'
+  | 'request_rate'
+  | 'response_time'
+  | 'error_rate';
 type ComparisonOperator = 'greater_than' | 'less_than' | 'equals' | 'not_equals';
 type ActionType = 'scale_up' | 'scale_down' | 'replace_instances' | 'rebalance';
 type ResourceType = 'compute' | 'storage' | 'network' | 'database';
@@ -859,8 +899,8 @@ type InstanceStatus = 'pending' | 'running' | 'stopping' | 'stopped' | 'terminat
 type HealthStatus = 'healthy' | 'warning' | 'critical' | 'unknown';
 
 interface TimeWindow {
-  start: string;  // HH:MM format
-  end: string;    // HH:MM format
+  start: string; // HH:MM format
+  end: string; // HH:MM format
   days: string[]; // ['monday', 'tuesday', ...]
 }
 
@@ -872,7 +912,8 @@ interface ScheduledScalingRule {
 }
 
 interface ModelParameters {
-  [key: string]: any;
+  confidenceThreshold: number;
+  [key: string]: unknown;
 }
 
 interface ResourceRequirement {
@@ -931,7 +972,7 @@ interface ScalingDecision {
   policy: string;
   trigger: MetricType;
   urgency: number;
-  estimatedImpact: any;
+  estimatedImpact: unknown;
   costEstimate: number;
 }
 
@@ -970,6 +1011,11 @@ interface CostImpact {
   savings: number;
 }
 
+interface ScalingImpact {
+  performance: number;
+  cost: number;
+}
+
 interface ScalingRecommendation {
   type: string;
   description: string;
@@ -990,11 +1036,11 @@ interface ScalingSystemStatus {
 // Mock 클래스들
 class SystemMetrics {
   private metrics = new Map<string, number>();
-  
+
   getMetric(name: string): number | undefined {
     return this.metrics.get(name);
   }
-  
+
   setMetric(name: string, value: number): void {
     this.metrics.set(name, value);
   }
@@ -1007,8 +1053,8 @@ class CostTracker {
 }
 
 class AlertManager {
-  sendAlert(alert: { level: string; message: string; poolId?: string }): void {
-    console.log(`[${alert.level.toUpperCase()}] ${alert.message}`);
+  sendAlert(_alert: { level: string; message: string; poolId?: string }): void {
+    // Alert sending implementation would go here
   }
 }
 

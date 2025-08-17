@@ -36,6 +36,7 @@ import '../../src/styles/globals.css';
 
 // 컴포넌트 테스트 전용 헬퍼 함수들
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Cypress {
     interface Chainable {
       /**

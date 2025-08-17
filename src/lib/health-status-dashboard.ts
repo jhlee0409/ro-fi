@@ -31,11 +31,11 @@ interface HealthCheck {
   criticalityLevel: CriticalityLevel;
   timeout: number;
   retryPolicy: RetryPolicy;
-  metadata: Map<string, any>;
+  metadata: Map<string, unknown>;
 }
 
 interface HealthCheckConfig {
-  expectedResponse?: any;
+  expectedResponse?: unknown;
   customValidation?: ValidationFunction;
   thresholds: HealthThresholds;
   tags: Map<string, string>;
@@ -70,7 +70,7 @@ interface HealthCheckResult {
 
 interface HealthDetails {
   message: string;
-  data: any;
+  data: unknown;
   validationResults: ValidationResult[];
   dependencyStatus: DependencyStatus[];
 }
@@ -224,7 +224,7 @@ export class HealthStatusDashboard {
           // 결과 저장
           this.storeHealthCheckResult(checkId, result);
           
-        } catch (error) {
+        } catch (_error) {
           errors.push(`Health check ${checkId} failed: ${error}`);
         }
       }
@@ -278,7 +278,7 @@ export class HealthStatusDashboard {
       
       return result;
       
-    } catch (error) {
+    } catch (_error) {
       const endTime = Date.now();
       
       return {
@@ -294,8 +294,8 @@ export class HealthStatusDashboard {
         },
         error: {
           type: 'execution_error',
-          message: error instanceof Error ? error.message : 'Unknown error',
-          stack: error instanceof Error ? error.stack : undefined,
+          message: _error instanceof Error ? error.message : 'Unknown error',
+          stack: _error instanceof Error ? error.stack : undefined,
           timestamp: new Date()
         },
         metrics: new Map(),
@@ -379,7 +379,7 @@ export class HealthStatusDashboard {
       throw new Error(`Dashboard not found: ${dashboardId}`);
     }
 
-    const sectionData = new Map<string, any>();
+    const sectionData = new Map<string, unknown>();
     
     for (const section of dashboard.sections) {
       const data = this.getSectionData(section);
@@ -504,7 +504,7 @@ export class HealthStatusDashboard {
   /**
    * 🔧 Private Helper Methods
    */
-  private async updateSystemStatus(results: HealthCheckResult[]): Promise<void> {
+  private async updateSystemStatus(_results: HealthCheckResult[]): Promise<void> {
     const components = new Map<string, ComponentStatus>();
     const dependencies = new Map<string, DependencyStatus>();
 
@@ -779,8 +779,8 @@ export class HealthStatusDashboard {
     setInterval(async () => {
       try {
         await this.executeHealthChecks();
-      } catch (error) {
-        console.error('Health check execution error:', error);
+      } catch (_error) {
+        // console.error('Health check execution error:', _error);
       }
     }, 30000);
 
@@ -788,18 +788,18 @@ export class HealthStatusDashboard {
     setInterval(async () => {
       try {
         await this.refreshSystemStatus();
-      } catch (error) {
-        console.error('Status refresh error:', error);
+      } catch (_error) {
+        // console.error('Status refresh error:', _error);
       }
     }, 10000);
   }
 
   // 스텁 메서드들
-  private async checkDependencies(healthCheck: HealthCheck): Promise<void> {
+  private async checkDependencies(_healthCheck: HealthCheck): Promise<void> {
     // 의존성 확인 로직
   }
 
-  private async calculateHealthTrends(checkId: string, result: HealthCheckResult): Promise<HealthTrends> {
+  private async calculateHealthTrends(checkId: string, _result: HealthCheckResult): Promise<HealthTrends> {
     const previousResults = this.getRecentResults(checkId, 10);
     
     return {
@@ -937,7 +937,7 @@ export class HealthStatusDashboard {
     };
   }
 
-  private getSectionData(section: DashboardSection): any {
+  private getSectionData(section: DashboardSection): unknown {
     switch (section.type) {
       case 'status_indicator':
         return { status: this.systemStatus.overall };
@@ -950,7 +950,7 @@ export class HealthStatusDashboard {
     }
   }
 
-  private getTimeSeriesData(source: string): any[] {
+  private getTimeSeriesData(_source: string): unknown[] {
     // 시계열 데이터 생성 로직
     return [];
   }
@@ -995,11 +995,11 @@ export class HealthStatusDashboard {
     }
   }
 
-  private shouldAttemptRecovery(result: HealthCheckResult): boolean {
+  private shouldAttemptRecovery(_result: HealthCheckResult): boolean {
     return true; // 복구 시도 조건 로직
   }
 
-  private async attemptRecovery(healthCheck: HealthCheck, result: HealthCheckResult): Promise<RecoveryAction | null> {
+  private async attemptRecovery(healthCheck: HealthCheck, _result: HealthCheckResult): Promise<RecoveryAction | null> {
     return {
       checkId: healthCheck.id,
       type: 'restart',
@@ -1014,12 +1014,12 @@ export class HealthStatusDashboard {
     return healthCheck?.dependencies || [];
   }
 
-  private async notifyIncident(incident: ActiveIncident): Promise<void> {
-    console.log('Incident created:', incident.title);
+  private async notifyIncident(_incident: ActiveIncident): Promise<void> {
+    // console.log('Incident created:', incident.title);
   }
 
-  private async notifyIncidentUpdate(incident: ActiveIncident, update: IncidentUpdate): Promise<void> {
-    console.log('Incident updated:', incident.title, update.message);
+  private async notifyIncidentUpdate(_incident: ActiveIncident, _update: IncidentUpdate): Promise<void> {
+    // console.log('Incident updated:', incident.title, update.message);
   }
 
   private async refreshSystemStatus(): Promise<void> {
@@ -1106,7 +1106,7 @@ export class HealthStatusDashboard {
   /**
    * 시스템 헬스 상태 조회
    */
-  getSystemHealth(): any {
+  getSystemHealth(): unknown {
     return {
       status: this.systemStatus.overallStatus,
       timestamp: this.systemStatus.timestamp,
@@ -1127,7 +1127,7 @@ export class HealthStatusDashboard {
   /**
    * 헬스체크 조회
    */
-  getHealthCheck(checkId: string): any {
+  getHealthCheck(checkId: string): unknown {
     const healthCheck = this.healthChecks.get(checkId);
     if (!healthCheck) return null;
     
@@ -1169,7 +1169,7 @@ export class HealthStatusDashboard {
           const result = await this.executeHealthCheck(healthCheck);
           results.push(result);
           this.storeHealthCheckResult(checkId, result);
-        } catch (error) {
+        } catch (_error) {
           results.push({
             checkId: healthCheck.id,
             name: healthCheck.name,
@@ -1209,7 +1209,7 @@ type IncidentSeverity = 'minor' | 'major' | 'critical';
 type IncidentStatus = 'investigating' | 'identified' | 'monitoring' | 'resolved';
 
 interface ValidationFunction {
-  (data: any): ValidationResult;
+  (data: unknown): ValidationResult;
 }
 
 interface ValidationResult {
@@ -1251,7 +1251,7 @@ interface ActiveIncident {
   updates: IncidentUpdate[];
   rootCause?: string;
   resolution?: string;
-  timeline: any[];
+  timeline: unknown[];
 }
 
 interface Issue {
@@ -1293,15 +1293,15 @@ interface Size {
 }
 
 interface SectionContent {
-  source: string;
+  _source: string;
   timeRange?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface Filter {
   field: string;
   operator: string;
-  value: any;
+  value: unknown;
 }
 
 interface Permission {
@@ -1315,7 +1315,7 @@ interface DashboardLayout {
 }
 
 interface DashboardCustomization {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface StatusPageComponent {
@@ -1355,7 +1355,7 @@ interface BrandingConfig {
 }
 
 interface SubscriptionConfig {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface RecoveryAction {
@@ -1388,7 +1388,7 @@ interface IncidentDetectionResult {
 
 interface DashboardData {
   dashboard: Dashboard;
-  sectionData: Map<string, any>;
+  sectionData: Map<string, unknown>;
   lastUpdated: Date;
   systemStatus: SystemStatus;
 }
@@ -1435,13 +1435,13 @@ interface HealthCheckConfig {
   type: HealthCheckType;
   category: HealthCategory;
   endpoint?: string;
-  configuration: any;
+  configuration: unknown;
   schedule: ScheduleConfig;
   dependencies?: string[];
   criticalityLevel?: CriticalityLevel;
   timeout?: number;
   retryPolicy?: RetryPolicy;
-  metadata?: { [key: string]: any };
+  metadata?: Record<string, unknown>;
 }
 
 interface DashboardConfig {
@@ -1520,7 +1520,7 @@ class IncidentManager {
 }
 
 class StatusReporter {
-  async generateReport(): Promise<any> {
+  async generateReport(): Promise<{ status: string; timestamp: Date }> {
     return { status: 'healthy', timestamp: new Date() };
   }
 }

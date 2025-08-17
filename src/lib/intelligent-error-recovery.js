@@ -9,13 +9,13 @@
  * - 예측적 실패 방지
  * 
  * 🚀 사용법:
- * const recovery = new IntelligentErrorRecovery(logger);
+ * const recovery = new IntelligentErrorRecovery(_logger);
  * const result = await recovery.handleGenerationFailure(errorContext);
  */
 
 export class IntelligentErrorRecovery {
-  constructor(logger) {
-    this.logger = logger;
+  constructor(_logger) {
+    this._logger = _logger;
     this.errorHistory = [];
     this.recoveryStrategies = new Map();
     this.emergencyFallbacks = new Map();
@@ -97,25 +97,25 @@ export class IntelligentErrorRecovery {
   /**
    * 🚨 생성 실패 처리 메인 엔트리포인트
    */
-  async handleGenerationFailure({ error, prompt, creativity, storyContext, operationId, logger }) {
+  async handleGenerationFailure({ _error, prompt, creativity, storyContext, operationId, _logger }) {
     const startTime = Date.now();
     
     try {
-      await this.logger.info('🛡️ 지능형 에러 복구 시작', {
+      await this._logger.info('🛡️ 지능형 에러 복구 시작', {
         operationId,
         errorType: error.name,
-        errorMessage: error.message
+        errorMessage: _error.message
       });
 
       // Step 1: 에러 분류 및 분석
-      const errorAnalysis = this.analyzeError(error, storyContext);
+      const errorAnalysis = this.analyzeError(_error, storyContext);
       
       // Step 2: 복구 전략 선택
       const recoveryPlan = this.selectRecoveryStrategy(errorAnalysis, storyContext);
       
       // Step 3: 단계적 복구 실행
       const recoveryResult = await this.executeRecoveryPlan(recoveryPlan, {
-        error,
+        _error,
         prompt,
         creativity,
         storyContext,
@@ -127,7 +127,7 @@ export class IntelligentErrorRecovery {
       
       return recoveryResult;
       
-    } catch (recoveryError) {
+    } catch (_recoveryError) {
       // 최종 긴급 Fallback
       return await this.executeEmergencyFallback(storyContext, operationId);
     }
@@ -136,7 +136,7 @@ export class IntelligentErrorRecovery {
   /**
    * 🔍 에러 분석 및 분류
    */
-  analyzeError(error, storyContext) {
+  analyzeError(_error, storyContext) {
     const analysis = {
       errorType: 'unknown',
       severity: 'medium',
@@ -144,22 +144,22 @@ export class IntelligentErrorRecovery {
       context: storyContext,
       errorDetails: {
         name: error.name,
-        message: error.message,
-        stack: error.stack
+        message: _error.message,
+        stack: _error.stack
       }
     };
 
     // 에러 타입 분류
-    if (error.message.includes('API') || error.message.includes('network')) {
+    if (_error.message.includes('API') || _error.message.includes('network')) {
       analysis.errorType = 'api_error';
       analysis.severity = 'high';
-    } else if (error.message.includes('quality') || error.message.includes('validation')) {
+    } else if (_error.message.includes('quality') || _error.message.includes('validation')) {
       analysis.errorType = 'quality_error';
       analysis.severity = 'medium';
-    } else if (error.message.includes('memory') || error.message.includes('resource')) {
+    } else if (_error.message.includes('memory') || _error.message.includes('resource')) {
       analysis.errorType = 'resource_error';
       analysis.severity = 'high';
-    } else if (error.message.includes('parse') || error.message.includes('format')) {
+    } else if (_error.message.includes('parse') || _error.message.includes('format')) {
       analysis.errorType = 'parsing_error';
       analysis.severity = 'low';
     }
@@ -219,19 +219,19 @@ export class IntelligentErrorRecovery {
       plan.currentAttempt = i + 1;
       
       try {
-        await this.logger.info(`🔧 복구 전략 실행: ${strategy} (${plan.currentAttempt}/${plan.maxAttempts})`);
+        await this._logger.info(`🔧 복구 전략 실행: ${strategy} (${plan.currentAttempt}/${plan.maxAttempts})`);
         
         const result = await this.executeStrategy(strategy, originalContext, plan);
         
         if (result && result.content) {
-          await this.logger.success(`✅ 복구 성공: ${strategy}`);
+          await this._logger.success(`✅ 복구 성공: ${strategy}`);
           this.recordSuccessfulRecovery(strategy);
           return result;
         }
         
       } catch (strategyError) {
         lastError = strategyError;
-        await this.logger.warn(`❌ 복구 전략 실패: ${strategy}`, { 
+        await this._logger.warn(`❌ 복구 전략 실패: ${strategy}`, { 
           error: strategyError.message 
         });
         
@@ -241,14 +241,14 @@ export class IntelligentErrorRecovery {
     }
     
     // 모든 전략 실패 시 긴급 Fallback
-    await this.logger.error('모든 복구 전략 실패, 긴급 Fallback 실행');
+    await this._logger.error('모든 복구 전략 실패, 긴급 Fallback 실행');
     throw new Error(`복구 실패: ${lastError?.message || '알 수 없는 오류'}`);
   }
 
   /**
    * 🛠️ 개별 복구 전략 실행
    */
-  async executeStrategy(strategy, originalContext, plan) {
+  async executeStrategy(strategy, originalContext, _plan) {
     switch (strategy) {
       case 'retry_with_backoff':
         return await this.retryWithBackoff(originalContext);
@@ -291,7 +291,7 @@ export class IntelligentErrorRecovery {
   /**
    * 🔄 지수 백오프 재시도
    */
-  async retryWithBackoff(context) {
+  async retryWithBackoff(_context) {
     const delays = [1000, 2000, 4000]; // 1초, 2초, 4초
     
     for (let i = 0; i < delays.length; i++) {
@@ -309,7 +309,7 @@ export class IntelligentErrorRecovery {
   /**
    * 📉 복잡도 감소
    */
-  async reduceComplexity(context) {
+  async reduceComplexity(_context) {
     const simplifiedContext = {
       ...context,
       creativity: 'low', // 창의성 수준 낮춤
@@ -330,7 +330,7 @@ export class IntelligentErrorRecovery {
   /**
    * 🔄 대체 모델 사용
    */
-  async useAlternativeModel(context) {
+  async useAlternativeModel(_context) {
     // 실제 구현에서는 다른 AI 모델 API 호출
     // 여기서는 단순화된 접근
     const alternativeContext = {
@@ -347,7 +347,7 @@ export class IntelligentErrorRecovery {
   /**
    * 🎨 자동 콘텐츠 개선
    */
-  async autoImproveContent(context) {
+  async autoImproveContent(_context) {
     // 기본 생성 후 개선 로직 적용
     const basicResult = await this.basicGeneration(context);
     
@@ -368,7 +368,7 @@ export class IntelligentErrorRecovery {
   /**
    * 🔀 대체 생성 접근
    */
-  async alternativeGeneration(context) {
+  async alternativeGeneration(_context) {
     // 템플릿 기반 생성
     const template = this.getContentTemplate(context.storyContext.novelType);
     const generatedContent = this.generateFromTemplate(template, context.storyContext);
@@ -383,7 +383,7 @@ export class IntelligentErrorRecovery {
   /**
    * 🤝 하이브리드 접근
    */
-  async hybridApproach(context) {
+  async hybridApproach(_context) {
     try {
       // AI 생성 + 템플릿 보완
       const aiResult = await this.basicGeneration(context);
@@ -410,7 +410,7 @@ export class IntelligentErrorRecovery {
   /**
    * 💾 메모리 최적화 후 재시도
    */
-  async optimizeMemoryAndRetry(context) {
+  async optimizeMemoryAndRetry(_context) {
     // 메모리 정리
     if (global.gc) {
       global.gc();
@@ -427,7 +427,7 @@ export class IntelligentErrorRecovery {
   /**
    * ⚡ 작업 단순화
    */
-  async simplifyOperation(context) {
+  async simplifyOperation(_context) {
     const simplifiedContext = {
       ...context,
       prompt: this.createMinimalPrompt(context.storyContext),
@@ -440,7 +440,7 @@ export class IntelligentErrorRecovery {
   /**
    * 🛠️ 형식 교정
    */
-  async correctFormat(context) {
+  async correctFormat(_context) {
     try {
       const rawResult = await this.basicGeneration(context);
       const correctedContent = this.applyFormatCorrection(rawResult.content);
@@ -457,7 +457,7 @@ export class IntelligentErrorRecovery {
   /**
    * 📝 템플릿 재생성
    */
-  async regenerateWithTemplate(context) {
+  async regenerateWithTemplate(_context) {
     const template = this.getAdvancedTemplate(context.storyContext.novelType);
     const content = this.generateFromAdvancedTemplate(template, context.storyContext);
     
@@ -471,7 +471,7 @@ export class IntelligentErrorRecovery {
   /**
    * 🚨 긴급 생성
    */
-  async emergencyGeneration(context) {
+  async emergencyGeneration(_context) {
     const novelType = context.storyContext?.novelType || 'continue_chapter';
     const fallback = this.emergencyFallbacks.get(novelType);
     
@@ -491,9 +491,9 @@ export class IntelligentErrorRecovery {
   /**
    * 🚨 시스템 실패 처리
    */
-  async handleSystemFailure({ error, operationId, startTime, logger, performanceMetrics }) {
+  async handleSystemFailure({ _error, operationId, startTime, _logger, performanceMetrics }) {
     try {
-      await this.logger.error('🚨 시스템 레벨 실패 감지', {
+      await this._logger.error('🚨 시스템 레벨 실패 감지', {
         operationId,
         errorType: error.name,
         duration: Date.now() - startTime
@@ -509,7 +509,7 @@ export class IntelligentErrorRecovery {
       
       return {
         success: false,
-        error: error.message,
+        error: _error.message,
         recovery: emergencyResult,
         operationId,
         emergencyMode: true
@@ -549,7 +549,7 @@ export class IntelligentErrorRecovery {
     const novelType = storyContext?.novelType || 'continue_chapter';
     const fallback = this.emergencyFallbacks.get(novelType);
     
-    await this.logger.warn('🚨 긴급 Fallback 실행', {
+    await this._logger.warn('🚨 긴급 Fallback 실행', {
       operationId,
       novelType
     });
@@ -564,7 +564,7 @@ export class IntelligentErrorRecovery {
 
   // === 유틸리티 메서드들 ===
 
-  async basicGeneration(context) {
+  async basicGeneration(_context) {
     // 실제 구현에서는 간단한 Gemini API 호출
     return {
       content: '기본 생성된 콘텐츠입니다.',
@@ -594,7 +594,7 @@ export class IntelligentErrorRecovery {
     return templates[novelType] || templates['continue_chapter'];
   }
 
-  generateFromTemplate(template, context) {
+  generateFromTemplate(template, _context) {
     return template + ' [자동 생성된 내용]';
   }
 
@@ -627,7 +627,7 @@ export class IntelligentErrorRecovery {
     };
   }
 
-  generateFromAdvancedTemplate(template, context) {
+  generateFromAdvancedTemplate(template, _context) {
     return `${template.structure} 구조의 ${template.tone} ${template.type} 내용입니다.`;
   }
 
@@ -644,7 +644,7 @@ export class IntelligentErrorRecovery {
   async validateAndLogRecovery(result, errorAnalysis, startTime) {
     const recoveryTime = Date.now() - startTime;
     
-    await this.logger.success('🛡️ 에러 복구 완료', {
+    await this._logger.success('🛡️ 에러 복구 완료', {
       recoveryTime: recoveryTime + 'ms',
       recoveryMethod: result.recoveryMethod,
       qualityScore: result.qualityScore

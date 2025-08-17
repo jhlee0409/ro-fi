@@ -253,9 +253,9 @@ export class RomanceChemistryAnalyzer {
       await this.logger.info('RomanceChemistryAnalyzer: 분석 완료', analysis);
       return analysis;
       
-    } catch (error) {
-      await this.logger.error('RomanceChemistryAnalyzer: 분석 실패', { error: error.message });
-      throw error;
+    } catch (_error) {
+      await this.logger.error('RomanceChemistryAnalyzer: 분석 실패', { error: _error.message });
+      throw _error;
     }
   }
 
@@ -341,8 +341,8 @@ export class RomanceChemistryAnalyzer {
       '서로의 마음', '진심', '솔직한', '믿어'
     ];
     
-    for (const word of emotionalConnectionWords) {
-      const matches = (content.match(new RegExp(word, 'g')) || []).length;
+    for (const _word of emotionalConnectionWords) {
+      const matches = (content.match(new RegExp(_word, 'g')) || []).length;
       chemistryPoints += matches * 0.7;
     }
     
@@ -410,8 +410,8 @@ export class RomanceChemistryAnalyzer {
       await this.logger.success('RomanceChemistryAnalyzer: 로맨틱 텐션 생성 완료');
       return enhancedContent;
       
-    } catch (error) {
-      await this.logger.error('RomanceChemistryAnalyzer: 텐션 생성 실패', { error: error.message });
+    } catch (_error) {
+      await this.logger.error('RomanceChemistryAnalyzer: 텐션 생성 실패', { error: _error.message });
       return content;
     }
   }
@@ -440,8 +440,8 @@ export class RomanceChemistryAnalyzer {
       await this.logger.success('RomanceChemistryAnalyzer: 대화 케미스트리 강화 완료');
       return enhancedContent;
       
-    } catch (error) {
-      await this.logger.error('RomanceChemistryAnalyzer: 대화 강화 실패', { error: error.message });
+    } catch (_error) {
+      await this.logger.error('RomanceChemistryAnalyzer: 대화 강화 실패', { error: _error.message });
       return content;
     }
   }
@@ -510,7 +510,7 @@ export class RomanceChemistryAnalyzer {
     let count = 0;
     
     // 각 카테고리별 설렘 포인트 확인
-    for (const [category, patterns] of Object.entries(this.heartFlutterPatterns)) {
+    for (const [_category, patterns] of Object.entries(this.heartFlutterPatterns)) {
       for (const pattern of patterns) {
         count += (content.match(new RegExp(pattern, 'g')) || []).length;
       }
@@ -518,8 +518,8 @@ export class RomanceChemistryAnalyzer {
     
     // 설렘 관련 키워드 추가 확인
     const flutterKeywords = ['설레', '두근거', '떨리', '심장이 뛰', '얼굴이 빨개'];
-    for (const keyword of flutterKeywords) {
-      count += (content.match(new RegExp(keyword, 'g')) || []).length;
+    for (const _keyword of flutterKeywords) {
+      count += (content.match(new RegExp(_keyword, 'g')) || []).length;
     }
     
     return count;
@@ -864,8 +864,8 @@ export class RomanceChemistryAnalyzer {
     
     let situationScore = 0;
     
-    for (const keyword of situationalTensionKeywords) {
-      situationScore += (content.match(new RegExp(keyword, 'g')) || []).length;
+    for (const _keyword of situationalTensionKeywords) {
+      situationScore += (content.match(new RegExp(_keyword, 'g')) || []).length;
     }
     
     return situationScore * 0.3;

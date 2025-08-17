@@ -56,7 +56,7 @@ export class PlotProgressionEngine {
   /**
    * 📊 플롯 진전도 종합 분석
    */
-  async validatePlotProgression(chapter, storyContext) {
+  async validatePlotProgression(chapter, _storyContext) {
     await this.logger.info('PlotProgressionEngine: 플롯 진전도 검증 시작');
     
     try {
@@ -64,13 +64,13 @@ export class PlotProgressionEngine {
       const progressionScore = this.calculateProgressionScore(chapter.content);
       
       // 2. 갈등 에스컬레이션 측정
-      const conflictScore = this.measureConflictEscalation(chapter.content, storyContext);
+      const conflictScore = this.measureConflictEscalation(chapter.content, _storyContext);
       
       // 3. 반복 패턴 탐지
-      const repetitionRate = this.detectRepetitionPatterns(chapter.content, storyContext);
+      const repetitionRate = this.detectRepetitionPatterns(chapter.content, _storyContext);
       
       // 4. 새로운 요소 확인
-      const newElementsCount = this.countNewElements(chapter.content, storyContext);
+      const newElementsCount = this.countNewElements(chapter.content, _storyContext);
       
       // 5. 종합 분석 결과
       const analysis = {
@@ -92,9 +92,9 @@ export class PlotProgressionEngine {
       await this.logger.info('PlotProgressionEngine: 분석 완료', analysis);
       return analysis;
       
-    } catch (error) {
-      await this.logger.error('PlotProgressionEngine: 분석 실패', { error: error.message });
-      throw error;
+    } catch (_error) {
+      await this.logger.error('PlotProgressionEngine: 분석 실패', { error: _error.message });
+      throw _error;
     }
   }
 
@@ -107,7 +107,7 @@ export class PlotProgressionEngine {
     }
     
     let progressionPoints = 0;
-    let totalSentences = content.split(/[.!?]/).length;
+    const totalSentences = content.split(/[.!?]/).length;
     
     // 진전 키워드 점수 계산
     for (const pattern of this.progressionPatterns.plotMovers) {
@@ -142,7 +142,7 @@ export class PlotProgressionEngine {
   /**
    * ⚔️ 갈등 에스컬레이션 측정
    */
-  measureConflictEscalation(content, storyContext) {
+  measureConflictEscalation(content, _storyContext) {
     if (!content) return 0.0;
     
     // 갈등 강화 지표
@@ -184,8 +184,8 @@ export class PlotProgressionEngine {
   /**
    * 🔄 반복 패턴 탐지
    */
-  detectRepetitionPatterns(content, storyContext) {
-    if (!content || !storyContext || !storyContext.previousChapters) {
+  detectRepetitionPatterns(content, _storyContext) {
+    if (!content || !_storyContext || !_storyContext.previousChapters) {
       return 0.0;
     }
     
@@ -196,7 +196,7 @@ export class PlotProgressionEngine {
     let totalRepetitions = 0;
     let totalComparisons = 0;
     
-    for (const prevChapter of storyContext.previousChapters.slice(-3)) { // 최근 3화와 비교
+    for (const prevChapter of _storyContext.previousChapters.slice(-3)) { // 최근 3화와 비교
       const prevKeywords = this.extractKeywords(prevChapter.content || '');
       
       // 키워드 중복 계산
@@ -215,7 +215,7 @@ export class PlotProgressionEngine {
   /**
    * 🆕 새로운 요소 개수 계산
    */
-  countNewElements(content, storyContext) {
+  countNewElements(content, _storyContext) {
     if (!content) return 0;
     
     const newElementPatterns = [
@@ -235,9 +235,9 @@ export class PlotProgressionEngine {
     const uniqueProperNouns = [...new Set(properNouns)];
     
     // 기존 스토리 컨텍스트에 없는 고유명사 확인
-    if (storyContext && storyContext.knownEntities) {
+    if (_storyContext && _storyContext.knownEntities) {
       const newEntities = uniqueProperNouns.filter(noun => 
-        !storyContext.knownEntities.includes(noun)
+        !_storyContext.knownEntities.includes(noun)
       );
       newElementsCount += newEntities.length;
     }
@@ -248,12 +248,12 @@ export class PlotProgressionEngine {
   /**
    * 🎯 강제 플롯 진전 시스템
    */
-  async enforceProgression(content, storyContext) {
+  async enforceProgression(content, _storyContext) {
     await this.logger.info('PlotProgressionEngine: 강제 진전 시작');
     
     try {
       // 현재 진전도 확인
-      const analysis = await this.validatePlotProgression({ content }, storyContext);
+      const analysis = await this.validatePlotProgression({ content }, _storyContext);
       
       if (analysis.overallQualityScore >= 7.0) {
         await this.logger.info('PlotProgressionEngine: 진전도 충족, 강제 진전 불필요');
@@ -289,8 +289,8 @@ export class PlotProgressionEngine {
       await this.logger.success('PlotProgressionEngine: 강제 진전 완료');
       return enhancedContent;
       
-    } catch (error) {
-      await this.logger.error('PlotProgressionEngine: 강제 진전 실패', { error: error.message });
+    } catch (_error) {
+      await this.logger.error('PlotProgressionEngine: 강제 진전 실패', { error: _error.message });
       return content; // 실패 시 원본 반환
     }
   }

@@ -45,9 +45,9 @@ describe('NovelDetector', () => {
       await fs.access(testChaptersDir).catch(async () => {
         await fs.mkdir(testChaptersDir, { recursive: true });
       });
-    } catch (error) {
-      console.error('Directory creation failed:', error);
-      throw error;
+    } catch (_error) {
+      // console.error('Directory creation failed:', _error);
+      throw _error;
     }
     
     // 테스트용 소설 파일 생성
@@ -108,9 +108,9 @@ rating: 0
       if (testContentDir && testContentDir.includes('novel-detector-')) {
         await fs.rm(testContentDir, { recursive: true, force: true });
       }
-    } catch (error) {
+    } catch (_error) {
       // 정리 실패해도 무시 (다른 테스트에서 이미 삭제했을 수 있음)
-      console.warn('Test cleanup warning:', error instanceof Error ? error.message : 'Unknown error');
+      // console.warn('Test cleanup warning:', _error instanceof Error ? error.message : 'Unknown error');
     }
   });
 

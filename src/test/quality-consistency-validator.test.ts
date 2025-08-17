@@ -5,38 +5,61 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { QualityConsistencyValidator } from '../lib/quality-consistency-validator.js';
-import { Novel, Chapter, QualityMetrics } from '../lib/types/index.js';
+import type { Novel, Chapter, QualityMetrics } from '../lib/types/index.js';
+
+// 테스트용 타입 확장 - private 메서드 접근용  
+type ValidatorForTesting = QualityConsistencyValidator & {
+  analyzeContentQuality: (chapter: Chapter) => unknown;
+  validateCharacterConsistency: (novel: Novel, chapters: Chapter[]) => unknown;
+  validateWorldConsistency: (novel: Novel, chapters: Chapter[]) => unknown;
+  validatePlotConsistency: (novel: Novel, chapters: Chapter[]) => unknown;
+  validateStyleConsistency: (novel: Novel, chapters: Chapter[]) => unknown;
+  analyzeSpeechPattern: (character: string, dialogues: unknown[]) => unknown;
+  validateMagicSystem: (content: string) => unknown;
+  validateLocationConsistency: (content: string) => unknown;
+  validateTimeline: (chapter: Chapter, previousChapters: Chapter[]) => unknown;
+  validateCausality: (chapter: Chapter, previousChapters: Chapter[]) => unknown;
+  validateConflictResolution: (content: string) => unknown;
+  analyzeWritingStyle: (content: string) => unknown;
+  validateEmotionExpression: (content: string, previousChapters: Chapter[]) => unknown;
+  generateImprovementSuggestions: (qualityMetrics: QualityMetrics, violations: unknown[]) => unknown[];
+  qualityHistory: QualityMetrics[];
+  extractDialogues: (content: string) => unknown[];
+  extractCharacterNames: (content: string) => string[];
+  calculateOverallScore: (...args: unknown[]) => number;
+};
 
 describe('QualityConsistencyValidator', () => {
   let validator: QualityConsistencyValidator;
+  let validatorForTesting: ValidatorForTesting;
   let mockNovel: Novel;
   let mockChapter: Chapter;
   let previousChapters: Chapter[];
 
   beforeEach(() => {
     validator = new QualityConsistencyValidator();
+    validatorForTesting = validator as ValidatorForTesting;
     
     mockNovel = {
       slug: 'test-novel',
       title: '테스트 로맨스 판타지',
       author: 'Test Author',
-      status: 'ongoing',
-      summary: '테스트용 로맨스 판타지 소설',
-      genre: '로맨스 판타지',
+      status: '연재 중',
+      description: '테스트용 로맨스 판타지 소설',
+      genre: ['로맨스', '판타지'],
       publishedDate: '2025-08-15',
       totalChapters: 50,
-      rating: 0,
-      coverImage: '/test.jpg',
-      tags: ['로맨스', '판타지'],
-      targetAudience: '20-30대 여성',
-      expectedLength: '50-60화'
+      contentRating: 'All',
+      tags: ['로맨스', '판타지']
     };
 
     mockChapter = {
       title: '5화',
       novel: 'test-novel',
       chapterNumber: 5,
-      publicationDate: '2025-08-15',
+      publishedDate: '2025-08-15',
+      contentRating: 'All',
+      wordCount: 3500,
       content: `
         "안녕하세요, 민준님." 서연이 정중하게 인사했다.
         
@@ -50,8 +73,8 @@ describe('QualityConsistencyValidator', () => {
         
         두 사람은 학교 옥상에서 석양을 바라보며 조용히 서 있었다.
       `,
-      wordCount: 150,
-      emotionalTone: 'romantic'
+      contentRating: 'All',
+      wordCount: 150
     };
 
     previousChapters = [
@@ -59,19 +82,19 @@ describe('QualityConsistencyValidator', () => {
         title: '1화',
         novel: 'test-novel',
         chapterNumber: 1,
-        publicationDate: '2025-08-11',
+        publishedDate: '2025-08-11',
+        contentRating: 'All',
         content: '민준과 서연의 첫 만남. 서연은 수줍어하며 인사했다.',
-        wordCount: 200,
-        emotionalTone: 'neutral'
+        wordCount: 200
       },
       {
         title: '2화',
         novel: 'test-novel',
         chapterNumber: 2,
-        publicationDate: '2025-08-12',
+        publishedDate: '2025-08-12',
+        contentRating: 'All',
         content: '마법 수업에서 서연의 금빛 마법이 처음 발현되었다.',
-        wordCount: 180,
-        emotionalTone: 'dramatic'
+        wordCount: 180
       }
     ];
   });
@@ -119,7 +142,7 @@ describe('QualityConsistencyValidator', () => {
   describe('Chapter Validation (Mocked)', () => {
     it('should perform comprehensive validation', async () => {
       // Mock the internal quality analysis method
-      const mockAnalyze = vi.spyOn(validator as any, 'analyzeContentQuality')
+      const mockAnalyze = vi.spyOn(validatorForTesting, 'analyzeContentQuality')
         .mockResolvedValue(createMockQualityMetrics(85));
 
       const result = await validator.validateChapter(mockChapter, mockNovel, previousChapters);
@@ -140,28 +163,28 @@ describe('QualityConsistencyValidator', () => {
 
     it('should pass validation for high-quality content', async () => {
       // Mock all validation methods to return good results
-      vi.spyOn(validator as any, 'validateCharacterConsistency')
+      vi.spyOn(validatorForTesting, 'validateCharacterConsistency')
         .mockResolvedValue({
           score: 90,
           issues: [],
           validations: []
         });
 
-      vi.spyOn(validator as any, 'validateWorldConsistency')
+      vi.spyOn(validatorForTesting, 'validateWorldConsistency')
         .mockResolvedValue({
           score: 95,
           issues: [],
           validations: []
         });
 
-      vi.spyOn(validator as any, 'validatePlotConsistency')
+      vi.spyOn(validatorForTesting, 'validatePlotConsistency')
         .mockResolvedValue({
           score: 88,
           issues: [],
           validations: []
         });
 
-      vi.spyOn(validator as any, 'validateStyleConsistency')
+      vi.spyOn(validatorForTesting, 'validateStyleConsistency')
         .mockResolvedValue({
           score: 92,
           issues: [],
@@ -177,14 +200,14 @@ describe('QualityConsistencyValidator', () => {
 
     it('should fail validation for poor-quality content', async () => {
       // Mock validation methods to return poor results
-      vi.spyOn(validator as any, 'validateCharacterConsistency')
+      vi.spyOn(validatorForTesting, 'validateCharacterConsistency')
         .mockResolvedValue({
           score: 40,
           issues: ['캐릭터 성격 불일치', '말투 변화'],
           validations: []
         });
 
-      vi.spyOn(validator as any, 'validateWorldConsistency')
+      vi.spyOn(validatorForTesting, 'validateWorldConsistency')
         .mockResolvedValue({
           score: 35,
           issues: ['마법 시스템 위반'],
@@ -212,7 +235,7 @@ describe('QualityConsistencyValidator', () => {
 
       validator.updateCharacterProfile('서연', profile);
 
-      const check = await (validator as any).validateCharacterConsistency(
+      const check = await (validatorForTesting).validateCharacterConsistency(
         mockChapter, 
         previousChapters
       );
@@ -230,7 +253,7 @@ describe('QualityConsistencyValidator', () => {
         { text: '어떻게 지내세요?', position: 50, speaker: '서연' }
       ];
 
-      const pattern = (validator as any).analyzeSpeechPattern('서연', dialogues);
+      const pattern = (validatorForTesting).analyzeSpeechPattern('서연', dialogues);
       
       expect(pattern).toHaveProperty('dominant');
       expect(pattern).toHaveProperty('deviation');
@@ -250,7 +273,7 @@ describe('QualityConsistencyValidator', () => {
 
       validator.addWorldRule(worldRule);
 
-      const check = await (validator as any).validateWorldConsistency(
+      const check = await (validatorForTesting).validateWorldConsistency(
         mockChapter, 
         mockNovel
       );
@@ -261,14 +284,14 @@ describe('QualityConsistencyValidator', () => {
     });
 
     it('should validate magic system consistency', () => {
-      const magicConsistency = (validator as any).validateMagicSystem(mockChapter.content);
+      const magicConsistency = (validatorForTesting).validateMagicSystem(mockChapter.content);
       
       expect(magicConsistency).toHaveProperty('consistent');
       expect(typeof magicConsistency.consistent).toBe('boolean');
     });
 
     it('should validate location consistency', () => {
-      const locationConsistency = (validator as any).validateLocationConsistency(mockChapter.content);
+      const locationConsistency = (validatorForTesting).validateLocationConsistency(mockChapter.content);
       
       expect(locationConsistency).toHaveProperty('consistent');
       expect(typeof locationConsistency.consistent).toBe('boolean');
@@ -277,7 +300,7 @@ describe('QualityConsistencyValidator', () => {
 
   describe('Plot Consistency Validation', () => {
     it('should validate timeline consistency', () => {
-      const timelineCheck = (validator as any).validateTimeline(mockChapter, previousChapters);
+      const timelineCheck = (validatorForTesting).validateTimeline(mockChapter, previousChapters);
       
       expect(timelineCheck).toHaveProperty('consistent');
       expect(timelineCheck).toHaveProperty('expected');
@@ -285,14 +308,14 @@ describe('QualityConsistencyValidator', () => {
     });
 
     it('should validate causality relationships', () => {
-      const causalityCheck = (validator as any).validateCausality(mockChapter, previousChapters);
+      const causalityCheck = (validatorForTesting).validateCausality(mockChapter, previousChapters);
       
       expect(causalityCheck).toHaveProperty('consistent');
       expect(typeof causalityCheck.consistent).toBe('boolean');
     });
 
     it('should validate conflict resolution logic', () => {
-      const conflictCheck = (validator as any).validateConflictResolution(mockChapter.content);
+      const conflictCheck = (validatorForTesting).validateConflictResolution(mockChapter.content);
       
       expect(conflictCheck).toHaveProperty('logical');
       expect(typeof conflictCheck.logical).toBe('boolean');
@@ -301,7 +324,7 @@ describe('QualityConsistencyValidator', () => {
 
   describe('Style Consistency Validation', () => {
     it('should analyze writing style patterns', () => {
-      const style = (validator as any).analyzeWritingStyle(mockChapter.content);
+      const style = (validatorForTesting).analyzeWritingStyle(mockChapter.content);
       
       expect(style).toHaveProperty('formalityLevel');
       expect(style).toHaveProperty('narrativePerspective');
@@ -311,7 +334,7 @@ describe('QualityConsistencyValidator', () => {
     });
 
     it('should validate emotion expression consistency', () => {
-      const emotionCheck = (validator as any).validateEmotionExpression(
+      const emotionCheck = (validatorForTesting).validateEmotionExpression(
         mockChapter.content, 
         previousChapters
       );
@@ -334,7 +357,7 @@ describe('QualityConsistencyValidator', () => {
         }
       ];
 
-      const suggestions = (validator as any).generateImprovementSuggestions(
+      const suggestions = (validatorForTesting).generateImprovementSuggestions(
         qualityMetrics, 
         violations
       );
@@ -342,7 +365,7 @@ describe('QualityConsistencyValidator', () => {
       expect(Array.isArray(suggestions)).toBe(true);
       expect(suggestions.length).toBeGreaterThan(0);
       
-      suggestions.forEach((suggestion: any) => {
+      suggestions.forEach((suggestion: unknown) => {
         expect(suggestion).toHaveProperty('category');
         expect(suggestion).toHaveProperty('priority');
         expect(suggestion).toHaveProperty('description');
@@ -362,12 +385,12 @@ describe('QualityConsistencyValidator', () => {
         }
       ];
 
-      const suggestions = (validator as any).generateImprovementSuggestions(
+      const suggestions = (validatorForTesting).generateImprovementSuggestions(
         qualityMetrics, 
         violations
       );
 
-      const highPriority = suggestions.filter((s: any) => s.priority === 'high');
+      const highPriority = suggestions.filter((s: unknown) => (s as Record<string, unknown>).priority === 'high');
       expect(highPriority.length).toBeGreaterThan(0);
     });
   });
@@ -386,7 +409,7 @@ describe('QualityConsistencyValidator', () => {
       // Add quality history to simulate improving trend
       for (let i = 0; i < 6; i++) {
         const mockQuality = createMockQualityMetrics(70 + i * 5);
-        (validator as any).qualityHistory.push(mockQuality);
+        (validatorForTesting).qualityHistory.push(mockQuality);
       }
 
       const trends = validator.getQualityTrends();
@@ -400,7 +423,7 @@ describe('QualityConsistencyValidator', () => {
       // Add quality history to simulate declining trend
       for (let i = 0; i < 6; i++) {
         const mockQuality = createMockQualityMetrics(90 - i * 5);
-        (validator as any).qualityHistory.push(mockQuality);
+        (validatorForTesting).qualityHistory.push(mockQuality);
       }
 
       const trends = validator.getQualityTrends();
@@ -414,7 +437,7 @@ describe('QualityConsistencyValidator', () => {
   describe('Utility Functions', () => {
     it('should extract dialogues correctly', () => {
       const content = '"안녕하세요" 그녀가 말했다. "오늘 날씨가 좋네요"';
-      const dialogues = (validator as any).extractDialogues(content);
+      const dialogues = (validatorForTesting).extractDialogues(content);
       
       expect(Array.isArray(dialogues)).toBe(true);
       expect(dialogues.length).toBe(2);
@@ -424,7 +447,7 @@ describe('QualityConsistencyValidator', () => {
 
     it('should extract character names', () => {
       const content = '민준이 서연에게 말했다. 지우도 함께 있었다.';
-      const names = (validator as any).extractCharacterNames(content);
+      const names = (validatorForTesting).extractCharacterNames(content);
       
       expect(Array.isArray(names)).toBe(true);
       expect(names).toContain('민준');
@@ -439,7 +462,7 @@ describe('QualityConsistencyValidator', () => {
       const plotCheck = { score: 75, issues: [], validations: [] };
       const styleCheck = { score: 88, issues: [], validations: [] };
 
-      const overallScore = (validator as any).calculateOverallScore(
+      const overallScore = (validatorForTesting).calculateOverallScore(
         qualityMetrics,
         characterCheck,
         worldCheck,

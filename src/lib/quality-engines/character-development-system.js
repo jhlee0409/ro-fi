@@ -69,7 +69,7 @@ export class CharacterDevelopmentSystem {
       },
       
       // 감정 상태별 변화
-      emotionalStates: {
+      _emotionalStates: {
         angry: ['화를 내며', '분노하여', '격앙되어', '성난 목소리로'],
         sad: ['슬프게', '우울하게', '침울하게', '눈물을 머금고'],
         happy: ['기쁘게', '환하게', '밝게', '즐거워하며'],
@@ -133,7 +133,7 @@ export class CharacterDevelopmentSystem {
   /**
    * 👥 캐릭터 능동성 종합 분석
    */
-  async analyzeCharacterDevelopment(chapter, storyContext) {
+  async analyzeCharacterDevelopment(chapter, _storyContext) {
     await this.logger.info('CharacterDevelopmentSystem: 캐릭터 분석 시작');
     
     try {
@@ -142,16 +142,16 @@ export class CharacterDevelopmentSystem {
       const actions = this.extractActions(chapter.content);
       
       // 2. 능동성 측정
-      const agencyScore = this.measureCharacterAgency(dialogues, actions);
+      const agencyScore = this.measureCharacterAgency(_dialogues, actions);
       
       // 3. 말투 다양성 분석
       const speechDiversityScore = this.analyzeSpeechDiversity(dialogues);
       
       // 4. 캐릭터 성장 추적
-      const growthAnalysis = this.trackCharacterGrowth(chapter, storyContext);
+      const growthAnalysis = this.trackCharacterGrowth(chapter, _storyContext);
       
       // 5. 개성 강도 측정
-      const personalityScore = this.measurePersonalityStrength(dialogues, actions);
+      const personalityScore = this.measurePersonalityStrength(_dialogues, actions);
       
       // 6. 종합 분석 결과
       const analysis = {
@@ -181,16 +181,16 @@ export class CharacterDevelopmentSystem {
       await this.logger.info('CharacterDevelopmentSystem: 분석 완료', analysis);
       return analysis;
       
-    } catch (error) {
-      await this.logger.error('CharacterDevelopmentSystem: 분석 실패', { error: error.message });
-      throw error;
+    } catch (_error) {
+      await this.logger.error('CharacterDevelopmentSystem: 분석 실패', { error: _error.message });
+      throw _error;
     }
   }
 
   /**
    * 🎬 캐릭터 능동성 강화
    */
-  async enforceCharacterAgency(content, storyContext) {
+  async enforceCharacterAgency(content, _storyContext) {
     await this.logger.info('CharacterDevelopmentSystem: 능동성 강화 시작');
     
     try {
@@ -203,16 +203,16 @@ export class CharacterDevelopmentSystem {
       enhancedContent = this.enhanceCharacterActions(enhancedContent);
       
       // 3. 캐릭터 개성 강화
-      enhancedContent = this.strengthenCharacterPersonality(enhancedContent, storyContext);
+      enhancedContent = this.strengthenCharacterPersonality(enhancedContent, _storyContext);
       
       // 4. 성장 요소 추가
-      enhancedContent = this.injectGrowthElements(enhancedContent, storyContext);
+      enhancedContent = this.injectGrowthElements(enhancedContent, _storyContext);
       
       await this.logger.success('CharacterDevelopmentSystem: 능동성 강화 완료');
       return enhancedContent;
       
-    } catch (error) {
-      await this.logger.error('CharacterDevelopmentSystem: 능동성 강화 실패', { error: error.message });
+    } catch (_error) {
+      await this.logger.error('CharacterDevelopmentSystem: 능동성 강화 실패', { error: _error.message });
       return content;
     }
   }
@@ -220,18 +220,18 @@ export class CharacterDevelopmentSystem {
   /**
    * 💬 대사 패턴 다양화
    */
-  async diversifyDialogue(content, emotionalState = 'neutral') {
+  async diversifyDialogue(content, _emotionalState = 'neutral') {
     await this.logger.info('CharacterDevelopmentSystem: 대사 다양화 시작');
     
     try {
-      const dialogues = this.extractDialogues(content);
+      const _dialogues = this.extractDialogues(content);
       let enhancedContent = content;
       
       // 반복 표현 자동 탐지 및 대체
       enhancedContent = this.replaceRepetitiveExpressions(enhancedContent);
       
       // 감정별 말투 차별화
-      enhancedContent = this.applyEmotionalSpeechPatterns(enhancedContent, emotionalState);
+      enhancedContent = this.applyEmotionalSpeechPatterns(enhancedContent, _emotionalState);
       
       // "차가운" 등 과다 반복 방지
       enhancedContent = this.reduceOverusedAdjectives(enhancedContent);
@@ -239,8 +239,8 @@ export class CharacterDevelopmentSystem {
       await this.logger.success('CharacterDevelopmentSystem: 대사 다양화 완료');
       return enhancedContent;
       
-    } catch (error) {
-      await this.logger.error('CharacterDevelopmentSystem: 대사 다양화 실패', { error: error.message });
+    } catch (_error) {
+      await this.logger.error('CharacterDevelopmentSystem: 대사 다양화 실패', { error: _error.message });
       return content;
     }
   }
@@ -248,12 +248,12 @@ export class CharacterDevelopmentSystem {
   /**
    * 📈 캐릭터 성장 추적
    */
-  trackCharacterGrowth(chapter, storyContext) {
+  trackCharacterGrowth(chapter, _storyContext) {
     const characterStates = {};
     
     // 스토리 컨텍스트에서 캐릭터 정보 추출
-    if (storyContext && storyContext.characters) {
-      for (const [charName, charInfo] of Object.entries(storyContext.characters)) {
+    if (_storyContext && _storyContext.characters) {
+      for (const [charName, charInfo] of Object.entries(_storyContext.characters)) {
         characterStates[charName] = this.analyzeIndividualGrowth(charName, chapter, charInfo);
       }
     }
@@ -279,7 +279,7 @@ export class CharacterDevelopmentSystem {
   /**
    * 🎭 능동성 측정
    */
-  measureCharacterAgency(dialogues, actions) {
+  measureCharacterAgency(_dialogues, actions) {
     if (dialogues.length === 0 && actions.length === 0) {
       return 0.0;
     }
@@ -355,9 +355,9 @@ export class CharacterDevelopmentSystem {
   /**
    * 🎨 개성 강도 측정
    */
-  measurePersonalityStrength(dialogues, actions) {
+  measurePersonalityStrength(_dialogues, actions) {
     let personalityScore = 0;
-    let totalElements = dialogues.length + actions.length;
+    const totalElements = dialogues.length + actions.length;
     
     if (totalElements === 0) return 0.0;
     
@@ -448,7 +448,7 @@ export class CharacterDevelopmentSystem {
   /**
    * 🎭 캐릭터 개성 강화
    */
-  strengthenCharacterPersonality(content, storyContext) {
+  strengthenCharacterPersonality(content, _storyContext) {
     // 캐릭터별 말투 패턴 적용
     let enhancedContent = content;
     
@@ -457,10 +457,10 @@ export class CharacterDevelopmentSystem {
     
     enhancedContent = enhancedContent.replace(dialogueRegex, (match, dialogue) => {
       // 감정 상태 추론
-      const emotionalState = this.inferEmotionalState(dialogue);
+      const _emotionalState = this.inferEmotionalState(dialogue);
       
       // 개성 있는 표현으로 변환
-      const enhancedDialogue = this.applyPersonalityToDialogue(dialogue, emotionalState);
+      const enhancedDialogue = this.applyPersonalityToDialogue(dialogue, _emotionalState);
       
       return `"${enhancedDialogue}"`;
     });
@@ -471,7 +471,7 @@ export class CharacterDevelopmentSystem {
   /**
    * 🌱 성장 요소 삽입
    */
-  injectGrowthElements(content, storyContext) {
+  injectGrowthElements(content, _storyContext) {
     const growthInserts = [
       '\n\n이 순간 그는 전과 다른 자신을 발견했다.',
       '\n\n그녀의 마음속에서 새로운 결의가 싹텄다.',
@@ -637,12 +637,12 @@ export class CharacterDevelopmentSystem {
     return improvedContent;
   }
   
-  applyEmotionalSpeechPatterns(content, emotionalState) {
-    if (!this.speechPatterns.emotionalStates[emotionalState]) {
+  applyEmotionalSpeechPatterns(content, _emotionalState) {
+    if (!this.speechPatterns._emotionalStates[_emotionalState]) {
       return content;
     }
     
-    const patterns = this.speechPatterns.emotionalStates[emotionalState];
+    const patterns = this.speechPatterns._emotionalStates[_emotionalState];
     const dialogueRegex = /"([^"]+)"/g;
     
     return content.replace(dialogueRegex, (match, dialogue) => {
@@ -712,7 +712,7 @@ export class CharacterDevelopmentSystem {
     return 'neutral';
   }
   
-  applyPersonalityToDialogue(dialogue, emotionalState) {
+  applyPersonalityToDialogue(dialogue, _emotionalState) {
     // 기본 개성 패턴 적용
     const personalityTypes = Object.keys(this.speechPatterns.personalities);
     const randomPersonality = personalityTypes[Math.floor(Math.random() * personalityTypes.length)];
@@ -722,7 +722,7 @@ export class CharacterDevelopmentSystem {
     const endingStyle = personality.endingStyles[Math.floor(Math.random() * personality.endingStyles.length)];
     
     // 기존 어미를 새 스타일로 교체
-    let enhancedDialogue = dialogue.replace(/다$|요$|야$|지$/, endingStyle);
+    const enhancedDialogue = dialogue.replace(/다$|요$|야$|지$/, endingStyle);
     
     return enhancedDialogue;
   }

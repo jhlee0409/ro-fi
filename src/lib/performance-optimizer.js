@@ -49,9 +49,9 @@ export class PerformanceOptimizer {
       
       await this.logger.success('⚡ 성능 최적화 시스템 초기화 완료');
       
-    } catch (error) {
-      await this.logger.error('성능 최적화 시스템 초기화 실패', { error: error.message });
-      throw error;
+    } catch (_error) {
+      await this.logger.error('성능 최적화 시스템 초기화 실패', { error: _error.message });
+      throw _error;
     }
   }
 
@@ -85,8 +85,8 @@ export class PerformanceOptimizer {
       
       return processingStrategy;
       
-    } catch (error) {
-      await this.logger.error('분석 기반 성능 최적화 실패', { error: error.message });
+    } catch (_error) {
+      await this.logger.error('분석 기반 성능 최적화 실패', { error: _error.message });
       return this.getDefaultProcessingStrategy();
     }
   }

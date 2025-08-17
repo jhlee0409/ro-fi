@@ -105,7 +105,26 @@ export interface ProcessingResult {
   success: boolean;
   output?: string;
   error?: string;
-  metrics?: any;
+  metrics?: unknown;
+}
+
+export interface QualityMetrics {
+  score: number;
+  threshold: number;
+  aspects: Record<string, number>;
+  passed: boolean;
+  overallScore?: number;
+  readabilityScore?: number;
+  creativityScore?: number;
+  consistencyScore?: number;
+  engagementScore?: number;
+  breakdown?: {
+    structure: number;
+    characterization: number;
+    dialogue: number;
+    pacing: number;
+    worldBuilding: number;
+  };
 }
 
 export interface PerformanceRecord {

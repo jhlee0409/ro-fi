@@ -169,23 +169,23 @@ export function validateEnvironment(): ValidationResult {
 // 환경 정보 디버깅용 출력
 export function debugEnvironment(): void {
   if (getLogLevel() === 'debug') {
-    const env = getEnvironmentInfo();
-    console.log('🔍 Environment Debug Info:', {
-      ...env,
-      hasApiKey: !!process.env.ANTHROPIC_API_KEY,
-      processEnv: {
-        NODE_ENV: process.env.NODE_ENV,
-        VITEST: process.env.VITEST,
-        npm_lifecycle_event: process.env.npm_lifecycle_event,
-      },
-    });
+    const _env = getEnvironmentInfo();
+    // console.log('🔍 Environment Debug Info:', {
+    //   ...env,
+    //   hasApiKey: !!process.env.ANTHROPIC_API_KEY,
+    //   processEnv: {
+    //     NODE_ENV: process.env.NODE_ENV,
+    //     VITEST: process.env.VITEST,
+    //     npm_lifecycle_event: process.env.npm_lifecycle_event,
+    //   },
+    // });
 
     const validation = validateEnvironment();
     if (validation.warnings.length > 0) {
-      console.warn('⚠️ Environment Warnings:', validation.warnings);
+      // console.warn('⚠️ Environment Warnings:', validation.warnings);
     }
     if (validation.errors.length > 0) {
-      console.error('❌ Environment Errors:', validation.errors);
+      // console.error('❌ Environment Errors:', validation.errors);
     }
   }
 }

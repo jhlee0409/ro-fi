@@ -9,7 +9,7 @@ export interface ReaderBehavior {
 }
 
 export interface ContentPerformance {
-  novel: string;
+  _novel: string;
   chapter: number;
   views: number;
   uniqueReaders: number;
@@ -75,14 +75,14 @@ export class ReaderAnalyticsEngine {
   /**
    * 콘텐츠 성과 분석
    */
-  analyzeContentPerformance(novel: string, chapter?: number): {
+  analyzeContentPerformance(_novel: string, chapter?: number): {
     overallScore: number;
     metrics: ReaderMetrics;
     insights: string[];
     recommendations: string[];
   } {
     const relevantData = this.performanceData.filter(data => {
-      return data.novel === novel && (chapter ? data.chapter === chapter : true);
+      return data._novel === _novel && (chapter ? data.chapter === chapter : true);
     });
 
     if (relevantData.length === 0) {
@@ -94,7 +94,7 @@ export class ReaderAnalyticsEngine {
     const avgReadTime = relevantData.reduce((sum, data) => sum + data.averageReadTime, 0) / relevantData.length;
     const avgBounceRate = relevantData.reduce((sum, data) => sum + data.bounceRate, 0) / relevantData.length;
     const totalShares = relevantData.reduce((sum, data) => sum + data.shareCount, 0);
-    const totalBookmarks = relevantData.reduce((sum, data) => sum + data.bookmarkCount, 0);
+    const _totalBookmarks = relevantData.reduce((sum, data) => sum + data.bookmarkCount, 0);
 
     const engagementScore = this.calculateEngagementScore(avgViews, avgReadTime, avgBounceRate, totalShares);
     const retentionRate = Math.max(0, 1 - avgBounceRate);
@@ -109,7 +109,7 @@ export class ReaderAnalyticsEngine {
 
     const overallScore = this.calculateOverallScore(metrics);
     const insights = this.generateInsights(metrics, relevantData);
-    const recommendations = this.generateRecommendations(metrics, novel);
+    const recommendations = this.generateRecommendations(metrics, _novel);
 
     return {
       overallScore,
@@ -200,7 +200,7 @@ export class ReaderAnalyticsEngine {
   /**
    * 추천사항 생성
    */
-  private generateRecommendations(metrics: ReaderMetrics, novel: string): string[] {
+  private generateRecommendations(metrics: ReaderMetrics, _novel: string): string[] {
     const recommendations: string[] = [];
 
     // 참여도 기반 추천
@@ -266,7 +266,7 @@ export class ReaderAnalyticsEngine {
   /**
    * 독자 세그먼트 분석
    */
-  analyzeReaderSegments(novel: string): Map<string, number> {
+  analyzeReaderSegments(_novel: string): Map<string, number> {
     const segmentDistribution = new Map<string, number>();
     
     // 실제 구현에서는 독자 행동 데이터를 기반으로 세그먼트 분류
@@ -284,7 +284,7 @@ export class ReaderAnalyticsEngine {
    */
   updateTrendingThemes(themes: string[]): void {
     this.trendingThemes = themes;
-    console.log('📊 트렌딩 테마 업데이트됨:', themes.join(', '));
+    // console.log('📊 트렌딩 테마 업데이트됨:', themes.join(', '));
   }
 
   /**

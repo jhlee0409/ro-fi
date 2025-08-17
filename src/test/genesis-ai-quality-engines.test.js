@@ -257,7 +257,7 @@ describe('GENESIS AI Quality Engines', () => {
         const result = await qualityGateway.validateQualityThreshold(lowQualityContent);
         // 자동 개선이 적용되었을 것으로 예상
         expect(result.improvedContent).toBeDefined();
-      } catch (error) {
+      } catch (_error) {
         // 품질 개선 실패 또는 임계값 미달로 인한 에러
         expect(error.name).toContain('Quality');
       }
@@ -389,7 +389,7 @@ describe('GENESIS AI Quality Engines', () => {
           
           expect(improvedReport.overallScore).toBeGreaterThanOrEqual(originalReport.overallScore);
         }
-      } catch (error) {
+      } catch (_error) {
         // 품질 개선이 불가능한 경우도 예상 범위 내
         expect(error.name).toContain('Quality');
       }
@@ -424,7 +424,7 @@ describe('GENESIS AI Quality Engines', () => {
         expect(qualityReport.scores.literaryScore).toBeGreaterThanOrEqual(0);
         expect(qualityReport.scores.romanceScore).toBeGreaterThanOrEqual(0);
         
-      } catch (error) {
+      } catch (_error) {
         // 전체 시스템 실패가 아닌 특정 엔진 실패만 발생해야 함
         expect(error.name).toBe('QualityAnalysisError');
       } finally {
@@ -622,17 +622,17 @@ describe('GENESIS AI 통합 시나리오 테스트', () => {
         expect(improvedReport.scores.literaryScore).toBeGreaterThanOrEqual(originalReport.scores.literaryScore);
         expect(improvedReport.scores.romanceScore).toBeGreaterThanOrEqual(originalReport.scores.romanceScore);
         
-        console.log('품질 개선 성공:');
-        console.log(`- 전체 점수: ${originalReport.overallScore} → ${improvedReport.overallScore}`);
-        console.log(`- 플롯: ${originalReport.scores.plotScore} → ${improvedReport.scores.plotScore}`);
-        console.log(`- 캐릭터: ${originalReport.scores.characterScore} → ${improvedReport.scores.characterScore}`);
-        console.log(`- 문체: ${originalReport.scores.literaryScore} → ${improvedReport.scores.literaryScore}`);
-        console.log(`- 로맨스: ${originalReport.scores.romanceScore} → ${improvedReport.scores.romanceScore}`);
+        // console.log('품질 개선 성공:');
+        // console.log(`- 전체 점수: ${originalReport.overallScore} → ${improvedReport.overallScore}`);
+        // console.log(`- 플롯: ${originalReport.scores.plotScore} → ${improvedReport.scores.plotScore}`);
+        // console.log(`- 캐릭터: ${originalReport.scores.characterScore} → ${improvedReport.scores.characterScore}`);
+        // console.log(`- 문체: ${originalReport.scores.literaryScore} → ${improvedReport.scores.literaryScore}`);
+        // console.log(`- 로맨스: ${originalReport.scores.romanceScore} → ${improvedReport.scores.romanceScore}`);
       }
       
-    } catch (error) {
+    } catch (_error) {
       // 개선 불가능한 경우도 예상 범위 내
-      console.log('품질 개선 실패 (예상 범위 내):', error.message);
+      // console.log('품질 개선 실패 (예상 범위 내):', _error.message);
     }
   });
 });

@@ -32,10 +32,10 @@ dotenv.config({ path: join(PROJECT_ROOT, '.env.local') });
 class SubAgentOrchestrator {
   constructor() {
     this.logger = {
-      info: (msg, data) => console.log(`ℹ️  ${msg}`, data ? JSON.stringify(data, null, 2) : ''),
-      warn: (msg, data) => console.log(`⚠️  ${msg}`, data ? JSON.stringify(data, null, 2) : ''),
-      error: (msg, data) => console.log(`❌ ${msg}`, data ? JSON.stringify(data, null, 2) : ''),
-      success: (msg, data) => console.log(`✅ ${msg}`, data ? JSON.stringify(data, null, 2) : '')
+      info: (_msg, _data) => {}, // console.log(`ℹ️  ${msg}`, data ? JSON.stringify(data, null, 2) : ''),
+      warn: (_msg, _data) => {}, // console.log(`⚠️  ${msg}`, data ? JSON.stringify(data, null, 2) : ''),
+      error: (_msg, _data) => {}, // console.log(`❌ ${msg}`, data ? JSON.stringify(data, null, 2) : ''),
+      success: (_msg, _data) => {}, // console.log(`✅ ${msg}`, data ? JSON.stringify(data, null, 2) : '')
     };
     
     // AI 모델 초기화
@@ -68,29 +68,29 @@ class SubAgentOrchestrator {
    * 🚀 메인 오케스트레이션 함수
    */
   async orchestrateNovelGeneration() {
-    console.log('🎭 SubAgent Orchestrator 시작!');
-    console.log('명확한 워크플로우로 품질 보장된 소설 생성\n');
+    // console.log('🎭 SubAgent Orchestrator 시작!');
+    // console.log('명확한 워크플로우로 품질 보장된 소설 생성\n');
     
     try {
       // 1단계: 혁신적 소설 컨셉 생성
-      console.log('🧠 소설 컨셉 생성...');
+      // console.log('🧠 소설 컨셉 생성...');
       const novelInfo = await this.generateNovelConcept();
       await this.createNovelFile(novelInfo);
       
       // 2단계: 챕터별 SubAgent 워크플로우 실행
       for (let chapterNum = 1; chapterNum <= 5; chapterNum++) {
-        console.log(`\n📖 챕터 ${chapterNum} SubAgent 워크플로우 시작`);
+        // console.log(`\n📖 챕터 ${chapterNum} SubAgent 워크플로우 시작`);
         await this.executeChapterWorkflow(novelInfo, chapterNum);
       }
       
       // 3단계: 전체 소설 품질 검증
       const overallQuality = await this.validateOverallNovel(novelInfo);
       
-      console.log('\n🎉 SubAgent Orchestrator 완료!');
-      console.log('================================');
-      console.log(`📚 제목: ${novelInfo.title}`);
-      console.log(`⭐ 전체 품질: ${overallQuality.overallScore.toFixed(1)}/10`);
-      console.log(`🎯 예상 독자 평점: ${overallQuality.expectedRating}/5`);
+      // console.log('\n🎉 SubAgent Orchestrator 완료!');
+      // console.log('================================');
+      // console.log(`📚 제목: ${novelInfo.title}`);
+      // console.log(`⭐ 전체 품질: ${overallQuality.overallScore.toFixed(1)}/10`);
+      // console.log(`🎯 예상 독자 평점: ${overallQuality.expectedRating}/5`);
       
       return {
         novelInfo,
@@ -98,9 +98,10 @@ class SubAgentOrchestrator {
         status: 'SUBAGENT_SUCCESS'
       };
       
-    } catch (error) {
-      this.logger.error('💥 SubAgent Orchestrator 실패:', error.message);
-      throw error;
+    } catch (_error) {
+    // Intentionally unused error variable
+      this.logger.error('💥 SubAgent Orchestrator 실패:', _error.message);
+      throw _error;
     }
   }
 
@@ -108,27 +109,27 @@ class SubAgentOrchestrator {
    * 📖 챕터별 워크플로우 실행
    */
   async executeChapterWorkflow(novelInfo, chapterNumber) {
-    console.log(`\n🔄 챕터 ${chapterNumber} 워크플로우 시작...`);
+    // console.log(`\n🔄 챕터 ${chapterNumber} 워크플로우 시작...`);
     
     try {
       // Phase 1: BaseStoryGenerator
-      console.log('Phase 1: BaseStory 생성...');
+      // console.log('Phase 1: BaseStory 생성...');
       const baseStoryResult = await this.executeBaseStoryGenerator(novelInfo, chapterNumber);
       this.workflowState.baseStory = { status: 'completed', result: baseStoryResult, attempts: 1 };
       
       // Phase 2A: ConflictAgent + CharacterAgent (병렬)
-      console.log('Phase 2A: ConflictAgent + CharacterAgent (병렬)...');
+      // console.log('Phase 2A: ConflictAgent + CharacterAgent (병렬)...');
       const [conflictResult, characterResult] = await this.executeParallelAgents(baseStoryResult, chapterNumber);
       this.workflowState.conflictAgent = { status: 'completed', result: conflictResult, attempts: 1 };
       this.workflowState.characterAgent = { status: 'completed', result: characterResult, attempts: 1 };
       
       // Phase 2B: ContentMerger
-      console.log('Phase 2B: Content 병합...');
+      // console.log('Phase 2B: Content 병합...');
       const mergedResult = await this.executeContentMerger(conflictResult, characterResult);
       this.workflowState.contentMerger = { status: 'completed', result: mergedResult, attempts: 1 };
       
       // Phase 3: RomanceAgent → TwistAgent → QualityValidator (순차)
-      console.log('Phase 3: RomanceAgent → TwistAgent → QualityValidator...');
+      // console.log('Phase 3: RomanceAgent → TwistAgent → QualityValidator...');
       const romanceResult = await this.executeRomanceAgent(mergedResult, chapterNumber);
       this.workflowState.romanceAgent = { status: 'completed', result: romanceResult, attempts: 1 };
       
@@ -140,23 +141,24 @@ class SubAgentOrchestrator {
       
       // Phase 4: 품질 검증 및 조건부 복구
       if (qualityResult.overallScore < this.qualityThresholds.overall) {
-        console.log(`⚠️ 품질 기준 미달 (${qualityResult.overallScore.toFixed(1)}/10), 복구 시도...`);
+        // console.log(`⚠️ 품질 기준 미달 (${qualityResult.overallScore.toFixed(1)}/10), 복구 시도...`);
         await this.executeFailureRecovery(novelInfo, chapterNumber, qualityResult);
       }
       
       // 최종 챕터 파일 저장
       await this.saveChapterFile(novelInfo, chapterNumber, twistResult.content, qualityResult);
       
-      console.log(`✅ 챕터 ${chapterNumber} 워크플로우 완료`);
-      console.log(`   🔥 갈등: ${qualityResult.scores.conflict.toFixed(1)}/10`);
-      console.log(`   🧠 캐릭터: ${qualityResult.scores.character.toFixed(1)}/10`);
-      console.log(`   💕 로맨스: ${qualityResult.scores.romance.toFixed(1)}/10`);
-      console.log(`   🎲 예측불가능성: ${qualityResult.scores.unpredictability.toFixed(1)}/10`);
-      console.log(`   ⭐ 전체: ${qualityResult.overallScore.toFixed(1)}/10`);
+      // console.log(`✅ 챕터 ${chapterNumber} 워크플로우 완료`);
+      // console.log(`   🔥 갈등: ${qualityResult.scores.conflict.toFixed(1)}/10`);
+      // console.log(`   🧠 캐릭터: ${qualityResult.scores.character.toFixed(1)}/10`);
+      // console.log(`   💕 로맨스: ${qualityResult.scores.romance.toFixed(1)}/10`);
+      // console.log(`   🎲 예측불가능성: ${qualityResult.scores.unpredictability.toFixed(1)}/10`);
+      // console.log(`   ⭐ 전체: ${qualityResult.overallScore.toFixed(1)}/10`);
       
-    } catch (error) {
-      this.logger.error(`💥 챕터 ${chapterNumber} 워크플로우 실패:`, error.message);
-      throw error;
+    } catch (_error) {
+    // Intentionally unused error variable
+      this.logger.error(`💥 챕터 ${chapterNumber} 워크플로우 실패:`, _error.message);
+      throw _error;
     }
   }
 
@@ -221,7 +223,7 @@ CONTENT:
   /**
    * ConflictAgent (갈등 전문)
    */
-  async executeConflictAgent(baseStoryResult, chapterNumber) {
+  async executeConflictAgent(_, _chapterNumber) {
     const prompt = `
 당신은 갈등과 긴장감만 전담하는 ConflictAgent입니다.
 
@@ -264,7 +266,7 @@ ${baseStoryResult.content}
   /**
    * CharacterAgent (캐릭터 전문)
    */
-  async executeCharacterAgent(baseStoryResult, chapterNumber) {
+  async executeCharacterAgent(_, _chapterNumber) {
     const prompt = `
 당신은 캐릭터 복잡성만 전담하는 CharacterAgent입니다.
 
@@ -349,7 +351,7 @@ ${characterResult.content}
   /**
    * Phase 3: RomanceAgent (로맨스 전문)
    */
-  async executeRomanceAgent(mergedResult, chapterNumber) {
+  async executeRomanceAgent(_, _chapterNumber) {
     const prompt = `
 당신은 로맨스 필연성만 전담하는 RomanceAgent입니다.
 
@@ -393,7 +395,7 @@ ${mergedResult.content}
   /**
    * Phase 3: TwistAgent (반전 전문)
    */
-  async executeTwistAgent(romanceResult, chapterNumber) {
+  async executeTwistAgent(_, _chapterNumber) {
     const prompt = `
 당신은 예측 불가능성만 전담하는 TwistAgent입니다.
 
@@ -436,7 +438,7 @@ ${romanceResult.content}
   /**
    * Phase 3: QualityValidator (품질 검증)
    */
-  async executeQualityValidator(twistResult, chapterNumber) {
+  async executeQualityValidator(_, _chapterNumber) {
     const content = twistResult.content;
     
     // 품질 점수 계산
@@ -474,18 +476,18 @@ ${romanceResult.content}
    * Phase 4: FailureRecovery (조건부 복구)
    */
   async executeFailureRecovery(novelInfo, chapterNumber, qualityResult) {
-    console.log('🔄 품질 기준 미달, 복구 프로세스 시작...');
+    // console.log('🔄 품질 기준 미달, 복구 프로세스 시작...');
     
     // 가장 낮은 점수의 영역 식별
     const scores = qualityResult.scores;
     const lowestScore = Math.min(...Object.values(scores));
-    const problemArea = Object.keys(scores).find(key => scores[key] === lowestScore);
+    const _problemArea = Object.keys(scores).find(key => scores[key] === lowestScore);
     
-    console.log(`🎯 복구 대상: ${problemArea} (${lowestScore.toFixed(1)}/10)`);
+    // console.log(`🎯 복구 대상: ${problemArea} (${lowestScore.toFixed(1)}/10)`);
     
     // 해당 영역만 재실행
     // 실제 구현에서는 해당 에이전트만 다시 호출
-    console.log(`⚠️ ${problemArea} 영역 개선 필요 - 현재는 기본 통과 처리`);
+    // console.log(`⚠️ ${problemArea} 영역 개선 필요 - 현재는 기본 통과 처리`);
   }
 
   /**
@@ -635,8 +637,8 @@ WORLD_SETTING: [독창적 세계관]
         const content = await fs.readFile(chapterPath, 'utf-8');
         const { data } = matter(content);
         chapters.push(data);
-      } catch (error) {
-        console.warn(`⚠️ 챕터 ${i} 읽기 실패`);
+      } catch (_) {
+        // console.warn(`⚠️ 챕터 ${i} 읽기 실패`);
       }
     }
     
@@ -656,14 +658,15 @@ WORLD_SETTING: [독창적 세계관]
 async function main() {
   try {
     const orchestrator = new SubAgentOrchestrator();
-    const result = await orchestrator.orchestrateNovelGeneration();
+    const _result = await orchestrator.orchestrateNovelGeneration();
     
-    console.log('\n🏆 SubAgent Orchestrator 성공!');
-    console.log('명확한 워크플로우로 품질 보장된 소설 완성');
-    console.log(`예상 독자 평점: ${result.qualityMetrics.expectedRating}/5`);
+    // console.log('\n🏆 SubAgent Orchestrator 성공!');
+    // console.log('명확한 워크플로우로 품질 보장된 소설 완성');
+    // console.log(`예상 독자 평점: ${result.qualityMetrics.expectedRating}/5`);
     
-  } catch (error) {
-    console.error('\n💥 SubAgent Orchestrator 실패:', error.message);
+  } catch (_error) {
+    // Intentionally unused error variable
+    // console.error('\n💥 SubAgent Orchestrator 실패:', _error.message);
     process.exit(1);
   }
 }

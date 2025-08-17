@@ -48,6 +48,22 @@ interface ChoiceConsequences {
   flagsRemoved: string[];
   nextSceneTrigger: string;
   narrativeShift?: 'romantic' | 'dramatic' | 'comedic' | 'mysterious';
+}
+
+interface ChoiceContext {
+  currentChapter: number;
+  currentScene: string;
+  characterMood: Record<string, string>;
+  plotFlags: string[];
+  [key: string]: unknown;
+}
+
+interface TypePreferences {
+  dialogue: number;
+  action: number;
+  emotion: number;
+  decision: number;
+  [key: string]: number;
   unlockConditions?: string[];
 }
 
@@ -251,7 +267,7 @@ export class InteractiveChoiceSystem {
    */
   private determineChoiceTypes(
     context: { scene: string; characters: string[]; mood: string },
-    readerProfile: ReaderProfile
+    _readerProfile: ReaderProfile
   ): ChoiceType[] {
     const types: ChoiceType[] = [];
 
@@ -297,7 +313,7 @@ export class InteractiveChoiceSystem {
     type: ChoiceType,
     chapter: Chapter,
     novel: Novel,
-    readerProfile: ReaderProfile,
+    _readerProfile: ReaderProfile,
     context: { scene: string; characters: string[]; mood: string }
   ): Promise<StoryChoice | null> {
     
@@ -326,7 +342,7 @@ export class InteractiveChoiceSystem {
   private async generateChoiceText(
     type: ChoiceType,
     context: { scene: string; characters: string[]; mood: string },
-    readerProfile: ReaderProfile
+    _readerProfile: ReaderProfile
   ): Promise<string> {
     
     const templates = {
@@ -389,7 +405,7 @@ export class InteractiveChoiceSystem {
    */
   private async generateCharacterReactions(
     choice: StoryChoice,
-    readerProfile: ReaderProfile
+    _readerProfile: ReaderProfile
   ): Promise<Record<string, CharacterReaction>> {
     const reactions: Record<string, CharacterReaction> = {};
 
@@ -417,8 +433,8 @@ export class InteractiveChoiceSystem {
    */
   private async generateNarrativeOutcome(
     choice: StoryChoice,
-    chapter: Chapter,
-    novel: Novel
+    _chapter: Chapter,
+    _novel: Novel
   ): Promise<string> {
     
     const outcomes = {
@@ -474,8 +490,8 @@ export class InteractiveChoiceSystem {
     // 선호도 점진적 업데이트 (학습률 0.1)
     const learningRate = 0.1;
     Object.entries(preferenceUpdate).forEach(([key, value]) => {
-      const currentValue = (readerProfile.preferences as any)[key] || 50;
-      (readerProfile.preferences as any)[key] = currentValue + (value - currentValue) * learningRate;
+      const currentValue = (readerProfile.preferences as Record<string, number>)[key] || 50;
+      (readerProfile.preferences as Record<string, number>)[key] = currentValue + (value - currentValue) * learningRate;
     });
 
     // 캐릭터 선호도 업데이트
@@ -496,7 +512,7 @@ export class InteractiveChoiceSystem {
   /**
    * 🔮 다음 선택지 힌트 생성
    */
-  private generateNextChoiceHints(choice: StoryChoice, chapter: Chapter): string[] {
+  private generateNextChoiceHints(choice: StoryChoice, _chapter: Chapter): string[] {
     const hints: string[] = [];
 
     // 선택 결과에 따른 힌트
@@ -565,7 +581,7 @@ export class InteractiveChoiceSystem {
     return this.readerProfiles.get(readerId)!;
   }
 
-  private validateChoice(choice: StoryChoice, readerProfile: ReaderProfile): boolean {
+  private validateChoice(choice: StoryChoice, _readerProfile: ReaderProfile): boolean {
     // 선택지 유효성 검증 로직
     return choice.readerAppeal > 20 && choice.text.length > 10;
   }
@@ -590,7 +606,7 @@ export class InteractiveChoiceSystem {
       decision: readerProfile.preferences.plotProgressionSpeed
     };
 
-    const preference = (typePreferences as any)[type] || 50;
+    const preference = (typePreferences as TypePreferences)[type] || 50;
     return Math.round(baseAppeal * (preference / 50));
   }
 
@@ -624,7 +640,7 @@ export class InteractiveChoiceSystem {
     return null;
   }
 
-  private updateChoiceHistory(choiceId: string, readerId: string, chapterNumber: number): void {
+  private updateChoiceHistory(_choiceId: string, _readerId: string, _chapterNumber: number): void {
     // 선택 이력 업데이트
   }
 
@@ -633,15 +649,15 @@ export class InteractiveChoiceSystem {
     consequences.flagsRemoved.forEach(flag => this.currentFlags.delete(flag));
   }
 
-  private selectTargetCharacter(characters: string[], readerProfile: ReaderProfile): string {
+  private selectTargetCharacter(characters: string[], _readerProfile: ReaderProfile): string {
     // 독자 선호도 기반 캐릭터 선택
     return characters[0] || '알 수 없음';
   }
 
   private async calculateChoiceImpact(
-    type: ChoiceType,
-    context: any,
-    readerProfile: ReaderProfile
+    _type: ChoiceType,
+    _context: ChoiceContext,
+    _readerProfile: ReaderProfile
   ): Promise<ChoiceImpact> {
     return {
       immediate: '즉시 효과',
@@ -653,7 +669,7 @@ export class InteractiveChoiceSystem {
     };
   }
 
-  private generateChoiceConsequences(type: ChoiceType, context: any): ChoiceConsequences {
+  private generateChoiceConsequences(type: ChoiceType, _context: ChoiceContext): ChoiceConsequences {
     return {
       flagsSet: [`${type}_chosen`],
       flagsRemoved: [],
@@ -663,9 +679,9 @@ export class InteractiveChoiceSystem {
   }
 
   private calculateReaderAppeal(
-    type: ChoiceType,
-    readerProfile: ReaderProfile,
-    context: any
+    _type: ChoiceType,
+    _readerProfile: ReaderProfile,
+    _context: ChoiceContext
   ): number {
     // 독자 매력도 계산
     return Math.floor(Math.random() * 40) + 60; // 60-100
@@ -679,7 +695,7 @@ export class InteractiveChoiceSystem {
     return '평온함';
   }
 
-  private generateDialogueResponse(character: string, choice: StoryChoice): string {
+  private generateDialogueResponse(character: string, _choice: StoryChoice): string {
     const responses = [
       `${character}: "그렇게 생각해주셔서 고마워요."`,
       `${character}: "정말 그런 마음이었군요."`,
@@ -688,33 +704,33 @@ export class InteractiveChoiceSystem {
     return responses[Math.floor(Math.random() * responses.length)];
   }
 
-  private predictFutureDisposition(character: string, choice: StoryChoice): string {
+  private predictFutureDisposition(_character: string, _choice: StoryChoice): string {
     return '호의적';
   }
 
-  private calculatePreferenceUpdate(choice: StoryChoice, readerProfile: ReaderProfile): any {
+  private calculatePreferenceUpdate(choice: StoryChoice, _readerProfile: ReaderProfile): unknown {
     return {
       romanticIntensity: choice.type === 'emotion' ? 60 : 40,
       actionPreference: choice.type === 'action' ? 70 : 30
     };
   }
 
-  private calculateSatisfactionScore(choice: StoryChoice, readerProfile: ReaderProfile): number {
+  private calculateSatisfactionScore(choice: StoryChoice, _readerProfile: ReaderProfile): number {
     return choice.readerAppeal;
   }
 
-  private calculatePreferenceAlignment(choice: StoryChoice, readerProfile: ReaderProfile): number {
+  private calculatePreferenceAlignment(_choice: StoryChoice, _readerProfile: ReaderProfile): number {
     return 75;
   }
 
-  private calculateSurpriseFactor(choice: StoryChoice, readerProfile: ReaderProfile): number {
+  private calculateSurpriseFactor(_choice: StoryChoice, _readerProfile: ReaderProfile): number {
     return Math.random() * 50 + 25;
   }
 
   /**
    * 시스템 상태 조회
    */
-  getSystemStats(): any {
+  getSystemStats(): unknown {
     return {
       totalReaders: this.readerProfiles.size,
       totalChoices: this.totalChoicesGenerated,

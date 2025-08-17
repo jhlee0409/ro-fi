@@ -175,9 +175,9 @@ export class LiteraryExcellenceEngine {
       await this.logger.info('LiteraryExcellenceEngine: 분석 완료', analysis);
       return analysis;
       
-    } catch (error) {
-      await this.logger.error('LiteraryExcellenceEngine: 분석 실패', { error: error.message });
-      throw error;
+    } catch (_error) {
+      await this.logger.error('LiteraryExcellenceEngine: 분석 실패', { error: _error.message });
+      throw _error;
     }
   }
 
@@ -202,8 +202,8 @@ export class LiteraryExcellenceEngine {
       await this.logger.success('LiteraryExcellenceEngine: 어휘 다양성 강화 완료');
       return enhancedContent;
       
-    } catch (error) {
-      await this.logger.error('LiteraryExcellenceEngine: 어휘 강화 실패', { error: error.message });
+    } catch (_error) {
+      await this.logger.error('LiteraryExcellenceEngine: 어휘 강화 실패', { error: _error.message });
       return content;
     }
   }
@@ -211,7 +211,7 @@ export class LiteraryExcellenceEngine {
   /**
    * 🌟 감정 묘사 강화
    */
-  async enhanceEmotionalDescription(content, emotionalContext = 'romantic') {
+  async enhanceEmotionalDescription(content, _emotionalContext = 'romantic') {
     await this.logger.info('LiteraryExcellenceEngine: 감정 묘사 강화 시작');
     
     try {
@@ -221,7 +221,7 @@ export class LiteraryExcellenceEngine {
       enhancedContent = this.injectSensoryDescriptions(enhancedContent);
       
       // 2. 은유/비유 자동 삽입
-      enhancedContent = this.insertMetaphors(enhancedContent, emotionalContext);
+      enhancedContent = this.insertMetaphors(enhancedContent, _emotionalContext);
       
       // 3. 감정의 층차 구현
       enhancedContent = this.addEmotionalLayers(enhancedContent);
@@ -232,8 +232,8 @@ export class LiteraryExcellenceEngine {
       await this.logger.success('LiteraryExcellenceEngine: 감정 묘사 강화 완료');
       return enhancedContent;
       
-    } catch (error) {
-      await this.logger.error('LiteraryExcellenceEngine: 감정 묘사 강화 실패', { error: error.message });
+    } catch (_error) {
+      await this.logger.error('LiteraryExcellenceEngine: 감정 묘사 강화 실패', { error: _error.message });
       return content;
     }
   }
@@ -259,8 +259,8 @@ export class LiteraryExcellenceEngine {
       await this.logger.success('LiteraryExcellenceEngine: 문장 리듬 최적화 완료');
       return optimizedContent;
       
-    } catch (error) {
-      await this.logger.error('LiteraryExcellenceEngine: 리듬 최적화 실패', { error: error.message });
+    } catch (_error) {
+      await this.logger.error('LiteraryExcellenceEngine: 리듬 최적화 실패', { error: _error.message });
       return content;
     }
   }
@@ -282,7 +282,7 @@ export class LiteraryExcellenceEngine {
     
     const advancedVocabulary = [...allAdvancedWords, ...emotionalWords];
     
-    for (const word of words) {
+    for (const _word of words) {
       if (advancedVocabulary.some(advWord => content.includes(advWord))) {
         advancedWordCount++;
       }
@@ -309,10 +309,10 @@ export class LiteraryExcellenceEngine {
     const totalSentences = content.split(/[.!?]/).length;
     
     // 5감별 요소 카운트
-    for (const [sense, patterns] of Object.entries(this.sensoryPatterns)) {
-      for (const [category, words] of Object.entries(patterns)) {
-        for (const word of words) {
-          sensoryCount += (content.match(new RegExp(word, 'g')) || []).length;
+    for (const [_sense, patterns] of Object.entries(this.sensoryPatterns)) {
+      for (const [_category, words] of Object.entries(patterns)) {
+        for (const _word of words) {
+          sensoryCount += (content.match(new RegExp(_word, 'g')) || []).length;
         }
       }
     }
@@ -342,7 +342,7 @@ export class LiteraryExcellenceEngine {
     }
     
     // 패턴 기반 은유
-    for (const [category, patterns] of Object.entries(this.metaphorPatterns)) {
+    for (const [_category, patterns] of Object.entries(this.metaphorPatterns)) {
       for (const pattern of patterns) {
         metaphorCount += (content.match(new RegExp(pattern, 'g')) || []).length;
       }
@@ -437,11 +437,11 @@ export class LiteraryExcellenceEngine {
     let improvedContent = content;
     
     // 3회 이상 반복된 단어 대체
-    for (const [word, freq] of Object.entries(wordFreq)) {
+    for (const [_word, freq] of Object.entries(wordFreq)) {
       if (freq >= 3) {
         const synonyms = this.findSynonyms(word);
         if (synonyms.length > 0) {
-          const regex = new RegExp(word, 'g');
+          const regex = new RegExp(_word, 'g');
           let replacementIndex = 0;
           
           improvedContent = improvedContent.replace(regex, () => {
@@ -491,7 +491,7 @@ export class LiteraryExcellenceEngine {
   /**
    * 🌟 은유/비유 자동 삽입
    */
-  insertMetaphors(content, emotionalContext) {
+  insertMetaphors(content, _emotionalContext) {
     const metaphorCategories = Object.keys(this.metaphorPatterns);
     const selectedCategory = metaphorCategories[Math.floor(Math.random() * metaphorCategories.length)];
     const metaphors = this.metaphorPatterns[selectedCategory];
@@ -688,10 +688,10 @@ export class LiteraryExcellenceEngine {
   countSensoryElements(content) {
     let count = 0;
     
-    for (const [sense, patterns] of Object.entries(this.sensoryPatterns)) {
-      for (const [category, words] of Object.entries(patterns)) {
-        for (const word of words) {
-          count += (content.match(new RegExp(word, 'g')) || []).length;
+    for (const [_sense, patterns] of Object.entries(this.sensoryPatterns)) {
+      for (const [_category, words] of Object.entries(patterns)) {
+        for (const _word of words) {
+          count += (content.match(new RegExp(_word, 'g')) || []).length;
         }
       }
     }
@@ -758,7 +758,7 @@ export class LiteraryExcellenceEngine {
     
     let optimizedContent = content;
     
-    for (const [contextType, { context, vocabulary }] of Object.entries(contextPatterns)) {
+    for (const [_contextType, { context, vocabulary }] of Object.entries(contextPatterns)) {
       if (context.test(content)) {
         // 해당 맥락에 적합한 어휘로 일부 교체
         const randomWord = vocabulary.adjectives[Math.floor(Math.random() * vocabulary.adjectives.length)];

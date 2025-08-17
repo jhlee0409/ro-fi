@@ -9,13 +9,13 @@
  * - 전략적 목표 기반 최적화
  * 
  * 🚀 사용법:
- * const engine = new IntelligentDecisionEngine(logger);
+ * const engine = new IntelligentDecisionEngine(_logger);
  * const decision = await engine.analyze(analysisData);
  */
 
 export class IntelligentDecisionEngine {
-  constructor(logger) {
-    this.logger = logger;
+  constructor(_logger) {
+    this._logger = _logger;
     this.decisionHistory = [];
     this.performanceTracker = {
       correctDecisions: 0,
@@ -30,7 +30,7 @@ export class IntelligentDecisionEngine {
   async analyze({
     currentState,
     readerEngagement,
-    marketTrends,
+    _marketTrends,
     qualityOpportunities,
     strategicGoals,
     performanceMetrics
@@ -38,12 +38,12 @@ export class IntelligentDecisionEngine {
     const startTime = Date.now();
     
     try {
-      await this.logger.info('🧠 지능형 의사결정 분석 시작');
+      await this._logger.info('🧠 지능형 의사결정 분석 시작');
 
       // Step 1: 컨텍스트 가중치 계산
       const contextWeights = this.calculateContextWeights({
         readerEngagement,
-        marketTrends,
+        _marketTrends,
         qualityOpportunities,
         performanceMetrics
       });
@@ -75,7 +75,7 @@ export class IntelligentDecisionEngine {
 
       this.updateDecisionHistory(decision);
 
-      await this.logger.success('🎯 지능형 의사결정 완료', {
+      await this._logger.success('🎯 지능형 의사결정 완료', {
         selectedAction: decision.type,
         confidence: decision.confidence,
         analysisTime: decision.analysisTime
@@ -83,16 +83,16 @@ export class IntelligentDecisionEngine {
 
       return decision;
 
-    } catch (error) {
-      await this.logger.error('지능형 의사결정 분석 실패', { error: error.message });
-      throw error;
+    } catch (_error) {
+      await this._logger.error('지능형 의사결정 분석 실패', { error: _error.message });
+      throw _error;
     }
   }
 
   /**
    * 📊 컨텍스트 가중치 계산
    */
-  calculateContextWeights({ readerEngagement, marketTrends, qualityOpportunities, performanceMetrics }) {
+  calculateContextWeights({ readerEngagement, _marketTrends, qualityOpportunities, performanceMetrics }) {
     const weights = {
       readerSatisfaction: 0.25,
       marketAlignment: 0.20,
@@ -123,12 +123,12 @@ export class IntelligentDecisionEngine {
   /**
    * 🏆 액션별 점수 계산
    */
-  async calculateActionScores(currentState, weights, strategicGoals) {
+  async calculateActionScores(currentState, weights, _strategicGoals) {
     const actions = this.generatePossibleActions(currentState);
     const scores = {};
 
     for (const action of actions) {
-      scores[action.id] = await this.scoreAction(action, currentState, weights, strategicGoals);
+      scores[action.id] = await this.scoreAction(action, currentState, weights, _strategicGoals);
     }
 
     return scores;
@@ -186,7 +186,7 @@ export class IntelligentDecisionEngine {
   /**
    * 🎯 개별 액션 점수 계산
    */
-  async scoreAction(action, currentState, weights, strategicGoals) {
+  async scoreAction(action, currentState, weights, _strategicGoals) {
     let score = 0;
 
     // 기본 우선순위 점수
@@ -261,7 +261,7 @@ export class IntelligentDecisionEngine {
     return efficiencyMap[action.type] || 0.5;
   }
 
-  calculateStrategicValueScore(action, strategicGoals) {
+  calculateStrategicValueScore(action, _strategicGoals) {
     // 전략적 목표 달성에 대한 기여도
     let strategicScore = 0.5;
     

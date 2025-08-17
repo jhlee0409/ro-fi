@@ -1,10 +1,10 @@
-interface OptimizerConfig {
+interface _OptimizerConfig {
   enabled?: boolean;
   maxSize?: number;
   ttl?: number;
 }
 
-interface OptimizationResult {
+interface _OptimizationResult {
   optimized: boolean;
   savings?: number;
   metadata?: Record<string, unknown>;
@@ -72,8 +72,8 @@ export class BatchProcessor {
     if (this.processingFunction) {
       try {
         await this.processingFunction(batch);
-      } catch (error: any) {
-        console.error('배치 처리 실패:', error);
+      } catch (_error: unknown) {
+        // console.error('배치 처리 실패:', _error);
         // 실패한 항목들을 다시 버퍼에 추가 (재시도)
         this.buffer.unshift(...batch);
       }
@@ -291,8 +291,8 @@ export class AsyncQueue {
     try {
       const result = await task();
       resolve(result);
-    } catch (error) {
-      reject(error);
+    } catch (_error) {
+      reject(_error);
     } finally {
       this.running--;
       this.process(); // 다음 작업 처리
@@ -517,9 +517,7 @@ export class GCMonitor {
         this.gcStats.memoryAfter = this.getMemoryUsage().heapUsed;
         this.gcStats.lastCleanup = Date.now();
 
-        console.log(
-          `🧹 강제 GC 실행: ${this.gcStats.memoryBefore}MB → ${this.gcStats.memoryAfter}MB`
-        );
+        // console.log(`🧹 강제 GC 실행: ${this.gcStats.memoryBefore}MB → ${this.gcStats.memoryAfter}MB`);
       }
     }
 
@@ -612,19 +610,19 @@ export class GCMonitor {
 }
 
 // 편의 함수들
-export function createBatchProcessor(batchSize: any, flushInterval: any): any {
+export function createBatchProcessor(batchSize: number, flushInterval: number): unknown {
   return new BatchProcessor(batchSize, flushInterval);
 }
 
-export function createCircularBuffer(size: any): any {
+export function createCircularBuffer(size: unknown): unknown {
   return new CircularBuffer(size);
 }
 
-export function createAsyncQueue(concurrency: any): any {
+export function createAsyncQueue(concurrency: unknown): unknown {
   return new AsyncQueue(concurrency);
 }
 
-export function createLRUCache(maxSize: any, ttl: any): any {
+export function createLRUCache(maxSize: number, ttl: number): unknown {
   return new LRUCache(maxSize, ttl);
 }
 

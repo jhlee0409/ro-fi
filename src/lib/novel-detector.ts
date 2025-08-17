@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs';
 import { join } from 'path';
 import matter from 'gray-matter';
-import type { Novel, Chapter, NovelState } from './types/index.ts';
+import type { Novel, NovelState } from './types/index.ts';
 
 interface NovelFile {
   slug: string;
@@ -34,8 +34,8 @@ export class NovelDetector {
                 data: data as Novel
               } as NovelFile);
             }
-          } catch (parseError) {
-            console.warn(`Skipping invalid file ${file}:`, (parseError as Error).message);
+          } catch (_parseError) {
+            // console.warn(`Skipping invalid file ${file}:`, (parseError as Error).message);
             // 잘못된 frontmatter가 있는 파일은 스킵
             continue;
           }
@@ -43,8 +43,8 @@ export class NovelDetector {
       }
 
       return novels;
-    } catch (error) {
-      console.error('Failed to get active novels:', error);
+    } catch (_error) {
+      // console.error('Failed to get active novels:', _error);
       return [];
     }
   }
@@ -81,16 +81,16 @@ export class NovelDetector {
           const stats = await fs.stat(latestChapterPath);
           lastUpdate = stats.mtime;
         } catch (error: unknown) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          console.warn(`Could not get stats for ${latestChapterPath}:`, errorMessage);
+          const _errorMessage = error instanceof Error ? error.message : String(error);
+          // console.warn(`Could not get stats for ${latestChapterPath}:`, errorMessage);
         }
       }
 
       return {
         ...typedNovelData,
         slug,
-        currentChapter: (novelData as any).currentChapter || 0,
-        lastUpdated: (novelData as any).lastUpdated || new Date().toISOString(),
+        currentChapter: (novelData as { currentChapter?: number }).currentChapter || 0,
+        lastUpdated: (novelData as { lastUpdated?: string }).lastUpdated || new Date().toISOString(),
         chaptersCount: novelChapters.length,
         latestChapter,
         progressPercentage,
@@ -99,8 +99,8 @@ export class NovelDetector {
           overallReadiness: progressPercentage >= 85,
         },
       };
-    } catch (error) {
-      console.error(`Failed to get novel progress for ${slug}:`, error);
+    } catch (_error) {
+      // console.error(`Failed to get novel progress for ${slug}:`, _error);
       return null;
     }
   }
@@ -109,13 +109,13 @@ export class NovelDetector {
     try {
       const activeNovels = await this.getActiveNovels();
       return activeNovels.length < 3; // 최대 3개의 활성 소설
-    } catch (error) {
-      console.error('Failed to check if new novel is needed:', error);
+    } catch (_error) {
+      // console.error('Failed to check if new novel is needed:', _error);
       return true; // 오류 시 새 소설 생성 시도
     }
   }
 
-  isNovelNearCompletion(novelProgress: any): boolean {
+  isNovelNearCompletion(novelProgress: unknown): boolean {
     return novelProgress.progressPercentage >= 85;
   }
 
@@ -136,8 +136,8 @@ export class NovelDetector {
       }
 
       return oldestNovel;
-    } catch (error) {
-      console.error('Failed to get oldest updated novel:', error);
+    } catch (_error) {
+      // console.error('Failed to get oldest updated novel:', _error);
       return null;
     }
   }

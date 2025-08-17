@@ -51,7 +51,7 @@ export interface NovelContext {
     paceRating: string;
     nextChapterMood: string;
   };
-  qualityMetrics: Record<string, any>;
+  qualityMetrics: Record<string, unknown>;
 }
 
 export interface StoryTracker {
@@ -68,7 +68,7 @@ export interface StoryTracker {
     preferredTropes: string[];
     avoidedElements: string[];
   };
-  generationHistory: Record<string, any>;
+  generationHistory: Record<string, unknown>;
 }
 
 /**
@@ -115,7 +115,7 @@ export class StoryContextManager {
 ### 주요 캐릭터 현재 상태:
 ${Object.entries(novel.characterStates)
   .map(
-    ([key, char]) => `
+    ([, char]) => `
 **${char.name}** (${char.role}):
 - 감정 상태: ${char.currentEmotionalState}
 - 현재 위치: ${char.currentLocation}
@@ -157,7 +157,10 @@ ${novel.plotProgress.worldBuilding.needsExpansion.map(el => `- ${el}`).join('\n'
 - 이전 챕터 평균 점수: ${
       Object.values(novel.qualityMetrics).length > 0
         ? Object.values(novel.qualityMetrics).reduce(
-            (sum: any, metrics: any) => sum + metrics.평균점수,
+            (sum: number, metrics: unknown) => {
+              const metricsObj = metrics as { 평균점수?: number };
+              return sum + (metricsObj.평균점수 || 0);
+            },
             0
           ) / Object.values(novel.qualityMetrics).length
         : 'N/A'

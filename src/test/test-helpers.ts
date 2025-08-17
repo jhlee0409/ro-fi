@@ -21,7 +21,7 @@ export function createTestNovelDetector(): NovelDetector {
 /**
  * 테스트용 샘플 소설 파일 생성
  */
-export async function createTestNovel(slug: string, data?: any) {
+export async function createTestNovel(slug: string, data?: unknown) {
   if (!isTestEnvironment()) {
     throw new Error('🚨 테스트 환경이 아닙니다!');
   }
@@ -50,7 +50,7 @@ tropes: ${JSON.stringify(data?.tropes || ['test-trope'])}
 /**
  * 테스트용 샘플 챕터 파일 생성
  */
-export async function createTestChapter(novelSlug: string, chapterNumber: number, data?: any) {
+export async function createTestChapter(novelSlug: string, chapterNumber: number, data?: unknown) {
   if (!isTestEnvironment()) {
     throw new Error('🚨 테스트 환경이 아닙니다!');
   }
@@ -95,21 +95,21 @@ export async function verifyTestIsolation() {
     const chapterFiles = await fs.readdir(productionChapters);
     
     if (novelFiles.length > 0 || chapterFiles.length > 0) {
-      console.warn('⚠️ 프로덕션 경로에 파일이 존재합니다. 테스트가 프로덕션 데이터에 영향을 줄 수 있습니다!');
-      console.warn(`📚 소설 파일: ${novelFiles.length}개`);
-      console.warn(`📖 챕터 파일: ${chapterFiles.length}개`);
+      // console.warn('⚠️ 프로덕션 경로에 파일이 존재합니다. 테스트가 프로덕션 데이터에 영향을 줄 수 있습니다!');
+      // console.warn(`📚 소설 파일: ${novelFiles.length}개`);
+      // console.warn(`📖 챕터 파일: ${chapterFiles.length}개`);
     }
-  } catch (error) {
+  } catch (_error) {
     // 디렉토리가 없으면 OK
-    console.log('✅ 프로덕션 디렉토리가 비어있거나 존재하지 않음 - 안전함');
+    // console.log('✅ 프로덕션 디렉토리가 비어있거나 존재하지 않음 - 안전함');
   }
   
   // 테스트 경로 확인
   const testPaths = getContentPaths();
-  console.log('🧪 테스트 환경 경로:');
-  console.log(`  📚 소설: ${testPaths.novels}`);
-  console.log(`  📖 챕터: ${testPaths.chapters}`);
-  console.log(`  🏷️ 트로프: ${testPaths.tropes}`);
+  // console.log('🧪 테스트 환경 경로:');
+  // console.log(`  📚 소설: ${testPaths.novels}`);
+  // console.log(`  📖 챕터: ${testPaths.chapters}`);
+  // console.log(`  🏷️ 트로프: ${testPaths.tropes}`);
 }
 
 /**
@@ -124,8 +124,8 @@ export async function cleanupTestEnvironment() {
   
   try {
     await fs.rm(testRoot, { recursive: true, force: true });
-    console.log('🧹 테스트 환경 정리 완료');
-  } catch (error) {
-    console.warn('⚠️ 테스트 정리 실패:', error);
+    // console.log('🧹 테스트 환경 정리 완료');
+  } catch (_error) {
+    // console.warn('⚠️ 테스트 정리 실패:', _error);
   }
 }

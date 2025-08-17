@@ -1,5 +1,3 @@
-import type { TokenBalancing } from './types/index.ts';
-
 export interface TokenUsage {
   input: number;
   output: number;
@@ -46,7 +44,10 @@ export class TokenBalancingEngine {
   /**
    * 요청 전 토큰 예측 및 최적화
    */
-  optimizeTokenUsage(content: string, targetLength: number): {
+  optimizeTokenUsage(
+    content: string,
+    targetLength: number
+  ): {
     maxTokens: number;
     temperature: number;
     strategy: string;
@@ -103,10 +104,10 @@ export class TokenBalancingEngine {
     // 한국어는 대략 2.5-3글자 = 1토큰
     const koreanRatio = 2.8;
     const englishRatio = 4; // 영어는 대략 4글자 = 1토큰
-    
+
     const koreanChars = (content.match(/[ㄱ-ㅎ가-힣]/g) || []).length;
     const otherChars = content.length - koreanChars;
-    
+
     return Math.ceil(koreanChars / koreanRatio + otherChars / englishRatio);
   }
 
@@ -116,10 +117,10 @@ export class TokenBalancingEngine {
   private calculateCost(inputTokens: number, outputTokens: number): number {
     const inputCostPer1K = 0.00015; // Gemini 1.5 Pro input cost
     const outputCostPer1K = 0.0006; // Gemini 1.5 Pro output cost
-    
+
     const inputCost = (inputTokens / 1000) * inputCostPer1K;
     const outputCost = (outputTokens / 1000) * outputCostPer1K;
-    
+
     return inputCost + outputCost;
   }
 
@@ -129,13 +130,13 @@ export class TokenBalancingEngine {
   recordUsage(usage: TokenUsage): void {
     this.usageHistory.push(usage);
     this.currentSpent += usage.cost;
-    
+
     // 히스토리 관리 (최근 100개만 유지)
     if (this.usageHistory.length > 100) {
       this.usageHistory = this.usageHistory.slice(-100);
     }
-    
-    console.log(`💰 토큰 사용 기록: ${usage.total} tokens, $${usage.cost.toFixed(4)}`);
+
+    // console.log(`💰 토큰 사용 기록: ${usage.total} tokens, $${usage.cost.toFixed(4)}`);
   }
 
   /**
@@ -149,7 +150,7 @@ export class TokenBalancingEngine {
   } {
     const remaining = this.dailyBudget - this.currentSpent;
     const percentage = (this.currentSpent / this.dailyBudget) * 100;
-    
+
     let status: 'safe' | 'warning' | 'critical';
     if (percentage < 70) status = 'safe';
     else if (percentage < 90) status = 'warning';
@@ -176,13 +177,13 @@ export class TokenBalancingEngine {
       this.strategy.mode = 'efficiency';
       this.strategy.qualityWeight = 0.3;
       this.strategy.efficiencyWeight = 0.7;
-      console.log('📉 예산 부족으로 효율성 모드 전환');
+      // console.log('📉 예산 부족으로 효율성 모드 전환');
     } else if (budgetStatus.status === 'safe' && avgCost < 0.01) {
       // 예산 여유 시 품질 모드
       this.strategy.mode = 'quality';
       this.strategy.qualityWeight = 0.8;
       this.strategy.efficiencyWeight = 0.2;
-      console.log('📈 예산 여유로 품질 모드 전환');
+      // console.log('📈 예산 여유로 품질 모드 전환');
     }
   }
 
@@ -192,7 +193,7 @@ export class TokenBalancingEngine {
   analyzeOptimization(originalCost: number, optimizedCost: number): OptimizationResult {
     const savings = originalCost - optimizedCost;
     const savingsPercentage = (savings / originalCost) * 100;
-    
+
     // 품질 영향도 계산 (단순화된 모델)
     const qualityImpact = Math.max(0, 100 - savingsPercentage * 1.2);
 
@@ -210,7 +211,7 @@ export class TokenBalancingEngine {
    */
   resetDailyUsage(): void {
     this.currentSpent = 0;
-    console.log('🔄 일일 토큰 사용량 리셋');
+    // console.log('🔄 일일 토큰 사용량 리셋');
   }
 
   /**
@@ -236,13 +237,13 @@ export class TokenBalancingEngine {
    */
   updateStrategy(newStrategy: Partial<BalancingStrategy>): void {
     this.strategy = { ...this.strategy, ...newStrategy };
-    console.log('🔧 토큰 밸런싱 전략 업데이트됨');
+    // console.log('🔧 토큰 밸런싱 전략 업데이트됨');
   }
 }
 
 // 편의 함수
 export function createTokenBalancer(
-  strategy?: Partial<BalancingStrategy>, 
+  strategy?: Partial<BalancingStrategy>,
   dailyBudget?: number
 ): TokenBalancingEngine {
   return new TokenBalancingEngine(strategy, dailyBudget);

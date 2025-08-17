@@ -1,7 +1,7 @@
 /**
  * 🚀 Enhanced Gemini API Wrapper
  * v2.1 창의성 모드 기반 고도화된 Gemini API 관리 시스템
- * 
+ *
  * Features:
  * - 토큰 최적화 및 비용 관리
  * - 창의성 모드 v2.1 통합
@@ -66,7 +66,7 @@ export class EnhancedGeminiWrapper {
   private rateLimiter: RateLimiter;
   private metrics: APIMetrics;
 
-  constructor(apiKey: string, modelName: string = 'gemini-1.5-pro') {
+  constructor(apiKey: string, modelName: string = 'gemini-2.5-pro') {
     this.genAI = new GoogleGenerativeAI(apiKey);
     this.model = this.genAI.getGenerativeModel({ model: modelName });
     this.tokenBalancer = new TokenBalancingEngine();
@@ -86,7 +86,7 @@ export class EnhancedGeminiWrapper {
   ): Promise<APIResponse> {
     const fullConfig = this.buildConfig(config);
     const cacheKey = this.generateCacheKey(prompt, fullConfig);
-    
+
     // 1. 캐시 확인
     const cachedResult = this.checkCache(cacheKey, fullConfig.cacheStrategy);
     if (cachedResult) {
@@ -117,8 +117,8 @@ export class EnhancedGeminiWrapper {
       metadata: {
         ...result.metadata,
         responseTime,
-        fromCache: false
-      }
+        fromCache: false,
+      },
     };
   }
 
@@ -133,12 +133,10 @@ export class EnhancedGeminiWrapper {
 
     for (let i = 0; i < requests.length; i += batchSize) {
       const batch = requests.slice(i, i + batchSize);
-      const batchPromises = batch.map(req => 
-        this.generateContent(req.prompt, req.config)
-      );
-      
+      const batchPromises = batch.map(req => this.generateContent(req.prompt, req.config));
+
       const batchResults = await Promise.allSettled(batchPromises);
-      
+
       batchResults.forEach(result => {
         if (result.status === 'fulfilled') {
           results.push(result.value);
@@ -151,8 +149,8 @@ export class EnhancedGeminiWrapper {
               responseTime: 0,
               fromCache: false,
               creativity: 0,
-              retryCount: 0
-            }
+              retryCount: 0,
+            },
           });
         }
       });
@@ -180,14 +178,14 @@ export class EnhancedGeminiWrapper {
 
     try {
       const result = await this.model.generateContentStream(optimizedPrompt);
-      
+
       for await (const chunk of result.stream) {
         const chunkText = chunk.text();
         if (chunkText) {
           yield chunkText;
         }
       }
-    } catch (error) {
+    } catch (_error) {
       throw new Error(`Streaming generation failed: ${error}`);
     }
   }
@@ -195,10 +193,7 @@ export class EnhancedGeminiWrapper {
   /**
    * 프롬프트 최적화 (토큰 효율성 향상)
    */
-  private async optimizePrompt(
-    prompt: string,
-    config: APIRequestConfig
-  ): Promise<string> {
+  private async optimizePrompt(prompt: string, config: APIRequestConfig): Promise<string> {
     // 창의성 모드에 따른 프롬프트 조정
     let optimizedPrompt = prompt;
 
@@ -252,7 +247,7 @@ ${prompt}
   private async enforceTokenLimit(prompt: string, limit: number): Promise<string> {
     // 간단한 토큰 추정 (실제로는 더 정확한 토큰 계산 필요)
     const estimatedTokens = Math.ceil(prompt.length / 4);
-    
+
     if (estimatedTokens <= limit) {
       return prompt;
     }
@@ -260,19 +255,16 @@ ${prompt}
     // 프롬프트 자르기 (중요한 부분 보존)
     const ratio = limit / estimatedTokens;
     const targetLength = Math.floor(prompt.length * ratio * 0.9); // 10% 여유
-    
+
     return prompt.substring(0, targetLength) + '...';
   }
 
   /**
    * 재시도 로직 포함 실행
    */
-  private async executeWithRetry(
-    prompt: string,
-    config: APIRequestConfig
-  ): Promise<APIResponse> {
+  private async executeWithRetry(prompt: string, config: APIRequestConfig): Promise<APIResponse> {
     let lastError: Error | null = null;
-    
+
     for (let attempt = 0; attempt <= config.retryPolicy.maxRetries; attempt++) {
       try {
         const result = await this.model.generateContent(prompt);
@@ -290,14 +282,16 @@ ${prompt}
             responseTime: 0, // 외부에서 설정됨
             fromCache: false,
             creativity: this.calculateCreativity(config.creativityMode),
-            retryCount: attempt
-          }
+            retryCount: attempt,
+          },
         };
-      } catch (error) {
-        lastError = error as Error;
-        
-        if (!this.shouldRetry(error as Error, config.retryPolicy) || 
-            attempt === config.retryPolicy.maxRetries) {
+      } catch (_error) {
+        lastError = _error as Error;
+
+        if (
+          !this.shouldRetry(_error as Error, config.retryPolicy) ||
+          attempt === config.retryPolicy.maxRetries
+        ) {
           break;
         }
 
@@ -314,8 +308,8 @@ ${prompt}
         responseTime: 0,
         fromCache: false,
         creativity: 0,
-        retryCount: config.retryPolicy.maxRetries
-      }
+        retryCount: config.retryPolicy.maxRetries,
+      },
     };
   }
 
@@ -324,13 +318,13 @@ ${prompt}
    */
   private postProcessResponse(text: string): string {
     let content = text;
-    
+
     // Gemini AI 응답에서 코드 블록 마커 제거
     content = content.replace(/^```[\s\S]*?\n/, ''); // 시작 코드 블록 제거
     content = content.replace(/\n```\s*$/, ''); // 끝 코드 블록 제거
     content = content.replace(/```\s*\n\s*```\s*$/, ''); // 빈 코드 블록 제거
     content = content.trim(); // 앞뒤 공백 제거
-    
+
     return content;
   }
 
@@ -344,7 +338,7 @@ ${prompt}
       cacheStrategy: config.cacheStrategy || 'memory',
       retryPolicy: config.retryPolicy || this.getDefaultRetryPolicy(),
       tokenLimit: config.tokenLimit,
-      timeoutMs: config.timeoutMs || 30000
+      timeoutMs: config.timeoutMs || 30000,
     };
   }
 
@@ -353,7 +347,7 @@ ${prompt}
       maxRetries: 3,
       baseDelayMs: 2000,
       exponentialBackoff: true,
-      retryConditions: ['overloaded', '503', 'timeout']
+      retryConditions: ['overloaded', '503', 'timeout'],
     };
   }
 
@@ -363,7 +357,7 @@ ${prompt}
   private generateCacheKey(prompt: string, config: APIRequestConfig): string {
     const configStr = JSON.stringify({
       mode: config.creativityMode,
-      limit: config.tokenLimit
+      limit: config.tokenLimit,
     });
     return `${this.hash(prompt)}-${this.hash(configStr)}`;
   }
@@ -389,8 +383,8 @@ ${prompt}
         responseTime: 0,
         fromCache: true,
         creativity: 0,
-        retryCount: 0
-      }
+        retryCount: 0,
+      },
     };
   }
 
@@ -400,16 +394,17 @@ ${prompt}
     responseTime: number,
     config: APIRequestConfig
   ): void {
-    const ttl = config.cacheStrategy === 'persistent' ? 
-      24 * 60 * 60 * 1000 : // 24시간
-      60 * 60 * 1000; // 1시간
+    const ttl =
+      config.cacheStrategy === 'persistent'
+        ? 24 * 60 * 60 * 1000 // 24시간
+        : 60 * 60 * 1000; // 1시간
 
     this.cache.set(key, {
       content,
       timestamp: Date.now(),
       tokensUsed: this.estimateTokensUsed('', content),
       ttl,
-      accessCount: 1
+      accessCount: 1,
     });
 
     // 캐시 크기 제한
@@ -425,7 +420,7 @@ ${prompt}
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // 32bit 정수로 변환
     }
     return hash.toString(36);
@@ -437,15 +432,15 @@ ${prompt}
 
   private calculateCreativity(mode: string): number {
     const modeMap = {
-      'standard': 0.7,
-      'high': 0.85,
-      'unlimited': 1.0
+      standard: 0.7,
+      high: 0.85,
+      unlimited: 1.0,
     };
     return modeMap[mode as keyof typeof modeMap] || 0.7;
   }
 
   private shouldRetry(error: Error, policy: RetryPolicy): boolean {
-    return policy.retryConditions.some(condition => 
+    return policy.retryConditions.some(condition =>
       error.message.toLowerCase().includes(condition.toLowerCase())
     );
   }
@@ -467,7 +462,7 @@ ${prompt}
     // LRU 정책으로 캐시 항목 제거
     const entries = Array.from(this.cache.entries());
     entries.sort((a, b) => a[1].accessCount - b[1].accessCount);
-    
+
     const toDelete = entries.slice(0, 100); // 100개 제거
     toDelete.forEach(([key]) => this.cache.delete(key));
   }
@@ -479,18 +474,18 @@ ${prompt}
   /**
    * 메트릭 조회
    */
-  getMetrics(): any {
+  getMetrics(): unknown {
     return this.metrics.getReport();
   }
 
   /**
    * 캐시 통계
    */
-  getCacheStats(): any {
+  getCacheStats(): unknown {
     return {
       size: this.cache.size,
       hitRate: this.metrics.getCacheHitRate(),
-      totalSavings: this.metrics.getTotalTokenSavings()
+      totalSavings: this.metrics.getTotalTokenSavings(),
     };
   }
 }
@@ -503,7 +498,7 @@ class RateLimiter {
 
   async waitIfNeeded(): Promise<void> {
     const now = Date.now();
-    
+
     // 분당 요청 제한 (예: 60 RPM)
     if (now - this.resetTime > 60000) {
       this.requestCount = 0;
@@ -531,7 +526,7 @@ class RateLimiter {
 }
 
 class APIMetrics {
-  private requests: any[] = [];
+  private requests: unknown[] = [];
   private cacheHits: number = 0;
   private cacheMisses: number = 0;
 
@@ -542,7 +537,7 @@ class APIMetrics {
       responseTime,
       tokensUsed: result.metadata.tokensUsed,
       creativityMode: config.creativityMode,
-      fromCache: result.metadata.fromCache
+      fromCache: result.metadata.fromCache,
     });
 
     if (result.metadata.fromCache) {
@@ -568,16 +563,17 @@ class APIMetrics {
       .reduce((total, req) => total + req.tokensUsed, 0);
   }
 
-  getReport(): any {
+  getReport(): unknown {
     const recent = this.requests.slice(-100); // 최근 100개 요청
-    
+
     return {
       totalRequests: this.requests.length,
       successRate: recent.filter(r => r.success).length / Math.max(recent.length, 1),
-      avgResponseTime: recent.reduce((sum, r) => sum + r.responseTime, 0) / Math.max(recent.length, 1),
+      avgResponseTime:
+        recent.reduce((sum, r) => sum + r.responseTime, 0) / Math.max(recent.length, 1),
       avgTokensUsed: recent.reduce((sum, r) => sum + r.tokensUsed, 0) / Math.max(recent.length, 1),
       cacheHitRate: this.getCacheHitRate(),
-      totalTokenSavings: this.getTotalTokenSavings()
+      totalTokenSavings: this.getTotalTokenSavings(),
     };
   }
 }

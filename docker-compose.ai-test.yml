@@ -1,0 +1,55 @@
+# Gemini AI 로맨스 판타지 자동 생성 로컬 테스트 환경
+version: '3.8'
+
+services:
+  ai-story-generator:
+    build:
+      context: .
+      dockerfile: Dockerfile.ai-test
+    container_name: ro-fi-ai-generator
+    environment:
+      - NODE_ENV=development
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - TZ=Asia/Seoul
+    volumes:
+      # 소스 코드 실시간 반영
+      - ./src:/app/src
+      - ./scripts:/app/scripts
+      - ./public:/app/public
+      # 생성된 콘텐츠 저장
+      - ./src/content/novels:/app/src/content/novels
+      - ./src/content/chapters:/app/src/content/chapters
+      # 이미지 저장
+      - ./public/images:/app/public/images
+      # 로그 저장
+      - ./logs:/app/logs
+    working_dir: /app
+    tty: true
+    stdin_open: true
+    restart: unless-stopped
+    
+  # AI 생성 결과 모니터링 (선택사항)
+  content-monitor:
+    image: alpine:latest
+    container_name: ro-fi-content-monitor
+    volumes:
+      - ./src/content:/content:ro
+      - ./public/images:/images:ro
+    command: |
+      sh -c "
+        echo '콘텐츠 모니터링 시작...'
+        while true; do
+          echo '=== 현재 콘텐츠 현황 ==='
+          echo \"소설: \$$(find /content/novels -name '*.md' | wc -l)편\"
+          echo \"챕터: \$$(find /content/chapters -name '*.md' | wc -l)화\"
+          echo \"이미지: \$$(find /images -name '*.jpg' -o -name '*.webp' -o -name '*.png' | wc -l)개\"
+          echo '시간:' \$$(date '+%Y-%m-%d %H:%M:%S')
+          echo '=========================='
+          sleep 60
+        done
+      "
+    restart: unless-stopped
+
+networks:
+  default:
+    name: ro-fi-ai-network

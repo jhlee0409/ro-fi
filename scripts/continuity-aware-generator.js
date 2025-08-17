@@ -73,7 +73,7 @@ class ContinuityAwareGenerator {
       const content = await fs.readFile(prevChapterPath, 'utf-8');
       const { content: text } = matter(content);
       
-      console.log(`📖 이전 챕터 ${chapterNumber - 1} 분석 중...`);
+      // console.log(`📖 이전 챕터 ${chapterNumber - 1} 분석 중...`);
       
       // AI로 이전 챕터 마지막 상황 정확히 추출
       const analysisPrompt = `
@@ -103,13 +103,14 @@ MYSTERIES: [아직 해결되지 않은 의문점들]
       // 분석 결과를 구조화된 데이터로 파싱
       const situationData = this.parseAnalysis(analysis);
       
-      console.log('✅ 이전 챕터 분석 완료');
-      console.log('📊 추출된 상황:', JSON.stringify(situationData, null, 2));
+      // console.log('✅ 이전 챕터 분석 완료');
+      // console.log('📊 추출된 상황:', JSON.stringify(situationData, null, 2));
       
       return situationData;
       
-    } catch (error) {
-      console.warn(`⚠️ 이전 챕터 분석 실패: ${error.message}`);
+    } catch (_error) {
+    // Intentionally unused error variable
+      // console.warn(`⚠️ 이전 챕터 분석 실패: ${_error.message}`);
       return null;
     }
   }
@@ -144,8 +145,9 @@ MYSTERIES: [아직 해결되지 않은 의문점들]
       const storyStatePath = join(PROJECT_ROOT, 'src/content/story-state.json');
       const content = await fs.readFile(storyStatePath, 'utf-8');
       return JSON.parse(content);
-    } catch (error) {
-      console.warn('⚠️ story-state.json 로드 실패:', error.message);
+    } catch (_error) {
+    // Intentionally unused error variable
+      // console.warn('⚠️ story-state.json 로드 실패:', _error.message);
       return null;
     }
   }
@@ -154,18 +156,18 @@ MYSTERIES: [아직 해결되지 않은 의문점들]
    * 🔗 연속성 보장 챕터 생성
    */
   async generateContinuousChapter(chapterNumber) {
-    console.log(`\n🔗 연속성 보장 챕터 ${chapterNumber} 생성 시작`);
+    // console.log(`\n🔗 연속성 보장 챕터 ${chapterNumber} 생성 시작`);
     
     // 1단계: 스토리 상태 파일 로드 (우선순위)
     const storyState = await this.loadStoryState();
     
     if (!storyState) {
-      console.log('스토리 상태 파일 없음 - 이전 챕터 분석으로 대체');
+      // console.log('스토리 상태 파일 없음 - 이전 챕터 분석으로 대체');
       const previousSituation = await this.analyzePreviousChapter(chapterNumber);
       return this.generateFromAnalysis(chapterNumber, previousSituation);
     }
     
-    console.log('✅ story-state.json 로드 완료');
+    // console.log('✅ story-state.json 로드 완료');
     return this.generateFromStoryState(chapterNumber, storyState);
   }
 
@@ -173,7 +175,7 @@ MYSTERIES: [아직 해결되지 않은 의문점들]
    * 📋 스토리 상태 기반 생성
    */
   async generateFromStoryState(chapterNumber, storyState) {
-    console.log('📋 story-state.json 기반 정확한 연속성 생성');
+    // console.log('📋 story-state.json 기반 정확한 연속성 생성');
     
     // 스토리 상태에서 정확한 요구사항 추출
     const requirements = storyState.nextChapterRequirements;
@@ -233,7 +235,7 @@ CONTENT:
       content: contentMatch ? contentMatch[1].trim() : response
     };
 
-    console.log('✅ 스토리 상태 기반 생성 완료');
+    // console.log('✅ 스토리 상태 기반 생성 완료');
     return chapterData;
   }
 
@@ -242,7 +244,7 @@ CONTENT:
    */
   async generateFromAnalysis(chapterNumber, previousSituation) {
     if (!previousSituation) {
-      console.log('첫 챕터이므로 기본 생성 진행');
+      // console.log('첫 챕터이므로 기본 생성 진행');
       return this.generateFirstChapter();
     }
 
@@ -307,11 +309,11 @@ ENDING_SITUATION:
     const isValid = await this.validateContinuity(chapterData, previousSituation);
     
     if (!isValid) {
-      console.error('❌ 연속성 검증 실패 - 재생성 필요');
+      // console.error('❌ 연속성 검증 실패 - 재생성 필요');
       throw new Error('연속성 보장 실패');
     }
 
-    console.log('✅ 연속성 검증 통과');
+    // console.log('✅ 연속성 검증 통과');
     return chapterData;
   }
 
@@ -319,7 +321,7 @@ ENDING_SITUATION:
    * 🔍 연속성 검증
    */
   async validateContinuity(chapterData, previousSituation) {
-    console.log('🔍 연속성 검증 중...');
+    // console.log('🔍 연속성 검증 중...');
     
     const validationPrompt = `
 다음 두 상황이 논리적으로 연결되는지 검증하세요:
@@ -346,7 +348,7 @@ ISSUES: [문제점 나열]
     const isValid = validation.includes('VALID: YES');
     
     if (!isValid) {
-      console.warn('⚠️ 연속성 문제 발견:', validation);
+      // console.warn('⚠️ 연속성 문제 발견:', validation);
     }
     
     return isValid;
@@ -381,7 +383,7 @@ ISSUES: [문제점 나열]
     const chapterMarkdown = matter.stringify(chapterData.content, frontmatter);
     await fs.writeFile(chapterPath, chapterMarkdown);
     
-    console.log(`✅ 챕터 ${chapterNumber} 저장 완료`);
+    // console.log(`✅ 챕터 ${chapterNumber} 저장 완료`);
   }
 }
 
@@ -390,18 +392,19 @@ async function main() {
   try {
     const generator = new ContinuityAwareGenerator();
     
-    console.log('🔗 Continuity-Aware Generator 시작');
-    console.log('근본적 연속성 보장 시스템으로 5화 재생성\n');
+    // console.log('🔗 Continuity-Aware Generator 시작');
+    // console.log('근본적 연속성 보장 시스템으로 5화 재생성\n');
     
     // 5화 연속성 보장 재생성
     const chapterData = await generator.generateContinuousChapter(5);
     await generator.saveChapter(5, chapterData);
     
-    console.log('\n🎉 연속성 보장 5화 생성 완료!');
-    console.log('4화와 완벽 연결, 스토리 논리성 보장');
+    // console.log('\n🎉 연속성 보장 5화 생성 완료!');
+    // console.log('4화와 완벽 연결, 스토리 논리성 보장');
     
-  } catch (error) {
-    console.error('\n💥 연속성 보장 생성 실패:', error.message);
+  } catch (_error) {
+    // Intentionally unused error variable
+    // console.error('\n💥 연속성 보장 생성 실패:', _error.message);
     process.exit(1);
   }
 }

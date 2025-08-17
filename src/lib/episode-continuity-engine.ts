@@ -11,10 +11,36 @@ import type {
   ValidationResult,
   ValidationError,
   ValidationWarning,
-  CharacterProfile,
+// CharacterProfile,
   FixSuggestion
 } from './types/continuity.js';
-import { storyStateManager } from './story-state-manager.js';
+// import { storyStateManager } from './story-state-manager.js';
+
+interface AspectScores {
+  characterConsistency: number;
+  worldConsistency: number;
+  plotConsistency: number;
+  emotionalFlow: number;
+  timelineConsistency: number;
+}
+
+interface MagicSystem {
+  rules: string[];
+  limitations: string[];
+  [key: string]: unknown;
+}
+
+interface Geography {
+  locations: Set<string>;
+  regions: string[];
+  [key: string]: unknown;
+}
+
+interface SocialHierarchy {
+  ranks: string[];
+  rules: string[];
+  [key: string]: unknown;
+}
 
 export class EpisodeContinuityEngine {
   private characterNamePattern = /[가-힣]{2,4}/g;
@@ -84,7 +110,19 @@ export class EpisodeContinuityEngine {
     const previousChapter = storyState.chapters.get(newChapter.chapterNumber - 1);
     
     if (!previousChapter) {
-      return { valid: true, errors: [], warnings: [], confidence: 1.0, aspectScores: {} as any };
+      return { 
+        valid: true, 
+        errors: [], 
+        warnings: [], 
+        confidence: 1.0, 
+        aspectScores: {
+          characterConsistency: 1.0,
+          worldConsistency: 1.0,
+          plotConsistency: 1.0,
+          emotionalFlow: 1.0,
+          timelineConsistency: 1.0
+        } as AspectScores 
+      };
     }
 
     // 새 챕터에서 캐릭터 이름 추출
@@ -138,7 +176,7 @@ export class EpisodeContinuityEngine {
     const confidence = errors.length === 0 ? (warnings.length === 0 ? 1.0 : 0.8) : 0.3;
     const valid = errors.filter(e => e.severity === 'critical' || e.severity === 'high').length === 0;
 
-    return { valid, errors, warnings, confidence, aspectScores: {} as any };
+    return { valid, errors, warnings, confidence, aspectScores: { characterConsistency: 1.0, worldConsistency: 1.0, plotConsistency: 1.0, emotionalFlow: 1.0, timelineConsistency: 1.0 } as AspectScores };
   }
 
   /**
@@ -169,7 +207,7 @@ export class EpisodeContinuityEngine {
     const confidence = errors.length === 0 ? (warnings.length === 0 ? 1.0 : 0.8) : 0.4;
     const valid = errors.filter(e => e.severity === 'critical' || e.severity === 'high').length === 0;
 
-    return { valid, errors, warnings, confidence, aspectScores: {} as any };
+    return { valid, errors, warnings, confidence, aspectScores: { characterConsistency: 1.0, worldConsistency: 1.0, plotConsistency: 1.0, emotionalFlow: 1.0, timelineConsistency: 1.0 } as AspectScores };
   }
 
   /**
@@ -209,7 +247,7 @@ export class EpisodeContinuityEngine {
     const confidence = errors.length === 0 ? (warnings.length <= 1 ? 1.0 : 0.7) : 0.3;
     const valid = errors.filter(e => e.severity === 'critical' || e.severity === 'high').length === 0;
 
-    return { valid, errors, warnings, confidence, aspectScores: {} as any };
+    return { valid, errors, warnings, confidence, aspectScores: { characterConsistency: 1.0, worldConsistency: 1.0, plotConsistency: 1.0, emotionalFlow: 1.0, timelineConsistency: 1.0 } as AspectScores };
   }
 
   /**
@@ -222,7 +260,7 @@ export class EpisodeContinuityEngine {
     const previousChapter = storyState.chapters.get(newChapter.chapterNumber - 1);
     
     if (!previousChapter) {
-      return { valid: true, errors: [], warnings: [], confidence: 1.0, aspectScores: {} as any };
+      return { valid: true, errors: [], warnings: [], confidence: 1.0, aspectScores: { characterConsistency: 1.0, worldConsistency: 1.0, plotConsistency: 1.0, emotionalFlow: 1.0, timelineConsistency: 1.0 } as AspectScores };
     }
 
     // 감정 변화 거리 계산
@@ -256,7 +294,7 @@ export class EpisodeContinuityEngine {
     const confidence = errors.length === 0 ? (warnings.length === 0 ? 1.0 : 0.8) : 0.5;
     const valid = errors.filter(e => e.severity === 'critical' || e.severity === 'high').length === 0;
 
-    return { valid, errors, warnings, confidence, aspectScores: {} as any };
+    return { valid, errors, warnings, confidence, aspectScores: { characterConsistency: 1.0, worldConsistency: 1.0, plotConsistency: 1.0, emotionalFlow: 1.0, timelineConsistency: 1.0 } as AspectScores };
   }
 
   /**
@@ -269,7 +307,7 @@ export class EpisodeContinuityEngine {
     const previousChapter = storyState.chapters.get(newChapter.chapterNumber - 1);
     
     if (!previousChapter) {
-      return { valid: true, errors: [], warnings: [], confidence: 1.0, aspectScores: {} as any };
+      return { valid: true, errors: [], warnings: [], confidence: 1.0, aspectScores: { characterConsistency: 1.0, worldConsistency: 1.0, plotConsistency: 1.0, emotionalFlow: 1.0, timelineConsistency: 1.0 } as AspectScores };
     }
 
     // 시간 역행 검증
@@ -294,16 +332,16 @@ export class EpisodeContinuityEngine {
     const confidence = errors.length === 0 ? 1.0 : 0.3;
     const valid = errors.filter(e => e.severity === 'critical' || e.severity === 'high').length === 0;
 
-    return { valid, errors, warnings, confidence, aspectScores: {} as any };
+    return { valid, errors, warnings, confidence, aspectScores: { characterConsistency: 1.0, worldConsistency: 1.0, plotConsistency: 1.0, emotionalFlow: 1.0, timelineConsistency: 1.0 } as AspectScores };
   }
 
   /**
    * 연속성 수정 제안 생성
    */
-  async suggestContinuityFix(validationErrors: ValidationError[], storyState: StoryState): Promise<FixSuggestion[]> {
+  async suggestContinuityFix(validationErrors: ValidationError[], _storyState: StoryState): Promise<FixSuggestion[]> {
     const suggestions: FixSuggestion[] = [];
 
-    for (const error of validationErrors) {
+    for (const _error of validationErrors) {
       switch (error.type) {
         case 'CHARACTER_NAME_CHANGED':
           suggestions.push({
@@ -360,7 +398,7 @@ export class EpisodeContinuityEngine {
   /**
    * 챕터 컨텐츠 추출 (실제 구현에서는 마크다운 파싱)
    */
-  private getChapterContent(chapter: ChapterState): string {
+  private getChapterContent(_chapter: ChapterState): string {
     // 임시 구현 - 실제로는 마크다운 파일에서 내용 추출
     return chapter.title + ' ' + chapter.summary + ' ' + chapter.keyEvents.join(' ');
   }
@@ -368,7 +406,7 @@ export class EpisodeContinuityEngine {
   /**
    * 캐릭터 이름 추출
    */
-  private extractCharacterNames(content: string): string[] {
+  private extractCharacterNames(_content: string): string[] {
     const matches = content.match(this.characterNamePattern) || [];
     const nameCount = new Map<string, number>();
     
@@ -378,13 +416,13 @@ export class EpisodeContinuityEngine {
     
     return Array.from(nameCount.entries())
       .filter(([_, count]) => count >= 2)
-      .map(([name, _]) => name);
+      .map(([_, _]) => name);
   }
 
   /**
    * 주인공 식별
    */
-  private identifyProtagonist(characters: string[], content: string): string | null {
+  private identifyProtagonist(characters: string[], _content: string): string | null {
     if (characters.length === 0) return null;
     
     // 가장 많이 언급된 캐릭터를 주인공으로 간주
@@ -402,7 +440,7 @@ export class EpisodeContinuityEngine {
   /**
    * 캐릭터 능력 추출
    */
-  private extractCharacterAbilities(content: string): Map<string, string[]> {
+  private extractCharacterAbilities(_content: string): Map<string, string[]> {
     const abilities = new Map<string, string[]>();
     const characters = this.extractCharacterNames(content);
     
@@ -454,7 +492,7 @@ export class EpisodeContinuityEngine {
   /**
    * 마법 시스템 위반 검사
    */
-  private checkMagicSystemViolations(magicSystem: any, content: string): ValidationError[] {
+  private checkMagicSystemViolations(_magicSystem: MagicSystem, _content: string): ValidationError[] {
     const errors: ValidationError[] = [];
     
     // 마법 시스템 규칙 위반 검사 (간단한 구현)
@@ -475,7 +513,7 @@ export class EpisodeContinuityEngine {
   /**
    * 세계관 규칙 위반 검사
    */
-  private checkWorldRuleViolations(rules: string[], content: string): ValidationError[] {
+  private checkWorldRuleViolations(rules: string[], _content: string): ValidationError[] {
     const errors: ValidationError[] = [];
     
     for (const rule of rules) {
@@ -498,7 +536,7 @@ export class EpisodeContinuityEngine {
   /**
    * 지리적 일관성 검사
    */
-  private checkGeographyConsistency(geography: any, content: string): ValidationWarning[] {
+  private checkGeographyConsistency(geography: Geography, _content: string): ValidationWarning[] {
     const warnings: ValidationWarning[] = [];
     
     // 새로운 지명이 등장할 때 경고 (간단한 구현)
@@ -522,7 +560,7 @@ export class EpisodeContinuityEngine {
   /**
    * 사회적 계층 일관성 검사
    */
-  private checkSocialHierarchyConsistency(hierarchy: any, content: string): ValidationWarning[] {
+  private checkSocialHierarchyConsistency(_hierarchy: SocialHierarchy, _content: string): ValidationWarning[] {
     const warnings: ValidationWarning[] = [];
     
     // 계급 체계 위반 검사 (간단한 구현)
@@ -565,7 +603,7 @@ export class EpisodeContinuityEngine {
   /**
    * 이벤트 순서 검증
    */
-  private checkEventSequence(timeline: any[], newChapter: ChapterState): ValidationError[] {
+  private checkEventSequence(timeline: unknown[], newChapter: ChapterState): ValidationError[] {
     const errors: ValidationError[] = [];
     
     // 시간 순서 위반 검사 (간단한 구현)

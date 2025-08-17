@@ -27,7 +27,7 @@ interface ContentQualityRecord {
   timestamp: number;
   contentType: string;
   overallScore: number;
-  dimensions: Record<string, any>;
+  dimensions: Record<string, unknown>;
   readabilityScore: number;
   creativityScore: number;
   consistencyScore: number;
@@ -44,7 +44,7 @@ interface SystemPerformanceRecord {
     external?: number;
     rss?: number;
   };
-  diskIO: Record<string, any>;
+  diskIO: Record<string, unknown>;
   networkLatency: number;
   activeConnections: number;
   queueLength: number;
@@ -58,7 +58,7 @@ interface ErrorRecord {
   errorStack: string;
   component: string;
   severity: 'low' | 'medium' | 'high' | 'critical';
-  context: Record<string, any>;
+  context: Record<string, unknown>;
   userId?: string | null;
   sessionId?: string | null;
 }
@@ -95,7 +95,7 @@ interface APIMetrics {
 
 interface QualityMetrics {
   overall?: number;
-  dimensions?: Record<string, any>;
+  dimensions?: Record<string, unknown>;
   readability?: number;
   creativity?: number;
   consistency?: number;
@@ -111,7 +111,7 @@ interface PerformanceData {
     external?: number;
     rss?: number;
   };
-  diskIO?: Record<string, any>;
+  diskIO?: Record<string, unknown>;
   networkLatency?: number;
   activeConnections?: number;
   queueLength?: number;
@@ -124,7 +124,7 @@ interface ErrorData {
   stack?: string;
   component?: string;
   severity?: 'low' | 'medium' | 'high' | 'critical';
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
   userId?: string;
   sessionId?: string;
 }
@@ -153,7 +153,7 @@ export class MetricsCollector {
     errorTracking: CircularBuffer<ErrorRecord>;
     userEngagement: CircularBuffer<UserEngagementRecord>;
   };
-  private aggregatedCache: LRUCache<string, any>;
+  private aggregatedCache: LRUCache<string, unknown>;
   private realTimeStats: RealTimeStats;
   private collectionInterval?: NodeJS.Timeout;
 
@@ -177,7 +177,7 @@ export class MetricsCollector {
     };
 
     // 집계된 메트릭 캐시
-    this.aggregatedCache = new LRUCache<string, any>(this.cacheSize, 300000); // 5분 TTL
+    this.aggregatedCache = new LRUCache<string, unknown>(this.cacheSize, 300000); // 5분 TTL
 
     // 실시간 통계
     this.realTimeStats = {
@@ -194,7 +194,7 @@ export class MetricsCollector {
       this.startCollection();
     }
 
-    console.log('📊 메트릭 수집기 초기화 완료');
+    // console.log('📊 메트릭 수집기 초기화 완료');
   }
 
   /**
@@ -340,7 +340,7 @@ export class MetricsCollector {
   /**
    * 집계된 메트릭 생성 및 캐싱
    */
-  getAggregatedMetrics(type: string = 'all', timeRange: number = 3600000): any {
+  getAggregatedMetrics(type: string = 'all', timeRange: number = 3600000): unknown {
     // 1시간 기본값
     const cacheKey = `${type}_${timeRange}`;
     const cached = this.aggregatedCache.get(cacheKey);
@@ -350,7 +350,7 @@ export class MetricsCollector {
     }
 
     const cutoffTime = Date.now() - timeRange;
-    const result: any = {};
+    const result: Record<string, unknown> = {};
 
     if (type === 'all' || type === 'api') {
       result.apiMetrics = this.aggregateAPIMetrics(cutoffTime);
@@ -384,7 +384,7 @@ export class MetricsCollector {
   /**
    * API 메트릭 집계
    */
-  private aggregateAPIMetrics(cutoffTime: number): any {
+  private aggregateAPIMetrics(cutoffTime: number): unknown {
     const apiData = this.metrics.apiUsage
       .getRecent(1000)
       .filter(record => record.timestamp > cutoffTime);
@@ -398,7 +398,7 @@ export class MetricsCollector {
     const totalResponseTime = apiData.reduce((sum, r) => sum + r.responseTime, 0);
     const totalTokens = apiData.reduce((sum, r) => sum + r.tokensUsed, 0);
 
-    const providerStats: Record<string, any> = {};
+    const providerStats: Record<string, unknown> = {};
     ['claude', 'gemini'].forEach(provider => {
       const providerData = apiData.filter(r => r.provider === provider);
       providerStats[provider] = {
@@ -430,7 +430,7 @@ export class MetricsCollector {
   /**
    * 품질 메트릭 집계
    */
-  private aggregateQualityMetrics(cutoffTime: number): any {
+  private aggregateQualityMetrics(cutoffTime: number): unknown {
     const qualityData = this.metrics.contentQuality
       .getRecent(1000)
       .filter(record => record.timestamp > cutoffTime);
@@ -446,7 +446,7 @@ export class MetricsCollector {
     const averageCreativity =
       qualityData.reduce((sum, r) => sum + r.creativityScore, 0) / totalContent;
 
-    const contentTypeBreakdown: Record<string, any> = {};
+    const contentTypeBreakdown: Record<string, unknown> = {};
     ['chapter', 'novel', 'metadata'].forEach(type => {
       const typeData = qualityData.filter(r => r.contentType === type);
       if (typeData.length > 0) {
@@ -473,7 +473,7 @@ export class MetricsCollector {
   /**
    * 성능 메트릭 집계
    */
-  private aggregatePerformanceMetrics(cutoffTime: number): any {
+  private aggregatePerformanceMetrics(cutoffTime: number): unknown {
     const perfData = this.metrics.systemPerformance
       .getRecent(1000)
       .filter(record => record.timestamp > cutoffTime);
@@ -500,7 +500,7 @@ export class MetricsCollector {
   /**
    * 에러 메트릭 집계
    */
-  private aggregateErrorMetrics(cutoffTime: number): any {
+  private aggregateErrorMetrics(cutoffTime: number): unknown {
     const errorData = this.metrics.errorTracking
       .getRecent(1000)
       .filter(record => record.timestamp > cutoffTime);
@@ -509,7 +509,7 @@ export class MetricsCollector {
     const errorsByType: Record<string, number> = {};
     const errorsBySeverity: Record<string, number> = {};
 
-    errorData.forEach(error => {
+    errorData.forEach(_error => {
       errorsByType[error.errorType] = (errorsByType[error.errorType] || 0) + 1;
       errorsBySeverity[error.severity] = (errorsBySeverity[error.severity] || 0) + 1;
     });
@@ -532,7 +532,7 @@ export class MetricsCollector {
   /**
    * 사용자 참여도 메트릭 집계
    */
-  private aggregateEngagementMetrics(cutoffTime: number): any {
+  private aggregateEngagementMetrics(cutoffTime: number): unknown {
     const engagementData = this.metrics.userEngagement
       .getRecent(1000)
       .filter(record => record.timestamp > cutoffTime);
@@ -560,7 +560,7 @@ export class MetricsCollector {
   /**
    * 시스템 건강도 점수 계산
    */
-  private calculateSystemHealthScore(metrics: any): number {
+  private calculateSystemHealthScore(metrics: unknown): number {
     let score = 100;
 
     // API 성공률 기반 점수 차감
@@ -671,7 +671,7 @@ export class MetricsCollector {
       }
     }, 30000); // 30초마다
 
-    console.log('📈 주기적 메트릭 수집 시작 (30초 간격)');
+    // console.log('📈 주기적 메트릭 수집 시작 (30초 간격)');
   }
 
   /**
@@ -690,8 +690,8 @@ export class MetricsCollector {
       };
 
       this.recordSystemPerformance(performanceData);
-    } catch (error) {
-      console.warn('⚠️ 시스템 메트릭 수집 중 오류:', (error as Error).message);
+    } catch (_error) {
+      // console.warn('⚠️ 시스템 메트릭 수집 중 오류:', (_error as Error).message);
     }
   }
 
@@ -710,7 +710,7 @@ export class MetricsCollector {
       lastReset: Date.now(),
     };
 
-    console.log('📊 메트릭 데이터 리셋 완료');
+    // console.log('📊 메트릭 데이터 리셋 완료');
   }
 
   /**
@@ -721,7 +721,7 @@ export class MetricsCollector {
     if (this.collectionInterval) {
       clearInterval(this.collectionInterval);
     }
-    console.log('📊 메트릭 수집 중지');
+    // console.log('📊 메트릭 수집 중지');
   }
 }
 

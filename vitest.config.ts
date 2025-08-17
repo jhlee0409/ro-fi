@@ -81,16 +81,6 @@ export default defineConfig({
       clean: true
     },
     
-    // 파일 감시 최적화 
-    watchExclude: [
-      '**/node_modules/**',
-      '**/dist/**',  
-      '**/logs/**',
-      '**/coverage/**',
-      '**/tmp/**',
-      '**/.git/**'
-    ],
-    
     // 종료 시 bail 설정
     bail: process.env.CI ? 5 : 0 // CI에서는 5개 실패 시 중단
   },

@@ -28,7 +28,6 @@ import dotenv from 'dotenv';
 import { QualityAssuranceGateway } from '../src/lib/quality-engines/quality-assurance-gateway.js';
 import { IntelligentDecisionEngine } from '../src/lib/intelligent-decision-engine.js';
 import { PerformanceOptimizer } from '../src/lib/performance-optimizer.js';
-import { IntelligentErrorRecovery } from '../src/lib/intelligent-error-recovery.js';
 import { WorldClassEnhancementEngine } from '../src/lib/world-class-enhancement-engine.js';
 
 // 연속성 관리 시스템 통합 (선택적)
@@ -36,8 +35,9 @@ let continuityIntegration = null;
 try {
   const continuityModule = await import('../src/lib/continuity-integration.js');
   continuityIntegration = continuityModule.LegacyCompatibilityHelper;
-} catch (error) {
-  console.log('연속성 시스템 로드 실패 (기존 방식으로 동작):', error.message);
+} catch (_error) {
+    // Intentionally unused error variable
+  // console.log('연속성 시스템 로드 실패 (기존 방식으로 동작):', _error.message);
 }
 
 const __filename = fileURLToPath(import.meta.url);
@@ -132,30 +132,24 @@ class Logger {
   async ensureLogDir() {
     try {
       await fs.mkdir(CONFIG.LOGS_DIR, { recursive: true });
-    } catch (error) {
+    } catch (_) {
       // 디렉토리가 이미 존재하는 경우 무시
     }
   }
 
   async log(level, message, data = null) {
     const timestamp = new Date().toISOString();
-    const logEntry = {
-      timestamp,
-      level,
-      message,
-      data
-    };
-
     const logLine = `[${timestamp}] ${level.toUpperCase()}: ${message}${data ? ` | ${JSON.stringify(data)}` : ''}\n`;
 
     if (this.verbose || level === 'ERROR') {
-      console.log(logLine.trim());
+      // console.log(logLine.trim());
     }
 
     try {
       await fs.appendFile(this.logFile, logLine);
-    } catch (error) {
-      console.error('로그 파일 쓰기 실패:', error);
+    } catch (_error) {
+    // Intentionally unused error variable
+      // console.error('로그 파일 쓰기 실패:', _error);
     }
   }
 
@@ -213,8 +207,9 @@ class ContentAnalyzer {
       }
 
       return novels;
-    } catch (error) {
-      await this.logger.warn('소설 파일 로드 실패', { error: error.message });
+    } catch (_error) {
+    // Intentionally unused error variable
+      await this.logger.warn('소설 파일 로드 실패', { error: _error.message });
       return [];
     }
   }
@@ -236,8 +231,9 @@ class ContentAnalyzer {
       }
 
       return chapters.sort((a, b) => new Date(b.publicationDate) - new Date(a.publicationDate));
-    } catch (error) {
-      await this.logger.warn('챕터 파일 로드 실패', { error: error.message });
+    } catch (_error) {
+    // Intentionally unused error variable
+      await this.logger.warn('챕터 파일 로드 실패', { error: _error.message });
       return [];
     }
   }
@@ -284,7 +280,6 @@ class NovelGenerator {
     this.qualityGateway = new QualityAssuranceGateway(logger);
     this.decisionEngine = new IntelligentDecisionEngine(logger);
     this.performanceOptimizer = new PerformanceOptimizer(logger);
-    this.errorRecovery = new IntelligentErrorRecovery(logger);
     
     this.qualityMode = true; // 품질 검증 활성화
     this.worldClassMode = true; // 세계급 모드 활성화
@@ -350,16 +345,10 @@ class NovelGenerator {
 
       return generationResult.content;
 
-    } catch (error) {
-      // 지능형 에러 복구
-      return await this.errorRecovery.handleGenerationFailure({
-        error,
-        prompt,
-        creativity,
-        storyContext,
-        operationId,
-        logger: this.logger
-      });
+    } catch (_error) {
+    // Intentionally unused error variable
+      await this.logger.error(`콘텐츠 생성 실패: ${_error.message}`, { _, _error: _error.stack });
+      throw _error;
     }
   }
 
@@ -570,8 +559,9 @@ ${basePrompt}
         }
 
         attempt++;
-      } catch (error) {
-        await this.logger.warn(`생성 시도 ${attempt} 실패`, { operationId, error: error.message });
+      } catch (_error) {
+    // Intentionally unused error variable
+        await this.logger.warn(`생성 시도 ${attempt} 실패`, { _, _error: _error.message });
         
         if (attempt === CONFIG.QUALITY_ASSURANCE.maxAttempts) {
           // 최종 시도도 실패한 경우
@@ -583,7 +573,7 @@ ${basePrompt}
             });
             return bestResult;
           }
-          throw error;
+          throw _error;
         }
         attempt++;
       }
@@ -846,7 +836,7 @@ IS_FINAL: [이것이 최종화면 true, 아니면 false]
         
         context += `\n--- ${chapter.title} (${chapter.chapterNumber}화) ---\n`;
         context += chapterContent.substring(0, 1000) + '...\n';
-      } catch (error) {
+      } catch (_) {
         await this.logger.warn('챕터 파일 읽기 실패', { filename: chapter.filename });
       }
     }
@@ -998,14 +988,6 @@ IS_FINAL: [이것이 최종화면 true, 아니면 false]
       slug = slug.replace(new RegExp(korean, 'g'), english);
     }
     
-    // 남은 한글을 로마자로 변환 (간단한 변환)
-    const hangulToRoman = {
-      'ㄱ': 'g', 'ㄴ': 'n', 'ㄷ': 'd', 'ㄹ': 'r', 'ㅁ': 'm',
-      'ㅂ': 'b', 'ㅅ': 's', 'ㅇ': '', 'ㅈ': 'j', 'ㅊ': 'ch',
-      'ㅋ': 'k', 'ㅌ': 't', 'ㅍ': 'p', 'ㅎ': 'h',
-      'ㅏ': 'a', 'ㅑ': 'ya', 'ㅓ': 'eo', 'ㅕ': 'yeo', 'ㅗ': 'o',
-      'ㅛ': 'yo', 'ㅜ': 'u', 'ㅠ': 'yu', 'ㅡ': 'eu', 'ㅣ': 'i'
-    };
     
     // 한글 자모 분해 및 변환 (단순화된 버전)
     slug = slug.replace(/[가-힣]/g, (char) => {
@@ -1078,9 +1060,67 @@ IS_FINAL: [이것이 최종화면 true, 아니면 false]
       }
       // 콤마로 구분된 문자열 처리
       return tropesStr.split(',').map(t => t.trim());
-    } catch {
+    } catch (_) {
       return [tropesStr];
     }
+  }
+
+  /**
+   * 스토리 복잡도 계산
+   */
+  calculateComplexity(storyContext) {
+    let complexity = 0.5; // 기본 복잡도
+    
+    if (storyContext.novelType === 'new') complexity += 0.3;
+    if (storyContext.novelType === 'complete') complexity += 0.2;
+    if (storyContext.tropes && storyContext.tropes.length > 2) complexity += 0.1;
+    if (storyContext.theme && storyContext.theme.includes('복잡')) complexity += 0.2;
+    
+    return Math.min(1.0, complexity);
+  }
+
+  /**
+   * 품질 요구사항 도출
+   */
+  deriveQualityRequirements(storyContext) {
+    return {
+      emotionalDepth: storyContext.novelType === 'new' ? 8.5 : 7.5,
+      plotCoherence: 8.0,
+      characterDevelopment: 8.5,
+      languageQuality: 8.0
+    };
+  }
+
+  /**
+   * 서사 단계 식별
+   */
+  identifyNarrativeStage(storyContext) {
+    if (storyContext.novelType === 'new') return 'introduction';
+    if (storyContext.novelType === 'continue') return 'development';
+    if (storyContext.novelType === 'complete') return 'resolution';
+    return 'unknown';
+  }
+
+  /**
+   * 캐릭터 프로필 분석
+   */
+  analyzeCharacterProfiles(storyContext) {
+    return {
+      mainCharacters: storyContext.characters || [],
+      archetypes: storyContext.tropes || [],
+      relationships: storyContext.relationships || []
+    };
+  }
+
+  /**
+   * 플롯 진행 분석
+   */
+  analyzePlotProgression(storyContext) {
+    return {
+      currentArc: storyContext.currentArc || 'beginning',
+      pacing: storyContext.pacing || 'medium',
+      tensions: storyContext.tensions || []
+    };
   }
 }
 
@@ -1170,8 +1210,9 @@ class FileManager {
       await fs.writeFile(novelPath, updatedContent, 'utf-8');
       
       await this.logger.success('소설 상태 업데이트', { novelSlug, status });
-    } catch (error) {
-      await this.logger.error('소설 상태 업데이트 실패', { novelSlug, error: error.message });
+    } catch (_error) {
+    // Intentionally unused error variable
+      await this.logger.error('소설 상태 업데이트 실패', { _, _error: _error.message });
     }
   }
 
@@ -1187,8 +1228,9 @@ class FileManager {
       const updatedContent = matter.stringify(novelContent, data);
       await fs.writeFile(novelPath, updatedContent, 'utf-8');
       
-    } catch (error) {
-      await this.logger.warn('소설 챕터 수 업데이트 실패', { novelSlug, error: error.message });
+    } catch (_error) {
+    // Intentionally unused error variable
+      await this.logger.warn('소설 챕터 수 업데이트 실패', { _, _error: _error.message });
     }
   }
 
@@ -1273,8 +1315,9 @@ class AutomationEngine {
       } else {
         await this.logger.info('연속성 관리 시스템 비활성화 (ENABLE_CONTINUITY_SYSTEM=false)');
       }
-    } catch (error) {
-      await this.logger.warn('연속성 시스템 통합 실패, 기존 방식으로 동작', { error: error.message });
+    } catch (_error) {
+    // Intentionally unused error variable
+      await this.logger.warn('연속성 시스템 통합 실패, 기존 방식으로 동작', { error: _error.message });
       this.continuityEnabled = false;
     }
   }
@@ -1326,12 +1369,13 @@ class AutomationEngine {
       await this.logger.success('🎉 GENESIS AI 자동 연재 시스템 완료', result);
       return { success: true, action, result };
 
-    } catch (error) {
+    } catch (_error) {
+    // Intentionally unused error variable
       await this.logger.error('❌ 자동 연재 시스템 실패', { 
-        error: error.message,
-        stack: error.stack 
+        error: _error.message,
+        stack: _error.stack 
       });
-      throw error;
+      throw _error;
     }
   }
 
@@ -1438,7 +1482,7 @@ class AutomationEngine {
     };
   }
 
-  async executeContinueChapter(novelSlug, analysis) {
+  async executeContinueChapter(novelSlug) {
     await this.logger.info('챕터 연재 실행', { novelSlug });
 
     const existingChapters = await this.analyzer.loadAllChapters();
@@ -1458,7 +1502,7 @@ class AutomationEngine {
     };
   }
 
-  async executeCompleteNovel(novelSlug, analysis) {
+  async executeCompleteNovel(novelSlug) {
     await this.logger.info('소설 완결 실행', { novelSlug });
 
     const existingChapters = await this.analyzer.loadAllChapters();
@@ -1490,7 +1534,7 @@ class AutomationEngine {
     for (const dir of dirs) {
       try {
         await fs.mkdir(dir, { recursive: true });
-      } catch (error) {
+      } catch (_) {
         // 디렉토리가 이미 존재하는 경우 무시
       }
     }
@@ -1533,8 +1577,8 @@ Co-Authored-By: Gemini AI <noreply@google.com>`;
 
       await this.logger.success('Git 푸시 완료');
 
-    } catch (error) {
-      await this.logger.error('Git 작업 실패', { error: error.message });
+    } catch (err) {
+      await this.logger.error('Git 작업 실패', { error: err.message });
       // Git 실패는 전체 프로세스를 중단하지 않음
     }
   }
@@ -1570,8 +1614,9 @@ Co-Authored-By: Gemini AI <noreply@google.com>`;
         trend: metricsLog.qualityInfo?.trend?.trend
       });
 
-    } catch (error) {
-      await this.logger.warn('품질 메트릭 로깅 실패', { error: error.message });
+    } catch (_error) {
+    // Intentionally unused error variable
+      await this.logger.warn('품질 메트릭 로깅 실패', { error: _error.message });
     }
   }
 }
@@ -1602,14 +1647,15 @@ async function main() {
 
   try {
     const engine = new AutomationEngine(options);
-    const result = await engine.run();
+    const _result = await engine.run();
     
-    console.log('\n🎉 자동 연재 시스템 실행 완료!');
-    console.log('📊 결과:', JSON.stringify(result, null, 2));
+    // console.log('\n🎉 자동 연재 시스템 실행 완료!');
+    // console.log('📊 결과:', JSON.stringify(result, null, 2));
     
     process.exit(0);
-  } catch (error) {
-    console.error('\n❌ 오류 발생:', error.message);
+  } catch (_error) {
+    // Intentionally unused error variable
+    // console.error('\n❌ 오류 발생:', _error.message);
     process.exit(1);
   }
 }

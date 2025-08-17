@@ -195,10 +195,10 @@ export class DeploymentManagementSystem {
       
       return execution;
       
-    } catch (error) {
+    } catch (_error) {
       // 5. 배포 실패 처리
-      await this.handleDeploymentFailure(execution, pipeline, error as Error);
-      throw error;
+      await this.handleDeploymentFailure(execution, _, _error as Error);
+      throw _error;
     }
   }
 
@@ -243,10 +243,10 @@ export class DeploymentManagementSystem {
       
       return execution;
       
-    } catch (error) {
+    } catch (_error) {
       // 롤백 실행
       await this.rollbackBlueGreenDeployment(execution, blueGreenConfig);
-      throw error;
+      throw _error;
     }
   }
 
@@ -420,12 +420,12 @@ export class DeploymentManagementSystem {
       stageExecution.status = 'completed';
       stageExecution.endTime = new Date();
       
-    } catch (error) {
+    } catch (_error) {
       stageExecution.status = 'failed';
       stageExecution.endTime = new Date();
       stageExecution.errorDetails = {
-        message: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
+        message: _error instanceof Error ? error.message : 'Unknown error',
+        stack: _error instanceof Error ? error.stack : undefined,
         timestamp: new Date()
       };
       
@@ -532,8 +532,8 @@ export class DeploymentManagementSystem {
     if (pipeline.rollbackEnabled && pipeline.deploymentStrategy.validation.autoRollback) {
       try {
         await this.rollbackDeployment(execution.id, undefined, `Auto rollback due to deployment failure: ${error.message}`);
-      } catch (rollbackError) {
-        console.error('Auto rollback failed:', rollbackError);
+      } catch (_rollbackError) {
+        // console.error('Auto rollback failed:', rollbackError);
       }
     }
   }
@@ -695,8 +695,8 @@ export class DeploymentManagementSystem {
     setInterval(async () => {
       try {
         await this.monitorActiveDeployments();
-      } catch (error) {
-        console.error('Deployment monitoring error:', error);
+      } catch (_error) {
+        // console.error('Deployment monitoring error:', _error);
       }
     }, 30000);
 
@@ -704,14 +704,14 @@ export class DeploymentManagementSystem {
     setInterval(async () => {
       try {
         await this.monitorEnvironmentHealth();
-      } catch (error) {
-        console.error('Environment monitoring error:', error);
+      } catch (_error) {
+        // console.error('Environment monitoring error:', _error);
       }
     }, 300000);
   }
 
   // 스텁 메서드들
-  private async prepareGreenEnvironment(execution: DeploymentExecution, config: BlueGreenConfig): Promise<void> {
+  private async prepareGreenEnvironment(execution: _, _config: BlueGreenConfig): Promise<void> {
     execution.stages.push({
       stageId: 'prepare-green',
       status: 'completed',
@@ -723,37 +723,37 @@ export class DeploymentManagementSystem {
     });
   }
 
-  private async deployToGreenEnvironment(execution: DeploymentExecution, pipeline: DeploymentPipeline): Promise<void> {
+  private async deployToGreenEnvironment(_execution: _, _pipeline: DeploymentPipeline): Promise<void> {
     // Green 환경 배포 로직
   }
 
-  private async validateGreenEnvironment(execution: DeploymentExecution, config: BlueGreenConfig): Promise<ValidationResult> {
+  private async validateGreenEnvironment(_execution: _, _config: BlueGreenConfig): Promise<ValidationResult> {
     return { success: true, reason: 'All validations passed' };
   }
 
-  private async switchTrafficToGreen(execution: DeploymentExecution, config: BlueGreenConfig): Promise<void> {
+  private async switchTrafficToGreen(_execution: _, _config: BlueGreenConfig): Promise<void> {
     // 트래픽 전환 로직
   }
 
-  private async cleanupBlueEnvironment(execution: DeploymentExecution, config: BlueGreenConfig): Promise<void> {
+  private async cleanupBlueEnvironment(_execution: _, _config: BlueGreenConfig): Promise<void> {
     // Blue 환경 정리 로직
   }
 
-  private async rollbackBlueGreenDeployment(execution: DeploymentExecution, config: BlueGreenConfig): Promise<void> {
+  private async rollbackBlueGreenDeployment(execution: _, _config: BlueGreenConfig): Promise<void> {
     execution.status = 'rolled_back';
   }
 
-  private async determineRollbackTarget(execution: DeploymentExecution): Promise<string> {
+  private async determineRollbackTarget(_execution: DeploymentExecution): Promise<string> {
     return 'previous-version';
   }
 
-  private async executeRollback(execution: DeploymentExecution, pipeline: DeploymentPipeline, target: string, reason?: string): Promise<DeploymentExecution> {
+  private async executeRollback(execution: DeploymentExecution, pipeline: DeploymentPipeline, target: _, _reason?: string): Promise<DeploymentExecution> {
     const rollbackExecution = this.createDeploymentExecution(pipeline, target, 'system');
     rollbackExecution.rollbackTarget = execution.version;
     return rollbackExecution;
   }
 
-  private async validateRollback(execution: DeploymentExecution, pipeline: DeploymentPipeline): Promise<ValidationResult> {
+  private async validateRollback(_execution: _, _pipeline: DeploymentPipeline): Promise<ValidationResult> {
     return { success: true, reason: 'Rollback validated successfully' };
   }
 
@@ -782,11 +782,11 @@ export class DeploymentManagementSystem {
     return `commit-${Date.now()}`;
   }
 
-  private async checkStageDependencies(stage: DeploymentStage, execution: DeploymentExecution): Promise<void> {
+  private async checkStageDependencies(_stage: _, _execution: DeploymentExecution): Promise<void> {
     // 의존성 확인 로직
   }
 
-  private async executeStageCommands(stageExecution: StageExecution, stage: DeploymentStage, pipeline: DeploymentPipeline, options: DeploymentOptions): Promise<void> {
+  private async executeStageCommands(stageExecution: StageExecution, stage: _, _pipeline: _, _options: DeploymentOptions): Promise<void> {
     stageExecution.logs.push(`Executing stage: ${stage.name}`);
   }
 
@@ -802,27 +802,27 @@ export class DeploymentManagementSystem {
     }
   }
 
-  private async checkRollbackConditions(stageExecution: StageExecution, stage: DeploymentStage): Promise<void> {
+  private async checkRollbackConditions(_stageExecution: _, _stage: DeploymentStage): Promise<void> {
     // 롤백 조건 확인 로직
   }
 
-  private async retryStage(stageExecution: StageExecution, stage: DeploymentStage, pipeline: DeploymentPipeline, options: DeploymentOptions): Promise<RetryResult> {
+  private async retryStage(stageExecution: _, _stage: _, _pipeline: _, _options: DeploymentOptions): Promise<RetryResult> {
     return { success: false, stageExecution };
   }
 
-  private async collectDeploymentMetrics(execution: DeploymentExecution, pipeline: DeploymentPipeline): Promise<DeploymentMetrics> {
+  private async collectDeploymentMetrics(execution: _, _pipeline: DeploymentPipeline): Promise<DeploymentMetrics> {
     return execution.metrics;
   }
 
-  private async sendDeploymentNotifications(execution: DeploymentExecution, pipeline: DeploymentPipeline): Promise<void> {
+  private async sendDeploymentNotifications(_execution: _, _pipeline: DeploymentPipeline): Promise<void> {
     // 알림 발송 로직
   }
 
-  private async archiveDeploymentArtifacts(execution: DeploymentExecution, pipeline: DeploymentPipeline): Promise<void> {
+  private async archiveDeploymentArtifacts(_execution: _, _pipeline: DeploymentPipeline): Promise<void> {
     // 아티팩트 보관 로직
   }
 
-  private async updateMonitoringConfiguration(execution: DeploymentExecution, pipeline: DeploymentPipeline): Promise<void> {
+  private async updateMonitoringConfiguration(_execution: _, _pipeline: DeploymentPipeline): Promise<void> {
     // 모니터링 설정 업데이트 로직
   }
 
@@ -939,7 +939,7 @@ interface NotificationSettings {
 }
 
 interface StageConfiguration {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface ArtifactConfig {
@@ -975,7 +975,7 @@ interface PerformanceImpact {
 interface InstanceConfig {
   type: string;
   count: number;
-  specifications: any;
+  specifications: unknown;
 }
 
 interface LoadBalancerConfig {
@@ -1110,12 +1110,12 @@ interface DeploymentSystemStatus {
 
 // Mock 클래스들
 class NotificationService {
-  async sendApprovalRequest(request: any): Promise<void> {
-    console.log('Approval request sent:', request);
+  async sendApprovalRequest(_request: unknown): Promise<void> {
+    // console.log('Approval request sent:', request);
   }
 
-  async sendFailureAlert(alert: any): Promise<void> {
-    console.log('Failure alert sent:', alert);
+  async sendFailureAlert(_alert: unknown): Promise<void> {
+    // console.log('Failure alert sent:', alert);
   }
 }
 
@@ -1124,17 +1124,17 @@ class SecretManager {
     return `secret_${key}`;
   }
 
-  setSecret(key: string, value: string): void {
+  setSecret(_key: _, _value: string): void {
     // 시크릿 저장 로직
   }
 }
 
 class ArtifactRepository {
-  async store(artifact: any): Promise<string> {
+  async store(_artifact: unknown): Promise<string> {
     return `artifact_${Date.now()}`;
   }
 
-  async retrieve(id: string): Promise<any> {
+  async retrieve(id: string): Promise<unknown> {
     return { id, data: 'artifact_data' };
   }
 }

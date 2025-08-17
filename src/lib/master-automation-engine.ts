@@ -1,7 +1,7 @@
-import { promises as fs } from 'fs';
-import { join } from 'path';
-import matter from 'gray-matter';
-import type { Novel, Chapter, NovelState } from './types/index.ts';
+// import { promises as fs } from 'fs';
+// import { join } from 'path';
+// import matter from 'gray-matter';
+// import type { Novel, Chapter, NovelState } from './types/index.ts';
 import { NovelDetector } from './novel-detector.ts';
 import { QualityAnalyticsEngine } from './quality-analytics-engine.ts';
 
@@ -100,8 +100,8 @@ export class MasterAutomationEngine {
         estimatedCost: 0,
       };
 
-    } catch (error) {
-      console.error('Automation decision error:', error);
+    } catch (_error) {
+      // console.error('Automation decision error:', _error);
       return {
         action: 'skip',
         priority: 'low',
@@ -117,7 +117,7 @@ export class MasterAutomationEngine {
   async validateDecision(decision: AutomationDecision): Promise<boolean> {
     // 비용 예산 체크
     if (decision.estimatedCost > this.config.costBudget) {
-      console.warn(`Budget exceeded: ${decision.estimatedCost} > ${this.config.costBudget}`);
+      // console.warn(`Budget exceeded: ${decision.estimatedCost} > ${this.config.costBudget}`);
       return false;
     }
 
@@ -128,7 +128,7 @@ export class MasterAutomationEngine {
       );
       
       if (qualityCheck.overall < this.config.qualityThreshold) {
-        console.warn(`Quality threshold not met: ${qualityCheck.overall} < ${this.config.qualityThreshold}`);
+        // console.warn(`Quality threshold not met: ${qualityCheck.overall} < ${this.config.qualityThreshold}`);
         return false;
       }
     }
@@ -139,24 +139,24 @@ export class MasterAutomationEngine {
   /**
    * 자동화 프로세스 전체 실행
    */
-  async executeAutomation(): Promise<{success: boolean, decision: AutomationDecision, result?: any}> {
-    console.log('🤖 Master Automation Engine 시작');
+  async executeAutomation(): Promise<{success: boolean, decision: AutomationDecision, result?: unknown}> {
+    // console.log('🤖 Master Automation Engine 시작');
     
     try {
       // 1. 결정 생성
       const decision = await this.makeAutomationDecision();
-      console.log(`📊 결정: ${decision.action} (우선순위: ${decision.priority})`);
-      console.log(`💭 이유: ${decision.reasoning}`);
+      // console.log(`📊 결정: ${decision.action} (우선순위: ${decision.priority})`);
+      // console.log(`💭 이유: ${decision.reasoning}`);
 
       // 2. 결정 검증
       const isValid = await this.validateDecision(decision);
       if (!isValid) {
-        console.log('❌ 결정 검증 실패');
+        // console.log('❌ 결정 검증 실패');
         return { success: false, decision };
       }
 
       // 3. 실행 (실제 구현에서는 AI 생성 엔진 호출)
-      console.log(`🚀 액션 실행: ${decision.action}`);
+      // console.log(`🚀 액션 실행: ${decision.action}`);
       
       return {
         success: true,
@@ -167,8 +167,8 @@ export class MasterAutomationEngine {
         },
       };
 
-    } catch (error) {
-      console.error('❌ Automation execution failed:', error);
+    } catch (_error) {
+      // console.error('❌ Automation execution failed:', _error);
       return {
         success: false,
         decision: {
@@ -202,7 +202,7 @@ export class MasterAutomationEngine {
    */
   updateConfig(newConfig: Partial<AutomationConfig>) {
     this.config = { ...this.config, ...newConfig };
-    console.log('🔧 Master Automation Engine 설정 업데이트됨');
+    // console.log('🔧 Master Automation Engine 설정 업데이트됨');
   }
 }
 

@@ -1,10 +1,10 @@
-import type {
-  ProcessingResult,
-  Platform,
-  QualityStandards
-} from './types/index.js';
+// import _type {
+//   _ProcessingResult,
+//   Platform,
+//   QualityStandards
+// } from './_types/index.js';
 
-interface EngineConfig {
+interface _EngineConfig {
   enabled?: boolean;
   bufferSize?: number;
   cacheSize?: number;
@@ -188,12 +188,12 @@ export class PlatformConfigEngine {
   /**
    * 플랫폼 설정 조회
    */
-  getConfig(platform = null) {
-    const targetPlatform = platform || this.currentPlatform;
+  getConfig(_platform = null) {
+    const targetPlatform = _platform || this.currentPlatform;
     const config = this.configs[targetPlatform];
 
     if (!config) {
-      console.warn(`플랫폼 '${targetPlatform}' 설정을 찾을 수 없습니다. 기본 설정을 사용합니다.`);
+      // console.warn(`플랫폼 '${targetPlatform}' 설정을 찾을 수 없습니다. 기본 설정을 사용합니다.`);
       return this.configs[this.defaultPlatform];
     }
 
@@ -203,14 +203,14 @@ export class PlatformConfigEngine {
   /**
    * 현재 플랫폼 설정
    */
-  setPlatform(platform) {
-    if (!this.configs[platform]) {
-      console.warn(`지원하지 않는 플랫폼: ${platform}. 기본 플랫폼을 유지합니다.`);
+  setPlatform(__platform) {
+    if (!this.configs[__platform]) {
+      // console.warn(`지원하지 않는 플랫폼: ${_platform}. 기본 플랫폼을 유지합니다.`);
       return false;
     }
 
-    this.currentPlatform = platform;
-    console.log(`플랫폼이 '${this.configs[platform].name}'로 변경되었습니다.`);
+    this.currentPlatform = __platform;
+    // console.log(`플랫폼이 '${this.configs[__platform].name}'로 변경되었습니다.`);
     return true;
   }
 
@@ -229,8 +229,8 @@ export class PlatformConfigEngine {
   /**
    * 플랫폼별 프롬프트 생성
    */
-  generatePromptGuidelines(platform = null) {
-    const config = this.getConfig(platform);
+  generatePromptGuidelines(_platform = null) {
+    const config = this.getConfig(_platform);
 
     return {
       wordCountGuideline: `${config.wordCount.min}-${config.wordCount.max}자 (공백 제외) - 목표 ${config.wordCount.target}자`,
@@ -241,7 +241,7 @@ export class PlatformConfigEngine {
 
       qualityGuideline: this.getQualityGuideline(config.quality),
 
-      platformNote: `${config.name} 최적화: ${config.description}`,
+      _platformNote: `${config.name} 최적화: ${config.description}`,
     };
   }
 
@@ -291,9 +291,9 @@ export class PlatformConfigEngine {
   compareWordCounts() {
     const comparison = {};
 
-    Object.keys(this.configs).forEach(platform => {
-      const config = this.configs[platform];
-      comparison[platform] = {
+    Object.keys(this.configs).forEach(_platform => {
+      const config = this.configs[_platform];
+      comparison[_platform] = {
         name: config.name,
         target: config.wordCount.target,
         range: `${config.wordCount.min}-${config.wordCount.max}`,
@@ -307,8 +307,8 @@ export class PlatformConfigEngine {
   /**
    * 품질 기준 조회
    */
-  getQualityStandards(platform = null) {
-    const config = this.getConfig(platform);
+  getQualityStandards(_platform = null) {
+    const config = this.getConfig(_platform);
     return {
       minWordCount: config.wordCount.min,
       maxWordCount: config.wordCount.max,
@@ -324,12 +324,12 @@ export class PlatformConfigEngine {
   /**
    * 플랫폼별 메타데이터 생성
    */
-  generateMetadata(platform = null) {
-    const config = this.getConfig(platform);
+  generateMetadata(_platform = null) {
+    const config = this.getConfig(_platform);
 
     return {
-      platform: platform || this.currentPlatform,
-      platformName: config.name,
+      _platform: _platform || this.currentPlatform,
+      _platformName: config.name,
       targetWordCount: config.wordCount.target,
       expectedScenes: config.structure.scenes,
       styleProfile: config.style,
@@ -341,11 +341,11 @@ export class PlatformConfigEngine {
 
 // 환경 변수에서 플랫폼 설정을 가져오는 헬퍼 함수
 export function createPlatformConfig(): void {
-  const platform = process.env.PLATFORM_MODE || 'default';
+  const _platform = process.env.PLATFORM_MODE || 'default';
   const engine = new PlatformConfigEngine();
 
-  if (platform !== 'default') {
-    engine.setPlatform(platform);
+  if (_platform !== 'default') {
+    engine.setPlatform(_platform);
   }
 
   return engine;
@@ -354,18 +354,18 @@ export function createPlatformConfig(): void {
 // 플랫폼별 설정 요약 출력
 export function printPlatformSummary(): void {
   const engine = new PlatformConfigEngine();
-  const platforms = engine.getAvailablePlatforms();
+  const _platforms = engine.getAvailablePlatforms();
 
-  console.log('\n📚 사용 가능한 웹소설 플랫폼 설정:');
-  console.log('=====================================');
+  // console.log('\n📚 사용 가능한 웹소설 플랫폼 설정:');
+  // console.log('=====================================');
 
-  platforms.forEach(platform => {
-    console.log(`\n${platform.name}:`);
-    console.log(`   - 키: ${platform.key}`);
-    console.log(`   - 목표 분량: ${platform.wordCount}자 (공백 제외)`);
-    console.log(`   - 설명: ${platform.description}`);
+  _platforms.forEach(_platform => {
+    // console.log(`\n${_platform.name}:`);
+    // console.log(`   - 키: ${_platform.key}`);
+    // console.log(`   - 목표 분량: ${_platform.wordCount}자 (공백 제외)`);
+    // console.log(`   - 설명: ${_platform.description}`);
   });
 
-  console.log('\n사용법: PLATFORM_MODE=naver node scripts/run-automation');
-  console.log('');
+  // console.log('\n사용법: PLATFORM_MODE=naver node scripts/run-automation');
+  // console.log('');
 }

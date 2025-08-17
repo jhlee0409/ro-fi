@@ -8,7 +8,7 @@ import { PerformanceOptimizationEngine } from '../lib/performance-optimization-e
 
 describe('PerformanceOptimizationEngine', () => {
   let optimizationEngine: PerformanceOptimizationEngine;
-  let mockPayload: any;
+  let mockPayload: unknown;
 
   beforeEach(() => {
     optimizationEngine = new PerformanceOptimizationEngine();
@@ -100,7 +100,7 @@ describe('PerformanceOptimizationEngine', () => {
       
       for (const opType of operationTypes) {
         const result = await optimizationEngine.optimizePerformance(
-          opType as any,
+          opType as unknown,
           mockPayload
         );
         
@@ -347,7 +347,7 @@ describe('PerformanceOptimizationEngine', () => {
       expect(health.scalability).toBeLessThanOrEqual(100);
     });
 
-    it('should track error rates', () => {
+    it('should track _error rates', () => {
       const report = optimizationEngine.generatePerformanceReport();
       const errors = report.metrics.errorRates;
       
@@ -437,7 +437,7 @@ describe('PerformanceOptimizationEngine', () => {
   describe('Edge Cases', () => {
     it('should handle invalid operation types gracefully', async () => {
       const result = await optimizationEngine.optimizePerformance(
-        'invalid_operation' as any,
+        'invalid_operation' as unknown,
         mockPayload
       );
       

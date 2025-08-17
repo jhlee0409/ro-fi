@@ -12,14 +12,20 @@ import type {
   CharacterProfile
 } from './types/continuity.js';
 import { storyStateManager } from './story-state-manager.js';
-
+import { Logger, createLogger } from './logger.js';
+// Removed unused imports: isObject, isString, isNumber
 export class ContextWindowManager {
   private maxTokens = 1000000; // Gemini 2.0 Flash 한계
   private targetTokens = 800000; // 80% 사용 목표 (여유분 확보)
   private compressionRatio = 0.3; // 압축 비율
+  private logger: Logger;
   
   // 토큰 추정 비율 (한국어 기준)
   private readonly koreanTokenRatio = 0.8; // 한국어 1글자 ≈ 0.8토큰
+
+  constructor(logger?: Logger) {
+    this.logger = logger || createLogger();
+  }
   
   /**
    * 챕터 생성을 위한 컨텍스트 구성
@@ -116,7 +122,7 @@ export class ContextWindowManager {
     let currentTokens = this.estimateTokens(context);
     context.tokenCount = currentTokens;
     
-    console.log(`초기 토큰 수: ${currentTokens.toLocaleString()}`);
+    this.logger.info(`초기 토큰 수: ${currentTokens.toLocaleString()}`);
 
     if (currentTokens <= this.targetTokens) {
       return context;
@@ -138,7 +144,7 @@ export class ContextWindowManager {
       const levels = ['light', 'medium', 'heavy', 'heavy'] as const;
       context.compressionLevel = levels[i];
       
-      console.log(`압축 단계 ${i + 1} 후 토큰 수: ${currentTokens.toLocaleString()}`);
+      this.logger.info(`압축 단계 ${i + 1} 후 토큰 수: ${currentTokens.toLocaleString()}`);
       
       if (currentTokens <= this.targetTokens) {
         break;
@@ -328,7 +334,7 @@ export class ContextWindowManager {
   /**
    * JSON.stringify용 Map 처리
    */
-  private mapReplacer(key: string, value: any): any {
+  private mapReplacer(key: string, value: unknown): unknown {
     if (value instanceof Map) {
       return Object.fromEntries(value);
     }

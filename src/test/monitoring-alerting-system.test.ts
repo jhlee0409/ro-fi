@@ -606,7 +606,7 @@ describe('MonitoringAlertingSystem', () => {
       }).not.toThrow();
       
       expect(() => {
-        monitoringSystem.recordMetric(null as any, 100);
+        monitoringSystem.recordMetric(null as unknown, 100);
       }).not.toThrow();
     });
 

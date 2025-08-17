@@ -4,7 +4,7 @@ import { afterAll } from 'vitest';
 afterAll(async () => {
   // Force close any open handles
   await new Promise(resolve => setTimeout(resolve, 100));
-  
+
   // Clear all timers
   if (typeof globalThis.clearInterval === 'function') {
     for (let i = 1; i < 10000; i++) {
@@ -12,7 +12,7 @@ afterAll(async () => {
       clearTimeout(i);
     }
   }
-  
+
   // Force garbage collection if available
   if (typeof global.gc === 'function') {
     global.gc();
@@ -20,7 +20,8 @@ afterAll(async () => {
 });
 
 // Ensure process exits cleanly
-process.on('unhandledRejection', (error) => {
+process.on('unhandledRejection', error => {
+  // eslint-disable-next-line no-console
   console.error('Unhandled rejection in tests:', error);
   process.exit(1);
 });

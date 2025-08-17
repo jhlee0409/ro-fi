@@ -26,10 +26,10 @@ dotenv.config({ path: join(PROJECT_ROOT, '.env.local') });
 class NewNovelCreator {
   constructor() {
     this.logger = {
-      info: (msg, data) => console.log(`ℹ️  ${msg}`, data ? JSON.stringify(data, null, 2) : ''),
-      warn: (msg, data) => console.log(`⚠️  ${msg}`, data ? JSON.stringify(data, null, 2) : ''),
-      error: (msg, data) => console.log(`❌ ${msg}`, data ? JSON.stringify(data, null, 2) : ''),
-      success: (msg, data) => console.log(`✅ ${msg}`, data ? JSON.stringify(data, null, 2) : '')
+      info: (_msg, _data) => {}, // console.log(`ℹ️  ${msg}`, data ? JSON.stringify(data, null, 2) : ''),
+      warn: (_msg, _data) => {}, // console.log(`⚠️  ${msg}`, data ? JSON.stringify(data, null, 2) : ''),
+      error: (_msg, _data) => {}, // console.log(`❌ ${msg}`, data ? JSON.stringify(data, null, 2) : ''),
+      success: (_msg, _data) => {}, // console.log(`✅ ${msg}`, data ? JSON.stringify(data, null, 2) : '')
     };
     
     this.enhancementEngine = new WorldClassEnhancementEngine(this.logger);
@@ -38,36 +38,37 @@ class NewNovelCreator {
   }
 
   async createCompleteNovel() {
-    console.log('🌟 새로운 World-Class 로맨스 판타지 소설 생성 시작!\n');
+    // console.log('🌟 새로운 World-Class 로맨스 판타지 소설 생성 시작!\n');
     
     try {
       // 1단계: 소설 기본 정보 생성
-      console.log('📚 1단계: 소설 기본 정보 생성...');
+      // console.log('📚 1단계: 소설 기본 정보 생성...');
       const novelInfo = await this.generateNovelInfo();
       
       // 2단계: 소설 파일 생성
-      console.log('📝 2단계: 소설 파일 생성...');
+      // console.log('📝 2단계: 소설 파일 생성...');
       await this.createNovelFile(novelInfo);
       
       // 3단계: 챕터 1-5 생성
-      console.log('📖 3단계: 챕터 1-5 생성...');
+      // console.log('📖 3단계: 챕터 1-5 생성...');
       for (let chapterNum = 1; chapterNum <= 5; chapterNum++) {
         await this.createChapter(novelInfo, chapterNum);
       }
       
-      console.log('\n🎉 새로운 World-Class 소설 완성!');
-      console.log('================================');
-      console.log(`📚 제목: ${novelInfo.title}`);
-      console.log(`🏷️  슬러그: ${novelInfo.slug}`);
-      console.log(`📖 총 챕터: 5개`);
-      console.log(`🌟 품질: WORLD_CLASS`);
-      console.log(`🎯 트로프: ${novelInfo.tropes.join(', ')}`);
+      // console.log('\n🎉 새로운 World-Class 소설 완성!');
+      // console.log('================================');
+      // console.log(`📚 제목: ${novelInfo.title}`);
+      // console.log(`🏷️  슬러그: ${novelInfo.slug}`);
+      // console.log(`📖 총 챕터: 5개`);
+      // console.log(`🌟 품질: WORLD_CLASS`);
+      // console.log(`🎯 트로프: ${novelInfo.tropes.join(', ')}`);
       
       return novelInfo;
       
-    } catch (error) {
-      console.error('❌ 소설 생성 실패:', error.message);
-      throw error;
+    } catch (_error) {
+    // Intentionally unused error variable
+      // console.error('❌ 소설 생성 실패:', _error.message);
+      throw _error;
     }
   }
   
@@ -136,12 +137,12 @@ WORLD_SETTING: [세계관 설정]
     const novelMarkdown = matter.stringify('', frontmatter);
     await fs.writeFile(novelPath, novelMarkdown);
     
-    console.log(`✅ 소설 파일 생성: ${novelInfo.title}`);
+    // console.log(`✅ 소설 파일 생성: ${novelInfo.title}`);
     return novelPath;
   }
   
   async createChapter(novelInfo, chapterNumber) {
-    console.log(`📝 챕터 ${chapterNumber} 생성 중...`);
+    // console.log(`📝 챕터 ${chapterNumber} 생성 중...`);
     
     // 이전 챕터들 로드 (연속성을 위해)
     const previousChapters = [];
@@ -151,7 +152,7 @@ WORLD_SETTING: [세계관 설정]
         const content = await fs.readFile(chapterPath, 'utf-8');
         const { data, content: text } = matter(content);
         previousChapters.push({ ...data, content: text });
-      } catch (error) {
+      } catch (_) {
         // 이전 챕터가 없으면 무시
       }
     }
@@ -184,7 +185,7 @@ WORLD_SETTING: [세계관 설정]
     };
     
     // World-Class Enhancement 적용
-    console.log(`✨ 챕터 ${chapterNumber} World-Class Enhancement 적용...`);
+    // console.log(`✨ 챕터 ${chapterNumber} World-Class Enhancement 적용...`);
     const enhancedResult = await this.enhancementEngine.transformToWorldClass(
       initialContent.content,
       storyContext
@@ -211,7 +212,7 @@ WORLD_SETTING: [세계관 설정]
     const chapterMarkdown = matter.stringify(enhancedResult.enhancedContent, frontmatter);
     await fs.writeFile(chapterPath, chapterMarkdown);
     
-    console.log(`✅ 챕터 ${chapterNumber} 완성 - 품질: ${enhancedResult.finalQuality.overallScore.toFixed(1)}/10 (${enhancedResult.finalQuality.worldClassStatus})`);
+    // console.log(`✅ 챕터 ${chapterNumber} 완성 - 품질: ${enhancedResult.finalQuality.overallScore.toFixed(1)}/10 (${enhancedResult.finalQuality.worldClassStatus})`);
     
     return chapterPath;
   }
@@ -298,10 +299,11 @@ async function main() {
     const creator = new NewNovelCreator();
     await creator.createCompleteNovel();
     
-    console.log('\n🏁 새로운 World-Class 소설 생성 완료!');
+    // console.log('\n🏁 새로운 World-Class 소설 생성 완료!');
     
-  } catch (error) {
-    console.error('\n💥 오류 발생:', error.message);
+  } catch (_error) {
+    // Intentionally unused error variable
+    // console.error('\n💥 오류 발생:', _error.message);
     process.exit(1);
   }
 }

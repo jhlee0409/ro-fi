@@ -63,7 +63,7 @@ interface CharacterProfile {
 
 interface PlotEvent {
   id: string;
-  chapterNumber: number;
+  _chapterNumber: number;
   eventType: 'setup' | 'confrontation' | 'resolution' | 'revelation';
   description: string;
   consequences: string[];
@@ -101,7 +101,7 @@ export class EnhancedContextManager {
   private memory: MemoryLayers;
   private baseContextManager: StoryContextManager;
   private qualityEngine: QualityAnalyticsEngine;
-  private contextCache: Map<string, any>;
+  private contextCache: Map<string, unknown>;
 
   constructor() {
     this.memory = this.initializeMemoryLayers();
@@ -151,8 +151,8 @@ export class EnhancedContextManager {
    * 챕터 생성을 위한 통합 컨텍스트 준비
    */
   async prepareContextForChapter(
-    novel: Novel, 
-    chapterNumber: number,
+    _novel: Novel, 
+    _chapterNumber: number,
     options: ContextOptions = {}
   ): Promise<EnhancedContext> {
     const cacheKey = `${novel.slug}-ch${chapterNumber}`;
@@ -166,7 +166,7 @@ export class EnhancedContextManager {
     try {
       await this.baseContextManager.loadStoryContext();
       baseContext = this.baseContextManager.generateChapterContext(novel.slug);
-    } catch (error) {
+    } catch (_error) {
       // 기존 시스템이 없으면 빈 컨텍스트로 진행
       baseContext = '';
     }
@@ -201,8 +201,8 @@ export class EnhancedContextManager {
    * 창의성 모드 필요성 평가 (v2.1 기반)
    */
   private async evaluateCreativityNeed(
-    novel: Novel, 
-    chapterNumber: number
+    _novel: Novel, 
+    _chapterNumber: number
   ): Promise<CreativityModeState> {
     const recentChapters = this.memory.episodic.recentChapters.slice(-3);
     const readerMetrics = this.memory.working.readerMetrics;
@@ -273,7 +273,7 @@ export class EnhancedContextManager {
   /**
    * 클라이맥스 순간 감지
    */
-  private isClimaxMoment(chapterNumber: number, novel: Novel): boolean {
+  private isClimaxMoment(_chapterNumber: number, _novel: Novel): boolean {
     const totalChapters = novel.totalChapters || 50; // 예상 총 챕터 수
     const progress = chapterNumber / totalChapters;
 
@@ -284,7 +284,7 @@ export class EnhancedContextManager {
   /**
    * 핵심 스토리 순간 감지
    */
-  private isKeyStoryMoment(chapterNumber: number): boolean {
+  private isKeyStoryMoment(_chapterNumber: number): boolean {
     const keyMoments = [1, 5, 10, 15, 20, 25, 30]; // 일반적인 핵심 챕터들
     return keyMoments.includes(chapterNumber);
   }
@@ -315,7 +315,7 @@ export class EnhancedContextManager {
   /**
    * 독자 피드백 분석
    */
-  private async analyzeReaderFeedback(novel: Novel): Promise<ReaderInsights> {
+  private async analyzeReaderFeedback(_novel: Novel): Promise<ReaderInsights> {
     // 실제 구현에서는 외부 피드백 데이터를 분석
     return {
       engagementTrends: [],
@@ -329,8 +329,8 @@ export class EnhancedContextManager {
    * 일관성 검증
    */
   private async performConsistencyCheck(
-    novel: Novel, 
-    chapterNumber: number
+    _novel: Novel, 
+    _chapterNumber: number
   ): Promise<ConsistencyGuards> {
     return {
       characterConsistency: [],
@@ -365,7 +365,7 @@ export class EnhancedContextManager {
   /**
    * 상황별 힌트 생성
    */
-  private generateContextualHints(novel: Novel, chapterNumber: number): GenerationHints {
+  private generateContextualHints(_novel: Novel, _chapterNumber: number): GenerationHints {
     return {
       stylistic: [],
       narrative: [],
@@ -377,7 +377,7 @@ export class EnhancedContextManager {
   /**
    * 메모리 업데이트
    */
-  async updateMemoryWithChapter(chapter: Chapter, qualityMetrics: QualityMetrics): Promise<void> {
+  async updateMemoryWithChapter(_chapter: Chapter, _qualityMetrics: QualityMetrics): Promise<void> {
     // Episodic memory 업데이트
     this.memory.episodic.recentChapters.push(chapter);
     if (this.memory.episodic.recentChapters.length > 10) {
@@ -408,21 +408,21 @@ export class EnhancedContextManager {
   }
 
   // Helper methods
-  private extractEmotionalTone(content: string): string {
+  private extractEmotionalTone(_content: string): string {
     // 감정 톤 분석 로직
     return 'neutral';
   }
 
-  private analyzeChapterStructure(content: string): string {
+  private analyzeChapterStructure(_content: string): string {
     // 구조 분석 로직
     return 'standard';
   }
 
-  private async updateCharacterProfiles(chapter: Chapter): Promise<void> {
+  private async updateCharacterProfiles(_chapter: Chapter): Promise<void> {
     // 캐릭터 프로필 업데이트 로직
   }
 
-  private async updatePlotTimeline(chapter: Chapter): Promise<void> {
+  private async updatePlotTimeline(_chapter: Chapter): Promise<void> {
     // 플롯 타임라인 업데이트 로직
   }
 
@@ -448,17 +448,17 @@ interface EnhancedContext {
 }
 
 interface ReaderInsights {
-  engagementTrends: any[];
-  preferredElements: any[];
-  criticalFeedback: any[];
-  suggestionAreas: any[];
+  engagementTrends: unknown[];
+  preferredElements: unknown[];
+  criticalFeedback: unknown[];
+  suggestionAreas: unknown[];
 }
 
 interface ConsistencyGuards {
-  characterConsistency: any[];
-  worldConsistency: any[];
-  plotConsistency: any[];
-  toneConsistency: any[];
+  characterConsistency: unknown[];
+  worldConsistency: unknown[];
+  plotConsistency: unknown[];
+  toneConsistency: unknown[];
 }
 
 interface QualityTargets {
@@ -469,10 +469,10 @@ interface QualityTargets {
 }
 
 interface GenerationHints {
-  stylistic: any[];
-  narrative: any[];
-  character: any[];
-  emotional: any[];
+  stylistic: unknown[];
+  narrative: unknown[];
+  character: unknown[];
+  emotional: unknown[];
 }
 
 interface MemoryReport {
@@ -527,7 +527,7 @@ interface ContextSnapshot {
 
 interface DialogueEntry {
   character: string;
-  content: string;
+  _content: string;
   emotion: string;
   chapter: number;
 }

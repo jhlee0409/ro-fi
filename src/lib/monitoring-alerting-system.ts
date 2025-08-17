@@ -64,10 +64,10 @@ interface AlertRule {
   condition: AlertCondition;
   severity: AlertSeverity;
   enabled: boolean;
-  channels: NotificationChannel[];
+  _channels: NotificationChannel[];
   escalation: EscalationPolicy;
   suppressions: SuppressionRule[];
-  metadata: Map<string, any>;
+  metadata: Map<string, unknown>;
 }
 
 interface AlertCondition {
@@ -156,7 +156,7 @@ interface SLAObjective {
 }
 
 interface SLAStatus {
-  slaId: string;
+  _slaId: string;
   currentPeriod: SLAPeriodStatus;
   historicalData: SLAPeriodStatus[];
   trend: SLATrend;
@@ -227,10 +227,10 @@ export class MonitoringAlertingSystem {
     const alertEvaluations = await this.evaluateAlertRules();
     
     // 4. SLA 상태 업데이트
-    const slaUpdates = await this.updateSLAStatus();
+    const _slaUpdates = await this.updateSLAStatus();
     
     // 5. 자동 복구 실행
-    const recoveryActions = await this.executeAutoRecovery();
+    const _recoveryActions = await this.executeAutoRecovery();
     
     const endTime = Date.now();
     
@@ -251,7 +251,7 @@ export class MonitoringAlertingSystem {
    * 🚨 알림 규칙 관리
    */
   createAlertRule(config: AlertRuleConfig): AlertRule {
-    const rule: AlertRule = {
+    const _rule: AlertRule = {
       id: config.id || this.generateAlertRuleId(),
       name: config.name,
       description: config.description,
@@ -259,7 +259,7 @@ export class MonitoringAlertingSystem {
       condition: config.condition,
       severity: config.severity,
       enabled: config.enabled || true,
-      channels: config.channels,
+      _channels: config._channels,
       escalation: config.escalation,
       suppressions: config.suppressions || [],
       metadata: new Map()
@@ -292,7 +292,7 @@ export class MonitoringAlertingSystem {
       throw new Error(`Alert rule not found or disabled: ${ruleId}`);
     }
 
-    const alert: Alert = {
+    const _alert: Alert = {
       id: this.generateAlertId(),
       ruleId,
       status: 'firing',
@@ -314,7 +314,7 @@ export class MonitoringAlertingSystem {
     return alert;
   }
 
-  async resolveAlert(alertId: string, resolvedBy?: string): Promise<Alert> {
+  async resolveAlert(alertId: string, _resolvedBy?: string): Promise<Alert> {
     const alert = this.activeAlerts.get(alertId);
     if (!alert) {
       throw new Error(`Alert not found: ${alertId}`);
@@ -433,7 +433,7 @@ export class MonitoringAlertingSystem {
     }
 
     const effectiveTimeRange = timeRange || dashboard.timeRange;
-    const widgetData = new Map<string, any>();
+    const widgetData = new Map<string, unknown>();
 
     for (const widget of dashboard.widgets) {
       const data = this.getWidgetData(widget, effectiveTimeRange);
@@ -452,7 +452,7 @@ export class MonitoringAlertingSystem {
    * 📋 SLA 관리
    */
   defineSLA(config: SLADefinitionConfig): SLADefinition {
-    const sla: SLADefinition = {
+    const _sla: SLADefinition = {
       id: config.id || this.generateSLAId(),
       name: config.name,
       service: config.service,
@@ -468,16 +468,16 @@ export class MonitoringAlertingSystem {
     return sla;
   }
 
-  getSLAStatus(slaId: string): SLAStatus | undefined {
-    return this.slaStatus.get(slaId);
+  getSLAStatus(_slaId: string): SLAStatus | undefined {
+    return this.slaStatus.get(_slaId);
   }
 
-  generateSLAReport(slaId: string, period: SLAReportPeriod): SLAReport {
-    const sla = this.slaDefinitions.get(slaId);
-    const status = this.slaStatus.get(slaId);
+  generateSLAReport(_slaId: string, period: SLAReportPeriod): SLAReport {
+    const sla = this.slaDefinitions.get(_slaId);
+    const status = this.slaStatus.get(_slaId);
     
     if (!sla || !status) {
-      throw new Error(`SLA not found: ${slaId}`);
+      throw new Error(`SLA not found: ${_slaId}`);
     }
 
     return this.calculateSLAReport(sla, status, period);
@@ -489,7 +489,7 @@ export class MonitoringAlertingSystem {
   async executeAutoRecovery(): Promise<RecoveryAction[]> {
     const actions: RecoveryAction[] = [];
     
-    for (const [alertId, alert] of this.activeAlerts) {
+    for (const [_alertId, alert] of this.activeAlerts) {
       if (alert.severity === 'critical' && this.shouldAttemptRecovery(alert)) {
         const recoveryAction = await this.attemptRecovery(alert);
         if (recoveryAction) {
@@ -529,7 +529,7 @@ export class MonitoringAlertingSystem {
     try {
       await this.collectSystemMetrics();
       totalMetrics += 10;
-    } catch (error) {
+    } catch (_error) {
       errors.push(`System metrics: ${error}`);
     }
 
@@ -537,7 +537,7 @@ export class MonitoringAlertingSystem {
     try {
       await this.collectApplicationMetrics();
       totalMetrics += 15;
-    } catch (error) {
+    } catch (_error) {
       errors.push(`Application metrics: ${error}`);
     }
 
@@ -545,7 +545,7 @@ export class MonitoringAlertingSystem {
     try {
       await this.collectBusinessMetrics();
       totalMetrics += 5;
-    } catch (error) {
+    } catch (_error) {
       errors.push(`Business metrics: ${error}`);
     }
 
@@ -573,8 +573,8 @@ export class MonitoringAlertingSystem {
           const resolvedAlert = await this.resolveAlert(existingAlert.id);
           resolvedAlerts.push(resolvedAlert);
         }
-      } catch (error) {
-        console.error(`Error evaluating alert rule ${ruleId}:`, error);
+      } catch (_error) {
+        // console.error(`Error evaluating alert rule ${ruleId}:`, _error);
       }
     }
 
@@ -584,12 +584,12 @@ export class MonitoringAlertingSystem {
   private async updateSLAStatus(): Promise<SLAUpdateResult> {
     const updates: string[] = [];
 
-    for (const [slaId, sla] of this.slaDefinitions) {
+    for (const [_slaId, sla] of this.slaDefinitions) {
       try {
-        await this.updateSingleSLAStatus(slaId, sla);
-        updates.push(slaId);
-      } catch (error) {
-        console.error(`Error updating SLA ${slaId}:`, error);
+        await this.updateSingleSLAStatus(_slaId, sla);
+        updates.push(_slaId);
+      } catch (_error) {
+        // console.error(`Error updating SLA ${_slaId}:`, _error);
       }
     }
 
@@ -650,7 +650,7 @@ export class MonitoringAlertingSystem {
       type: 'counter',
       category: 'application',
       unit: 'percent',
-      description: 'Application error rate',
+      description: 'Application _error rate',
       thresholds: {
         critical: { value: 5, operator: 'greater_than', duration: 300 },
         warning: { value: 2, operator: 'greater_than', duration: 180 }
@@ -673,7 +673,7 @@ export class MonitoringAlertingSystem {
         missingDataTreatment: 'not_breaching'
       },
       severity: 'critical',
-      channels: [
+      _channels: [
         {
           id: 'email-ops',
           type: 'email',
@@ -686,8 +686,8 @@ export class MonitoringAlertingSystem {
       escalation: {
         enabled: true,
         levels: [
-          { duration: 900, channels: ['email-ops'] },
-          { duration: 1800, channels: ['email-ops', 'slack-critical'] }
+          { duration: 900, _channels: ['email-ops'] },
+          { duration: 1800, _channels: ['email-ops', 'slack-critical'] }
         ]
       }
     });
@@ -695,7 +695,7 @@ export class MonitoringAlertingSystem {
     // 높은 에러율 알림
     this.createAlertRule({
       name: 'High Error Rate',
-      description: 'Application error rate is too high',
+      description: 'Application _error rate is too high',
       metricId: 'error_rate',
       condition: {
         expression: 'error_rate > 5',
@@ -704,7 +704,7 @@ export class MonitoringAlertingSystem {
         missingDataTreatment: 'not_breaching'
       },
       severity: 'critical',
-      channels: [
+      _channels: [
         {
           id: 'slack-dev',
           type: 'slack',
@@ -717,8 +717,8 @@ export class MonitoringAlertingSystem {
       escalation: {
         enabled: true,
         levels: [
-          { duration: 600, channels: ['slack-dev'] },
-          { duration: 1200, channels: ['slack-dev', 'email-ops'] }
+          { duration: 600, _channels: ['slack-dev'] },
+          { duration: 1200, _channels: ['slack-dev', 'email-ops'] }
         ]
       }
     });
@@ -810,8 +810,8 @@ export class MonitoringAlertingSystem {
     setInterval(async () => {
       try {
         await this.executeMonitoringCycle();
-      } catch (error) {
-        console.error('Monitoring cycle error:', error);
+      } catch (_error) {
+        // console.error('Monitoring cycle error:', _error);
       }
     }, 30000);
 
@@ -819,8 +819,8 @@ export class MonitoringAlertingSystem {
     setInterval(async () => {
       try {
         await this.updateSLAStatus();
-      } catch (error) {
-        console.error('SLA update error:', error);
+      } catch (_error) {
+        // console.error('SLA update error:', _error);
       }
     }, 300000);
 
@@ -828,8 +828,8 @@ export class MonitoringAlertingSystem {
     setInterval(async () => {
       try {
         await this.cleanupOldData();
-      } catch (error) {
-        console.error('Data cleanup error:', error);
+      } catch (_error) {
+        // console.error('Data cleanup error:', _error);
       }
     }, 3600000);
   }
@@ -849,7 +849,7 @@ export class MonitoringAlertingSystem {
     // 비즈니스 메트릭 수집 로직
   }
 
-  private async evaluateAlertCondition(rule: AlertRule): Promise<boolean> {
+  private async evaluateAlertCondition(_rule: AlertRule): Promise<boolean> {
     // 알림 조건 평가 로직
     return Math.random() < 0.1; // 10% 확률로 알림 트리거
   }
@@ -858,16 +858,16 @@ export class MonitoringAlertingSystem {
     return Array.from(this.activeAlerts.values()).find(alert => alert.ruleId === ruleId);
   }
 
-  private async getMetricDataForRule(rule: AlertRule): Promise<MetricData[]> {
+  private async getMetricDataForRule(_rule: AlertRule): Promise<MetricData[]> {
     const data = this.metricData.get(rule.metricId) || [];
     return data.slice(-10); // 최근 10개 데이터 포인트
   }
 
-  private generateAlertDescription(rule: AlertRule, metricData: MetricData[]): string {
+  private generateAlertDescription(_rule: AlertRule, _metricData: MetricData[]): string {
     return `Alert triggered for ${rule.name}: ${rule.description}`;
   }
 
-  private async gatherAlertContext(rule: AlertRule, metricData: MetricData[]): Promise<AlertContext> {
+  private async gatherAlertContext(_rule: AlertRule, _metricData: MetricData[]): Promise<AlertContext> {
     return {
       environment: 'production',
       service: 'ro-fan-platform',
@@ -877,13 +877,13 @@ export class MonitoringAlertingSystem {
     };
   }
 
-  private async sendNotifications(alert: Alert, rule: AlertRule): Promise<void> {
-    for (const channel of rule.channels) {
-      await this.notificationService.send(channel, alert);
+  private async sendNotifications(_alert: Alert, _rule: AlertRule): Promise<void> {
+    for (const _channel of rule._channels) {
+      await this.notificationService.send(_channel, alert);
     }
   }
 
-  private async sendResolutionNotifications(alert: Alert, rule: AlertRule): Promise<void> {
+  private async sendResolutionNotifications(_alert: Alert, _rule: AlertRule): Promise<void> {
     // 해결 알림 발송 로직
   }
 
@@ -912,14 +912,14 @@ export class MonitoringAlertingSystem {
     };
   }
 
-  private getWidgetData(widget: Widget, timeRange: TimeRange): any {
+  private getWidgetData(widget: Widget, timeRange: TimeRange): unknown {
     const results = widget.queries.map(query => this.queryMetrics(query, timeRange));
     return { widget: widget.id, queries: results };
   }
 
-  private initializeSLAStatus(sla: SLADefinition): SLAStatus {
+  private initializeSLAStatus(_sla: SLADefinition): SLAStatus {
     return {
-      slaId: sla.id,
+      _slaId: sla.id,
       currentPeriod: {
         start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
         end: new Date(),
@@ -937,13 +937,13 @@ export class MonitoringAlertingSystem {
     };
   }
 
-  private async updateSingleSLAStatus(slaId: string, sla: SLADefinition): Promise<void> {
+  private async updateSingleSLAStatus(_slaId: string, _sla: SLADefinition): Promise<void> {
     // SLA 상태 업데이트 로직
   }
 
-  private calculateSLAReport(sla: SLADefinition, status: SLAStatus, period: SLAReportPeriod): SLAReport {
+  private calculateSLAReport(_sla: SLADefinition, status: SLAStatus, period: SLAReportPeriod): SLAReport {
     return {
-      slaId: sla.id,
+      _slaId: sla.id,
       period,
       achievement: status.currentPeriod.achievement,
       target: sla.objective.target,
@@ -952,11 +952,11 @@ export class MonitoringAlertingSystem {
     };
   }
 
-  private shouldAttemptRecovery(alert: Alert): boolean {
+  private shouldAttemptRecovery(_alert: Alert): boolean {
     return alert.escalationLevel === 0 && !alert.acknowledgedAt;
   }
 
-  private async attemptRecovery(alert: Alert): Promise<RecoveryAction | null> {
+  private async attemptRecovery(_alert: Alert): Promise<RecoveryAction | null> {
     return {
       alertId: alert.id,
       type: 'restart_service',
@@ -1079,12 +1079,12 @@ interface EscalationPolicy {
 
 interface EscalationLevel {
   duration: number; // seconds
-  channels: string[];
+  _channels: string[];
 }
 
 interface SuppressionRule {
   type: 'time_based' | 'condition_based';
-  configuration: any;
+  configuration: unknown;
 }
 
 interface AlertContext {
@@ -1092,16 +1092,16 @@ interface AlertContext {
   service: string;
   runbook?: string;
   relatedMetrics: string[];
-  recentDeployments: any[];
+  recentDeployments: unknown[];
 }
 
 interface ChannelConfig {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface NotificationFilter {
   type: string;
-  configuration: any;
+  configuration: unknown;
 }
 
 interface DashboardLayout {
@@ -1120,13 +1120,13 @@ interface WidgetSize {
 }
 
 interface WidgetConfig {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface QueryFilter {
   field: string;
   operator: string;
-  value: any;
+  value: unknown;
 }
 
 interface Permission {
@@ -1238,16 +1238,16 @@ interface MetricQueryResult {
 interface DashboardData {
   dashboard: Dashboard;
   timeRange: TimeRange;
-  widgetData: Map<string, any>;
+  widgetData: Map<string, unknown>;
   lastUpdated: Date;
 }
 
 interface SLAReport {
-  slaId: string;
+  _slaId: string;
   period: SLAReportPeriod;
   achievement: number;
   target: number;
-  breaches: any[];
+  breaches: unknown[];
   summary: string;
 }
 
@@ -1271,7 +1271,7 @@ interface AlertRuleConfig {
   condition: AlertCondition;
   severity: AlertSeverity;
   enabled?: boolean;
-  channels: NotificationChannel[];
+  _channels: NotificationChannel[];
   escalation: EscalationPolicy;
   suppressions?: SuppressionRule[];
 }
@@ -1315,7 +1315,7 @@ type SLAReportPeriod = 'daily' | 'weekly' | 'monthly' | 'quarterly';
 
 // Mock 클래스들
 class AnomalyDetector {
-  async detect(metricId: string, data: MetricData[]): Promise<Anomaly[]> {
+  async detect(metricId: string, _data: MetricData[]): Promise<Anomaly[]> {
     if (Math.random() < 0.05) { // 5% 확률로 이상 탐지
       return [{
         metricId,
@@ -1330,8 +1330,8 @@ class AnomalyDetector {
 }
 
 class NotificationService {
-  async send(channel: NotificationChannel, alert: Alert): Promise<void> {
-    console.log(`Sending notification via ${channel.type}:`, alert.title);
+  async send(_channel: NotificationChannel, _alert: Alert): Promise<void> {
+    // console.log(`Sending notification via ${_channel.type}:`, alert.title);
   }
 }
 

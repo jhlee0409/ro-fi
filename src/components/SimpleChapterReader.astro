@@ -1,0 +1,268 @@
+---
+/**
+ * 단순화된 챕터 읽기 컴포넌트
+ * 각 화당 핵심 이미지 1개를 해당 묘사 단락 위에 배치
+ */
+import ChapterImagePoint from './ChapterImagePoint.astro';
+import type { ChapterImagePoint as ImagePointType } from '../lib/types/image-types';
+
+interface Props {
+  chapterContent: string;
+  chapterTitle: string;
+  chapterSlug: string;
+  keyImagePoint?: ImagePointType;
+  className?: string;
+}
+
+const { 
+  chapterContent, 
+  chapterTitle, 
+  chapterSlug, 
+  keyImagePoint, 
+  className = '' 
+} = Astro.props;
+
+// novelSlug와 chapterNumber 추출
+const novelSlug = chapterSlug?.split('-ch')[0] || '';
+const chapterNumber = chapterSlug?.includes('-ch') 
+  ? parseInt(chapterSlug.split('-ch')[1]) || 1
+  : 1;
+
+// 챕터 내용을 문단별로 분리
+const paragraphs = chapterContent
+  .split('\n')
+  .filter(p => p.trim().length > 0)
+  .map(p => p.trim());
+
+// 이미지 삽입 위치 계산
+let imageInsertIndex = -1;
+if (keyImagePoint?.targetParagraph) {
+  // targetParagraph를 포함하는 문단 찾기
+  imageInsertIndex = paragraphs.findIndex(p => 
+    p.includes(keyImagePoint.targetParagraph?.trim() || '')
+  );
+  
+  // 부분 매치 시도
+  if (imageInsertIndex === -1) {
+    const keywords = keyImagePoint.targetParagraph.trim().split(' ').slice(0, 3);
+    imageInsertIndex = paragraphs.findIndex(p => 
+      keywords.some(keyword => p.includes(keyword))
+    );
+  }
+  
+  // 폴백: position 기반 계산
+  if (imageInsertIndex === -1 && keyImagePoint.position) {
+    imageInsertIndex = Math.floor((keyImagePoint.position / 100) * paragraphs.length);
+  }
+}
+
+// 기본값: 중간 지점
+if (imageInsertIndex === -1) {
+  imageInsertIndex = Math.floor(paragraphs.length / 2);
+}
+
+// 문단 스타일 클래스 결정
+function getParagraphClass(content: string): string {
+  const trimmed = content.trim();
+  
+  // 대화 감지
+  if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
+    return 'novel-dialogue';
+  }
+  
+  // 강조된 대화 감지
+  if (trimmed.includes('!!') || trimmed.includes('!?')) {
+    return 'novel-dialogue-emphasis';
+  }
+  
+  // 독백 감지
+  if (trimmed.startsWith("'") && trimmed.endsWith("'")) {
+    return 'novel-monologue';
+  }
+  
+  // 액션/장면 묘사 감지
+  if (trimmed.startsWith('*') || trimmed.includes('[') || trimmed.length < 100) {
+    return 'novel-action';
+  }
+  
+  // 기본 서술
+  return 'novel-narrative';
+}
+---
+
+<div class={`simple-chapter-reader reading-content ${className}`}>
+  <!-- Chapter Title -->
+  <header class="chapter-header mb-12 text-center">
+    <h1 class="text-3xl sm:text-4xl font-display font-bold text-ink-900 mb-4 leading-tight">
+      {chapterTitle}
+    </h1>
+    <div class="w-24 h-1 bg-gradient-to-r from-rose-400 to-ink-500 mx-auto rounded-full"></div>
+  </header>
+
+  <!-- Chapter Content with Single Key Image -->
+  <article class="chapter-content space-y-6 max-w-4xl mx-auto">
+    {paragraphs.map((paragraph, index) => {
+      // 이미지 삽입 위치인지 확인
+      const shouldInsertImage = keyImagePoint && index === imageInsertIndex;
+      
+      return (
+        <div>
+          {/* 핵심 이미지 삽입 (해당 묘사 단락 바로 위) */}
+          {shouldInsertImage && (
+            <div class="key-image-section my-16 mb-8">
+              <ChapterImagePoint
+                imagePoint={keyImagePoint}
+                novelSlug={novelSlug}
+                chapterNumber={chapterNumber}
+                className="mx-auto max-w-3xl"
+              />
+              
+              {/* 이미지 설명 */}
+              <div class="mt-4 text-center">
+                <p class="text-sm text-stone-500 italic">
+                  {keyImagePoint.description}
+                </p>
+                {keyImagePoint.characters && keyImagePoint.characters.length > 0 && (
+                  <p class="text-xs text-stone-400 mt-1">
+                    {keyImagePoint.characters.join(', ')} - {keyImagePoint.setting}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+          
+          {/* 문단 */}
+          <div 
+            class={`paragraph-section ${getParagraphClass(paragraph)}`}
+            data-paragraph={index}
+            id={shouldInsertImage ? 'key-scene-paragraph' : undefined}
+          >
+            <p>{paragraph}</p>
+          </div>
+        </div>
+      );
+    })}
+  </article>
+
+  <!-- Chapter End -->
+  <div class="chapter-end mt-20 mb-16 text-center">
+    <div class="novel-scene-break"></div>
+    <div class="mt-8 text-stone-400 text-sm">
+      - {chapterTitle} 끝 -
+    </div>
+  </div>
+
+  <!-- Reading Progress (Simple) -->
+  <div class="reading-progress fixed bottom-4 right-4 z-40">
+    <div class="bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-modern border border-stone-200">
+      <div class="w-8 h-8 flex items-center justify-center">
+        <span class="text-xs font-bold text-ink-900 reading-progress-text">0%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Image Indicator (if exists) -->
+  {keyImagePoint && (
+    <div class="key-image-nav fixed left-4 top-1/2 transform -translate-y-1/2 z-40 hidden lg:block">
+      <div class="bg-white/90 backdrop-blur-sm rounded-2xl p-3 shadow-modern border border-stone-200">
+        <div class="text-xs text-stone-600 mb-2 font-medium">핵심 장면</div>
+        <button
+          class="w-10 h-10 rounded-full bg-gradient-to-r from-rose-500 to-ink-500 text-white flex items-center justify-center text-sm font-bold hover:shadow-glow transition-all"
+          onclick="document.getElementById('key-scene-paragraph')?.scrollIntoView({behavior: 'smooth', block: 'center'})"
+          title={keyImagePoint.description}
+        >
+          🎨
+        </button>
+      </div>
+    </div>
+  )}
+</div>
+
+<!-- Reading Progress Script -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const progressText = document.querySelector('.reading-progress-text');
+    
+    if (progressText) {
+      const updateProgress = () => {
+        const scrollTop = window.pageYOffset;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const scrollProgress = Math.min(scrollTop / docHeight * 100, 100);
+        progressText.textContent = `${Math.round(scrollProgress)}%`;
+      };
+      
+      window.addEventListener('scroll', updateProgress);
+      updateProgress();
+    }
+    
+    // 키보드 네비게이션
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowDown' || e.key === 'j') {
+        e.preventDefault();
+        window.scrollBy({ top: 100, behavior: 'smooth' });
+      } else if (e.key === 'ArrowUp' || e.key === 'k') {
+        e.preventDefault();
+        window.scrollBy({ top: -100, behavior: 'smooth' });
+      } else if (e.key === 'g') {
+        // 'g' 키로 핵심 이미지로 이동
+        const keyScene = document.getElementById('key-scene-paragraph');
+        if (keyScene) {
+          keyScene.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+    });
+  });
+</script>
+
+<style>
+  /* 단순화된 읽기 스타일 */
+  .simple-chapter-reader {
+    line-height: 1.8;
+    color: hsl(var(--ink-800));
+  }
+  
+  .paragraph-section {
+    scroll-margin-top: 6rem;
+    padding: 0.5rem 0;
+    border-radius: 0.5rem;
+    transition: background-color 0.3s ease;
+  }
+  
+  /* 핵심 이미지 섹션 하이라이트 */
+  .key-image-section {
+    scroll-margin-top: 8rem;
+    position: relative;
+  }
+  
+  .key-image-section::before {
+    content: '';
+    position: absolute;
+    top: -2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #f43f5e, transparent);
+  }
+  
+  /* 핵심 장면 문단 스타일 */
+  #key-scene-paragraph {
+    background: linear-gradient(90deg, transparent, rgba(244, 63, 94, 0.05), transparent);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    margin: 1rem 0;
+    border-left: 4px solid #f43f5e;
+  }
+  
+  /* 반응형 */
+  @media (max-width: 768px) {
+    .key-image-nav {
+      display: none;
+    }
+    
+    .reading-progress {
+      bottom: 1rem;
+      right: 1rem;
+    }
+  }
+</style>

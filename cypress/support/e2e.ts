@@ -48,7 +48,7 @@ afterEach(() => {
 });
 
 // 전역 에러 핸들링
-Cypress.on('uncaught:exception', (err, runnable) => {
+Cypress.on('uncaught:exception', (err) => {
   // AI 모킹 관련 에러는 무시
   if (err.message.includes('fetch') && err.message.includes('MockAI')) {
     return false;
@@ -70,6 +70,7 @@ Cypress.on('uncaught:exception', (err, runnable) => {
 
 // 커스텀 Cypress 명령어 타입 정의
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Cypress {
     interface Chainable {
       /**

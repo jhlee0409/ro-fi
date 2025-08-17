@@ -237,7 +237,7 @@ describe('InteractiveChoiceSystem', () => {
       };
 
       // Mock the internal method
-      const mockProcessChoice = vi.spyOn(choiceSystem as any, 'findChoiceById')
+      const mockProcessChoice = vi.spyOn(choiceSystem as unknown, 'findChoiceById')
         .mockResolvedValue(mockChoice);
 
       const mockResult = {
@@ -371,7 +371,7 @@ describe('InteractiveChoiceSystem', () => {
       expect(initialStats.totalReaders).toBe(0);
 
       // 호감도 변화 테스트를 위한 Mock 설정
-      const mockUpdateAffection = vi.spyOn(choiceSystem as any, 'updateCharacterAffection');
+      const mockUpdateAffection = vi.spyOn(choiceSystem as unknown, 'updateCharacterAffection');
 
       const context = {
         scene: '대화 상황',

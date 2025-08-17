@@ -7,14 +7,26 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { EpisodeGenerationPipeline, defaultEpisodeConfig } from '../lib/episode-generation-pipeline.js';
 import { Novel, Chapter, QualityMetrics } from '../lib/types/index.js';
 
+// 테스트용 타입 확장 - private 메서드 접근용
+type PipelineForTesting = EpisodeGenerationPipeline & {
+  executeGenerationAttempt: (novel: Novel, config: unknown) => Promise<unknown>;
+  autoSelectTemplate: (...args: unknown[]) => string;
+  validateQuality: (...args: unknown[]) => Promise<unknown>;
+  extractEmotionalTone: (content: string) => string;
+  createChapterObject: (...args: unknown[]) => Chapter;
+  updateMemory: (chapter: Chapter, metrics: QualityMetrics) => Promise<void>;
+};
+
 describe('EpisodeGenerationPipeline', () => {
   let pipeline: EpisodeGenerationPipeline;
+  let pipelineForTesting: PipelineForTesting;
   let mockNovel: Novel;
   let mockApiKey: string;
 
   beforeEach(() => {
     mockApiKey = 'test-api-key';
     pipeline = new EpisodeGenerationPipeline(mockApiKey);
+    pipelineForTesting = pipeline as PipelineForTesting;
     
     mockNovel = {
       slug: 'test-novel',
@@ -57,7 +69,7 @@ describe('EpisodeGenerationPipeline', () => {
   describe('Episode Generation (Mocked)', () => {
     it('should handle successful generation workflow', async () => {
       // Mock the internal methods to avoid actual API calls
-      const mockGenerate = vi.spyOn(pipeline as any, 'executeGenerationAttempt')
+      const mockGenerate = vi.spyOn(pipelineForTesting, 'executeGenerationAttempt')
         .mockResolvedValue({
           success: true,
           episode: createMockChapter(1),
@@ -80,7 +92,7 @@ describe('EpisodeGenerationPipeline', () => {
 
     it('should handle generation failures with retries', async () => {
       // Mock failures followed by success
-      const mockGenerate = vi.spyOn(pipeline as any, 'executeGenerationAttempt')
+      const mockGenerate = vi.spyOn(pipelineForTesting, 'executeGenerationAttempt')
         .mockRejectedValueOnce(new Error('First attempt failed'))
         .mockRejectedValueOnce(new Error('Second attempt failed'))
         .mockResolvedValue({
@@ -103,7 +115,7 @@ describe('EpisodeGenerationPipeline', () => {
 
     it('should handle complete generation failure', async () => {
       // Mock all attempts failing
-      const mockGenerate = vi.spyOn(pipeline as any, 'executeGenerationAttempt')
+      const mockGenerate = vi.spyOn(pipelineForTesting, 'executeGenerationAttempt')
         .mockRejectedValue(new Error('Generation failed'));
 
       const result = await pipeline.generateEpisode(mockNovel, 1, defaultEpisodeConfig);
@@ -117,7 +129,7 @@ describe('EpisodeGenerationPipeline', () => {
 
   describe('Template Selection Logic', () => {
     it('should select introduction template for early chapters', () => {
-      const templateId = (pipeline as any).autoSelectTemplate(
+      const templateId = (pipelineForTesting).autoSelectTemplate(
         mockNovel, 
         1, 
         { creativityMode: { isActive: false } }
@@ -127,7 +139,7 @@ describe('EpisodeGenerationPipeline', () => {
     });
 
     it('should select climax template for late chapters', () => {
-      const templateId = (pipeline as any).autoSelectTemplate(
+      const templateId = (pipelineForTesting).autoSelectTemplate(
         mockNovel, 
         40, 
         { creativityMode: { isActive: false } }
@@ -137,7 +149,7 @@ describe('EpisodeGenerationPipeline', () => {
     });
 
     it('should prioritize creativity mode templates', () => {
-      const templateId = (pipeline as any).autoSelectTemplate(
+      const templateId = (pipelineForTesting).autoSelectTemplate(
         mockNovel, 
         10, 
         { 
@@ -156,7 +168,7 @@ describe('EpisodeGenerationPipeline', () => {
     it('should pass quality validation for good content', async () => {
       const mockContent = '고품질 로맨스 판타지 에피소드 내용입니다. '.repeat(50);
       
-      const mockValidate = vi.spyOn(pipeline as any, 'validateQuality')
+      const mockValidate = vi.spyOn(pipelineForTesting, 'validateQuality')
         .mockResolvedValue({
           passed: true,
           metrics: createMockQualityMetrics(85)
@@ -165,7 +177,7 @@ describe('EpisodeGenerationPipeline', () => {
       const config = { ...defaultEpisodeConfig, qualityThreshold: 75 };
       const state = createMockPipelineState();
       
-      const result = await (pipeline as any).validateQuality(
+      const result = await (pipelineForTesting).validateQuality(
         mockContent, 
         mockNovel, 
         1, 
@@ -180,7 +192,7 @@ describe('EpisodeGenerationPipeline', () => {
     it('should fail quality validation for poor content', async () => {
       const mockContent = '저품질 내용';
       
-      const mockValidate = vi.spyOn(pipeline as any, 'validateQuality')
+      const mockValidate = vi.spyOn(pipelineForTesting, 'validateQuality')
         .mockResolvedValue({
           passed: false,
           reason: 'Quality score 60 below threshold 75',
@@ -190,7 +202,7 @@ describe('EpisodeGenerationPipeline', () => {
       const config = { ...defaultEpisodeConfig, qualityThreshold: 75 };
       const state = createMockPipelineState();
       
-      const result = await (pipeline as any).validateQuality(
+      const result = await (pipelineForTesting).validateQuality(
         mockContent, 
         mockNovel, 
         1, 
@@ -206,21 +218,21 @@ describe('EpisodeGenerationPipeline', () => {
   describe('Emotional Tone Analysis', () => {
     it('should detect romantic tone', () => {
       const content = '사랑하는 마음이 가슴 깊이 설렘을 주었다';
-      const tone = (pipeline as any).extractEmotionalTone(content);
+      const tone = (pipelineForTesting).extractEmotionalTone(content);
       
       expect(tone).toBe('romantic');
     });
 
     it('should detect tense tone', () => {
       const content = '긴장감이 흐르며 위험한 상황에 두려움을 느꼈다';
-      const tone = (pipeline as any).extractEmotionalTone(content);
+      const tone = (pipelineForTesting).extractEmotionalTone(content);
       
       expect(tone).toBe('tense');
     });
 
     it('should default to neutral for unknown content', () => {
       const content = '일반적인 내용입니다';
-      const tone = (pipeline as any).extractEmotionalTone(content);
+      const tone = (pipelineForTesting).extractEmotionalTone(content);
       
       expect(tone).toBe('neutral');
     });
@@ -259,7 +271,7 @@ describe('EpisodeGenerationPipeline', () => {
       };
 
       // Mock successful generation
-      const mockGenerate = vi.spyOn(pipeline as any, 'executeGenerationAttempt')
+      const mockGenerate = vi.spyOn(pipelineForTesting, 'executeGenerationAttempt')
         .mockResolvedValue({
           success: true,
           episode: createMockChapter(1),
@@ -279,7 +291,7 @@ describe('EpisodeGenerationPipeline', () => {
     it('should respect retry limits', async () => {
       const customConfig = { ...defaultEpisodeConfig, maxRetries: 1 };
       
-      const mockGenerate = vi.spyOn(pipeline as any, 'executeGenerationAttempt')
+      const mockGenerate = vi.spyOn(pipelineForTesting, 'executeGenerationAttempt')
         .mockRejectedValue(new Error('Generation failed'));
 
       const result = await pipeline.generateEpisode(mockNovel, 1, customConfig);
@@ -295,7 +307,7 @@ describe('EpisodeGenerationPipeline', () => {
       const content = '테스트 에피소드 내용입니다. '.repeat(30);
       const metrics = createMockQualityMetrics();
       
-      const chapter = (pipeline as any).createChapterObject(
+      const chapter = (pipelineForTesting).createChapterObject(
         content, 
         mockNovel, 
         5, 
@@ -316,7 +328,7 @@ describe('EpisodeGenerationPipeline', () => {
       
       // This should not throw
       await expect(
-        (pipeline as any).updateMemory(chapter, metrics)
+        (pipelineForTesting).updateMemory(chapter, metrics)
       ).resolves.not.toThrow();
     });
   });

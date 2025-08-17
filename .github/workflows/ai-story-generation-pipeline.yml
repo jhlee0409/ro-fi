@@ -90,6 +90,63 @@ jobs:
 
           echo "Gemini AI 생성 완료"
 
+      - name: 이미지 프롬프트 생성
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          echo "소설 이미지 프롬프트 자동 생성 시작"
+          
+          # 새로 생성된 소설들 찾기
+          new_novels=$(find src/content/novels/ -name "*.md" -newer .git/COMMIT_EDITMSG 2>/dev/null | head -5)
+          
+          if [ -n "$new_novels" ]; then
+            echo "새 소설에 대한 이미지 프롬프트 생성 시작"
+            
+            # data/image-prompts 디렉토리 생성
+            mkdir -p data/image-prompts
+            
+            for novel_file in $new_novels; do
+              # 소설 slug 추출
+              novel_slug=$(basename "$novel_file" .md)
+              echo "이미지 프롬프트 생성 중: $novel_slug"
+              
+              # 이미지 프롬프트 생성 실행
+              if node scripts/generate-image-prompts.js "$novel_slug" --save-metadata; then
+                echo "이미지 프롬프트 생성 성공: $novel_slug"
+              else
+                echo "이미지 프롬프트 생성 실패: $novel_slug (계속 진행)"
+              fi
+              
+              # API 속도 제한 방지
+              sleep 5
+            done
+          else
+            echo "새 소설이 없어 이미지 프롬프트 생성 생략"
+          fi
+          
+          # 기존 소설 중 이미지 프롬프트가 없는 것들도 처리
+          echo "기존 소설 이미지 프롬프트 확인 중..."
+          all_novels=$(find src/content/novels/ -name "*.md")
+          
+          for novel_file in $all_novels; do
+            novel_slug=$(basename "$novel_file" .md)
+            
+            # 이미지 프롬프트 파일 존재 확인
+            if [ ! -f "data/image-prompts/${novel_slug}.json" ]; then
+              echo "누락된 이미지 프롬프트 생성: $novel_slug"
+              
+              if node scripts/generate-image-prompts.js "$novel_slug" --save-metadata; then
+                echo "이미지 프롬프트 생성 완료: $novel_slug"
+              else
+                echo "이미지 프롬프트 생성 실패: $novel_slug (건너뛰기)"
+              fi
+              
+              sleep 3
+            fi
+          done
+          
+          echo "이미지 프롬프트 생성 완료"
+
       - name: 생성 결과 확인 및 배포
         if: always()
         run: |

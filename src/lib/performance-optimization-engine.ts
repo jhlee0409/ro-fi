@@ -11,7 +11,7 @@
  * - 비동기 작업 큐 관리
  */
 
-import { Novel, Chapter } from './types/index.js';
+import { Novel as _Novel, _Chapter as __Chapter } from './_types/index.js';
 import { EnhancedContextManager } from './enhanced-context-manager.js';
 import { EnhancedGeminiWrapper } from './enhanced-gemini-wrapper.js';
 
@@ -171,7 +171,7 @@ export class PerformanceOptimizationEngine {
   private geminiWrapper: EnhancedGeminiWrapper;
   private performanceHistory: PerformanceSnapshot[];
   private optimizationRules: OptimizationRule[];
-  private alertThresholds: AlertThresholds;
+  private _alertThresholds: AlertThresholds;
 
   constructor() {
     this.metrics = this.initializeMetrics();
@@ -184,7 +184,7 @@ export class PerformanceOptimizationEngine {
     this.geminiWrapper = new EnhancedGeminiWrapper();
     this.performanceHistory = [];
     this.optimizationRules = this.initializeOptimizationRules();
-    this.alertThresholds = this.initializeAlertThresholds();
+    this._alertThresholds = this.initializeAlertThresholds();
     
     this.startPerformanceMonitoring();
   }
@@ -193,8 +193,8 @@ export class PerformanceOptimizationEngine {
    * 🎯 메인 성능 최적화 메서드
    */
   async optimizePerformance(
-    operationType: OperationType,
-    payload: any,
+    _operationType: OperationType,
+    payload: unknown,
     options: OptimizationOptions = {}
   ): Promise<OptimizationResult> {
     
@@ -204,10 +204,10 @@ export class PerformanceOptimizationEngine {
     await this.collectCurrentMetrics();
     
     // 2. 최적화 전략 선택
-    const selectedStrategy = this.selectOptimizationStrategy(operationType, this.metrics);
+    const selectedStrategy = this.selectOptimizationStrategy(_operationType, this.metrics);
     
     // 3. 캐시 확인
-    const cacheKey = this.generateCacheKey(operationType, payload);
+    const cacheKey = this.generateCacheKey(_operationType, payload);
     const cachedResult = await this.cacheManager.get(cacheKey);
     
     if (cachedResult && !options.bypassCache) {
@@ -221,12 +221,12 @@ export class PerformanceOptimizationEngine {
     }
     
     // 4. 부하 분산 및 큐 관리
-    const assignedInstance = await this.loadBalancer.assignTask(operationType, payload);
-    const queuePosition = await this.queueManager.enqueue(operationType, payload, options.priority);
+    const assignedInstance = await this.loadBalancer.assignTask(_operationType, payload);
+    const _queuePosition = await this.queueManager.enqueue(_operationType, payload, options.priority);
     
     // 5. 실제 작업 수행 (최적화 적용)
     const result = await this.executeOptimizedOperation(
-      operationType,
+      _operationType,
       payload,
       selectedStrategy,
       assignedInstance
@@ -234,12 +234,12 @@ export class PerformanceOptimizationEngine {
     
     // 6. 결과 캐싱
     if (result && !options.skipCache) {
-      await this.cacheManager.set(cacheKey, result, selectedStrategy.caching.ttl.get(operationType));
+      await this.cacheManager.set(cacheKey, result, selectedStrategy.caching.ttl.get(_operationType));
     }
     
     // 7. 성능 메트릭 업데이트
     const totalTime = performance.now() - startTime;
-    this.updateMetrics('operation_complete', totalTime);
+    this.updateMetrics('_operation_complete', totalTime);
     
     // 8. 자동 스케일링 검토
     await this.evaluateScalingNeeds();
@@ -277,14 +277,14 @@ export class PerformanceOptimizationEngine {
   /**
    * 💾 캐시 최적화
    */
-  async optimizeCaching(operationType: OperationType, data: any): Promise<CacheOptimizationResult> {
+  async optimizeCaching(_operationType: OperationType, _data: unknown): Promise<CacheOptimizationResult> {
     const cacheStats = await this.cacheManager.getStats();
     const recommendations: CacheRecommendation[] = [];
 
     // 캐시 적중률 분석
     if (cacheStats.hitRate < 60) {
       recommendations.push({
-        type: 'increase_ttl',
+        _type: 'increase_ttl',
         reason: '캐시 적중률이 낮음',
         expectedImpact: 'medium',
         implementation: 'TTL을 현재의 1.5배로 증가'
@@ -294,7 +294,7 @@ export class PerformanceOptimizationEngine {
     // 캐시 크기 최적화
     if (cacheStats.memoryUsage > 80) {
       recommendations.push({
-        type: 'enable_compression',
+        _type: 'enable_compression',
         reason: '캐시 메모리 사용량이 높음',
         expectedImpact: 'high',
         implementation: '압축 알고리즘 적용'
@@ -302,10 +302,10 @@ export class PerformanceOptimizationEngine {
     }
 
     // 사전 로딩 전략
-    const preloadCandidates = await this.identifyPreloadCandidates(operationType);
+    const preloadCandidates = await this.identifyPreloadCandidates(_operationType);
     if (preloadCandidates.length > 0) {
       recommendations.push({
-        type: 'preload_strategy',
+        _type: 'preload_strategy',
         reason: '자주 사용되는 데이터 식별됨',
         expectedImpact: 'high',
         implementation: `${preloadCandidates.length}개 항목 사전 로딩`
@@ -340,7 +340,7 @@ export class PerformanceOptimizationEngine {
     totalSavings += duplicatesSaved * 300; // 평균 300ms 절약
 
     // 3. 우선순위 기반 큐잉
-    const prioritizedRequests = this.prioritizeRequests(deduplicatedRequests);
+    const _prioritizedRequests = this.prioritizeRequests(deduplicatedRequests);
     
     // 4. 연결 풀링 최적화
     await this.optimizeConnectionPooling();
@@ -489,44 +489,44 @@ export class PerformanceOptimizationEngine {
    * 🚨 알림 임계값 확인
    */
   private checkAlertThresholds(): void {
-    const alerts: PerformanceAlert[] = [];
+    const _alerts: PerformanceAlert[] = [];
 
     // 응답 시간 알림
-    if (this.metrics.responseTime.average > this.alertThresholds.responseTime.critical) {
-      alerts.push({
+    if (this.metrics.responseTime.average > this._alertThresholds.responseTime.critical) {
+      _alerts.push({
         level: 'critical',
-        type: 'response_time',
+        _type: 'response_time',
         message: `응답 시간이 임계값을 초과했습니다: ${this.metrics.responseTime.average}ms`,
         value: this.metrics.responseTime.average,
-        threshold: this.alertThresholds.responseTime.critical
+        threshold: this._alertThresholds.responseTime.critical
       });
     }
 
     // 에러율 알림
-    if (this.metrics.errorRates.errorRate > this.alertThresholds.errorRate.warning) {
-      alerts.push({
-        level: this.metrics.errorRates.errorRate > this.alertThresholds.errorRate.critical ? 'critical' : 'warning',
-        type: 'error_rate',
+    if (this.metrics.errorRates.errorRate > this._alertThresholds.errorRate.warning) {
+      _alerts.push({
+        level: this.metrics.errorRates.errorRate > this._alertThresholds.errorRate.critical ? 'critical' : 'warning',
+        _type: 'error_rate',
         message: `에러율이 높습니다: ${this.metrics.errorRates.errorRate}%`,
         value: this.metrics.errorRates.errorRate,
-        threshold: this.alertThresholds.errorRate.warning
+        threshold: this._alertThresholds.errorRate.warning
       });
     }
 
     // 메모리 사용량 알림
-    if (this.metrics.resourceUsage.memoryUsage > this.alertThresholds.memoryUsage.warning) {
-      alerts.push({
-        level: this.metrics.resourceUsage.memoryUsage > this.alertThresholds.memoryUsage.critical ? 'critical' : 'warning',
-        type: 'memory_usage',
+    if (this.metrics.resourceUsage.memoryUsage > this._alertThresholds.memoryUsage.warning) {
+      _alerts.push({
+        level: this.metrics.resourceUsage.memoryUsage > this._alertThresholds.memoryUsage.critical ? 'critical' : 'warning',
+        _type: 'memory_usage',
         message: `메모리 사용량이 높습니다: ${this.metrics.resourceUsage.memoryUsage}%`,
         value: this.metrics.resourceUsage.memoryUsage,
-        threshold: this.alertThresholds.memoryUsage.warning
+        threshold: this._alertThresholds.memoryUsage.warning
       });
     }
 
     // 알림 처리
-    if (alerts.length > 0) {
-      this.handlePerformanceAlerts(alerts);
+    if (_alerts.length > 0) {
+      this.handlePerformanceAlerts(_alerts);
     }
   }
 
@@ -658,23 +658,23 @@ export class PerformanceOptimizationEngine {
     // 실제 메트릭 수집 로직
   }
 
-  private selectOptimizationStrategy(type: OperationType, metrics: PerformanceMetrics): any {
+  private selectOptimizationStrategy(__type: OperationType, _metrics: PerformanceMetrics): unknown {
     return { 
       appliedOptimizations: ['caching', 'batching'],
       caching: this.strategy.caching
     };
   }
 
-  private generateCacheKey(type: OperationType, payload: any): string {
+  private generateCacheKey(_type: OperationType, payload: unknown): string {
     const payloadStr = payload ? JSON.stringify(payload) : 'null';
-    return `${type}_${payloadStr.slice(0, 100)}`;
+    return `${_type}_${payloadStr.slice(0, 100)}`;
   }
 
-  private async executeOptimizedOperation(type: OperationType, payload: any, strategy: any, instance: any): Promise<any> {
+  private async executeOptimizedOperation(__type: OperationType, payload: unknown, _strategy: unknown, _instance: unknown): Promise<unknown> {
     return { success: true, data: payload };
   }
 
-  private updateMetrics(event: string, duration?: number): void {
+  private updateMetrics(_event: string, _duration?: number): void {
     // 메트릭 업데이트 로직
   }
 
@@ -686,7 +686,7 @@ export class PerformanceOptimizationEngine {
     return Math.max(0, (2000 - duration) / 2000 * 100); // 2초 기준 개선율
   }
 
-  private getMetricsSummary(): any {
+  private getMetricsSummary(): unknown {
     return {
       responseTime: this.metrics.responseTime.average,
       throughput: this.metrics.throughput.requestsPerSecond,
@@ -695,7 +695,7 @@ export class PerformanceOptimizationEngine {
   }
 
   // 추가 스텁 메서드들...
-  private async identifyPreloadCandidates(type: OperationType): Promise<string[]> {
+  private async identifyPreloadCandidates(_type: OperationType): Promise<string[]> {
     return ['popular_characters', 'common_scenarios'];
   }
 
@@ -712,7 +712,7 @@ export class PerformanceOptimizationEngine {
   private async createBatchedRequest(requests: APIRequest[]): Promise<APIRequest> {
     return {
       id: 'batch_' + Date.now(),
-      type: 'batch',
+      _type: 'batch',
       data: requests.map(r => r.data),
       batchable: false
     };
@@ -740,7 +740,7 @@ export class PerformanceOptimizationEngine {
     return (original.length - optimized.length) * 0.01; // $0.01 per request 추정
   }
 
-  private getMemoryStats(): any {
+  private getMemoryStats(): unknown {
     return process.memoryUsage();
   }
 
@@ -781,9 +781,9 @@ export class PerformanceOptimizationEngine {
     this.strategy.caching.preloadStrategy = 'aggressive';
   }
 
-  private handlePerformanceAlerts(alerts: PerformanceAlert[]): void {
-    alerts.forEach(alert => {
-      console.warn(`[${alert.level.toUpperCase()}] ${alert.message}`);
+  private handlePerformanceAlerts(_alerts: PerformanceAlert[]): void {
+    _alerts.forEach(_alert => {
+      // console.warn(`[${_alert.level.toUpperCase()}] ${_alert.message}`);
       // 실제 구현에서는 이메일, Slack 등으로 알림 전송
     });
   }
@@ -798,7 +798,7 @@ export class PerformanceOptimizationEngine {
       optimizations: this.getAppliedOptimizations(),
       recommendations: this.generateOptimizationRecommendations(),
       trends: this.analyzeHistoricalTrends(),
-      alerts: this.getActiveAlerts()
+      _alerts: this.getActiveAlerts()
     };
   }
 
@@ -820,7 +820,7 @@ export class PerformanceOptimizationEngine {
     return recommendations;
   }
 
-  private analyzeHistoricalTrends(): any {
+  private analyzeHistoricalTrends(): unknown {
     return {
       responseTimeTrend: 'improving',
       throughputTrend: 'stable',
@@ -847,20 +847,20 @@ interface OptimizationOptions {
 }
 
 interface OptimizationResult {
-  result: any;
+  result: unknown;
   optimizations: string[];
   performanceGain: number;
-  metrics: any;
+  metrics: unknown;
 }
 
 interface CacheOptimizationResult {
-  currentStats: any;
+  currentStats: unknown;
   recommendations: CacheRecommendation[];
   estimatedImprovement: number;
 }
 
 interface CacheRecommendation {
-  type: string;
+  _type: string;
   reason: string;
   expectedImpact: 'low' | 'medium' | 'high';
   implementation: string;
@@ -868,8 +868,8 @@ interface CacheRecommendation {
 
 interface APIRequest {
   id: string;
-  type: string;
-  data: any;
+  _type: string;
+  data: unknown;
   priority?: number;
   batchable?: boolean;
 }
@@ -896,7 +896,7 @@ interface PerformanceTrendAnalysis {
 
 interface PerformanceAlert {
   level: 'info' | 'warning' | 'critical';
-  type: string;
+  _type: string;
   message: string;
   value: number;
   threshold: number;
@@ -907,7 +907,7 @@ interface PerformanceSnapshot {
   responseTime: number;
   throughput: number;
   errorRate: number;
-  resourceUsage: any;
+  resourceUsage: unknown;
 }
 
 interface OptimizationRule {
@@ -940,23 +940,23 @@ interface PerformanceReport {
   metrics: PerformanceMetrics;
   optimizations: string[];
   recommendations: string[];
-  trends: any;
-  alerts: PerformanceAlert[];
+  trends: unknown;
+  _alerts: PerformanceAlert[];
 }
 
 // 매니저 클래스들 (스텁)
 class CacheManager {
   constructor(private strategy: CachingStrategy) {}
   
-  async get(key: string): Promise<any> {
+  async get(_key: string): Promise<unknown> {
     return null; // 실제 캐시 조회
   }
   
-  async set(key: string, value: any, ttl?: number): Promise<void> {
+  async set(_key: string, _value: unknown, _ttl?: number): Promise<void> {
     // 실제 캐시 저장
   }
   
-  async getStats(): Promise<any> {
+  async getStats(): Promise<unknown> {
     return {
       hitRate: 75,
       memoryUsage: 60,
@@ -968,7 +968,7 @@ class CacheManager {
 class LoadBalancer {
   constructor(private strategy: LoadBalancingStrategy) {}
   
-  async assignTask(type: OperationType, payload: any): Promise<any> {
+  async assignTask(__type: OperationType, _payload: unknown): Promise<unknown> {
     return { instanceId: 'instance-1', load: 45 };
   }
 }
@@ -976,7 +976,7 @@ class LoadBalancer {
 class QueueManager {
   constructor(private strategy: QueueManagementStrategy) {}
   
-  async enqueue(type: OperationType, payload: any, priority?: number): Promise<number> {
+  async enqueue(__type: OperationType, _payload: unknown, _priority?: number): Promise<number> {
     return 0; // 큐 위치 반환
   }
 }
