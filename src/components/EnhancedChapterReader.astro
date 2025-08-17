@@ -1,16 +1,13 @@
 ---
 /**
- * Enhanced Chapter Reader with Image Points
- * Gemini AI 이미지 포인트가 통합된 고급 챕터 읽기 컴포넌트
+ * Enhanced Chapter Reader
+ * 고급 챕터 읽기 컴포넌트
  */
-import ChapterImagePoint from './ChapterImagePoint.astro';
-import type { ChapterImagePoint as ImagePointType } from '../lib/types/image-types';
 
 interface Props {
   chapterContent: string;
   chapterTitle: string;
   chapterSlug: string;
-  imagePoints?: ImagePointType[];
   className?: string;
 }
 
@@ -18,7 +15,6 @@ const {
   chapterContent, 
   chapterTitle, 
   chapterSlug, 
-  imagePoints = [], 
   className = '' 
 } = Astro.props;
 
@@ -27,55 +23,6 @@ const paragraphs = chapterContent
   .split('\n')
   .filter(p => p.trim().length > 0)
   .map(p => p.trim());
-
-// 이미지 포인트를 위치별로 정렬
-const sortedImagePoints = [...imagePoints].sort((a, b) => a.position - b.position);
-
-// 문단과 이미지 포인트를 합쳐서 렌더링 순서 결정
-function createRenderSequence() {
-  const sequence = [];
-  let imageIndex = 0;
-  
-  paragraphs.forEach((paragraph, paragraphIndex) => {
-    // 현재 문단의 위치 계산 (0-100%)
-    const currentPosition = (paragraphIndex / paragraphs.length) * 100;
-    
-    // 현재 위치 이전에 삽입할 이미지 포인트들 추가
-    while (
-      imageIndex < sortedImagePoints.length && 
-      sortedImagePoints[imageIndex].position <= currentPosition
-    ) {
-      sequence.push({
-        type: 'image',
-        data: sortedImagePoints[imageIndex],
-        position: currentPosition
-      });
-      imageIndex++;
-    }
-    
-    // 문단 추가
-    sequence.push({
-      type: 'paragraph',
-      data: paragraph,
-      index: paragraphIndex,
-      position: currentPosition
-    });
-  });
-  
-  // 남은 이미지 포인트들 추가
-  while (imageIndex < sortedImagePoints.length) {
-    sequence.push({
-      type: 'image',
-      data: sortedImagePoints[imageIndex],
-      position: 100
-    });
-    imageIndex++;
-  }
-  
-  return sequence;
-}
-
-const renderSequence = createRenderSequence();
 
 // 문단 스타일 클래스 결정
 function getParagraphClass(content: string): string {
@@ -115,45 +62,21 @@ function getParagraphClass(content: string): string {
     <div class="w-24 h-1 bg-gradient-to-r from-rose-400 to-ink-500 mx-auto rounded-full"></div>
   </header>
 
-  <!-- Chapter Content with Integrated Image Points -->
+  <!-- Chapter Content -->
   <article class="chapter-content space-y-6 max-w-4xl mx-auto">
-    {renderSequence.map((item, index) => {
-      if (item.type === 'image') {
-        return (
-          <div 
-            class="chapter-image-section my-16"
-            data-position={item.data.position}
-            id={`image-${item.data.id}`}
-          >
-            <ChapterImagePoint
-              imagePoint={item.data}
-              className="mx-auto max-w-3xl"
-            />
-            
-            <!-- Image Caption (Optional) -->
-            {item.data.characters && item.data.characters.length > 0 && (
-              <div class="mt-4 text-center">
-                <p class="text-sm text-stone-500 italic">
-                  {item.data.characters.join(', ')} - {item.data.setting}
-                </p>
-              </div>
-            )}
-          </div>
-        );
-      } else {
-        // 문단 렌더링
-        const paragraphClass = getParagraphClass(item.data);
-        
-        return (
-          <div 
-            class={`paragraph-section ${paragraphClass}`}
-            data-paragraph={item.index}
-            data-position={item.position}
-          >
-            <p>{item.data}</p>
-          </div>
-        );
-      }
+    {paragraphs.map((paragraph, index) => {
+      const paragraphClass = getParagraphClass(paragraph);
+      const position = (index / paragraphs.length) * 100;
+      
+      return (
+        <div 
+          class={`paragraph-section ${paragraphClass}`}
+          data-paragraph={index}
+          data-position={position}
+        >
+          <p>{paragraph}</p>
+        </div>
+      );
     })}
   </article>
 
@@ -194,26 +117,6 @@ function getParagraphClass(content: string): string {
     </div>
   </div>
 
-  <!-- Image Points Navigation (Mobile) -->
-  {imagePoints.length > 0 && (
-    <div class="image-points-nav fixed left-4 top-1/2 transform -translate-y-1/2 z-40 hidden lg:block">
-      <div class="bg-white/90 backdrop-blur-sm rounded-2xl p-3 shadow-modern border border-stone-200">
-        <div class="text-xs text-stone-600 mb-2 font-medium">이미지</div>
-        <div class="space-y-2">
-          {imagePoints.map((point, index) => (
-            <button
-              class="image-nav-button w-8 h-8 rounded-full border-2 border-stone-300 hover:border-rose-400 transition-colors flex items-center justify-center text-xs font-medium"
-              data-target={`image-${point.id}`}
-              data-position={point.position}
-              title={`${point.type} - ${point.position}%`}
-            >
-              {index + 1}
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  )}
 </div>
 
 <!-- Enhanced Reading JavaScript -->
@@ -238,62 +141,6 @@ function getParagraphClass(content: string): string {
       updateProgress();
     }
     
-    // Image points navigation
-    const imageNavButtons = document.querySelectorAll('.image-nav-button');
-    
-    imageNavButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        const targetId = button.dataset.target;
-        const targetElement = document.getElementById(targetId);
-        
-        if (targetElement) {
-          targetElement.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center'
-          });
-          
-          // Visual feedback
-          targetElement.classList.add('highlight-flash');
-          setTimeout(() => {
-            targetElement.classList.remove('highlight-flash');
-          }, 2000);
-        }
-      });
-    });
-    
-    // Intersection Observer for image points highlighting
-    if (imageNavButtons.length > 0) {
-      const observerOptions = {
-        threshold: 0.5,
-        rootMargin: '-50px 0px'
-      };
-      
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            const imageId = entry.target.id;
-            const navButton = document.querySelector(`[data-target="${imageId}"]`);
-            
-            // Remove active class from all buttons
-            imageNavButtons.forEach(btn => {
-              btn.classList.remove('border-rose-500', 'bg-rose-50');
-              btn.classList.add('border-stone-300');
-            });
-            
-            // Add active class to current button
-            if (navButton) {
-              navButton.classList.add('border-rose-500', 'bg-rose-50');
-              navButton.classList.remove('border-stone-300');
-            }
-          }
-        });
-      }, observerOptions);
-      
-      // Observe all image sections
-      document.querySelectorAll('.chapter-image-section').forEach(section => {
-        observer.observe(section);
-      });
-    }
     
     // Smooth paragraph highlighting on scroll
     const paragraphs = document.querySelectorAll('.paragraph-section');
@@ -368,18 +215,9 @@ function getParagraphClass(content: string): string {
     transition: background-color 0.3s ease;
   }
   
-  /* Image section spacing */
-  .chapter-image-section {
-    scroll-margin-top: 8rem;
-  }
-  
   /* Reading progress styles */
   .reading-progress-tracker {
     animation: fadeInUp 0.5s ease-out 1s both;
-  }
-  
-  .image-points-nav {
-    animation: slideInLeft 0.5s ease-out 1.5s both;
   }
   
   @keyframes fadeInUp {
@@ -393,22 +231,8 @@ function getParagraphClass(content: string): string {
     }
   }
   
-  @keyframes slideInLeft {
-    from {
-      opacity: 0;
-      transform: translateX(-20px) translateY(-50%);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0) translateY(-50%);
-    }
-  }
-  
   /* Mobile optimizations */
   @media (max-width: 768px) {
-    .image-points-nav {
-      display: none;
-    }
     
     .reading-progress-tracker {
       bottom: 1rem;

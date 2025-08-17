@@ -2,7 +2,6 @@
 import Layout from '../../../../layouts/Layout.astro';
 import SimpleChapterReader from '../../../../components/SimpleChapterReader.astro';
 import { getCollection } from 'astro:content';
-import { simplifiedImageAnalyzer } from '../../../../lib/simplified-image-analyzer';
 import '../../../../styles/globals.css';
 
 // 정적 사이트 생성을 위한 설정
@@ -68,18 +67,6 @@ if (!currentNovel || !currentChapter || !currentAllChapters) {
 // 챕터 콘텐츠 렌더링
 const { Content } = await currentChapter.render();
 
-// 이미지 데이터 로드 (에러 발생시 무시하고 계속 진행)
-let chapterImageData = null;
-try {
-  const novelImageData = await simplifiedImageAnalyzer.loadNovelImageData(slug!);
-  if (novelImageData) {
-    chapterImageData = novelImageData.chapters.find(ch => 
-      ch.chapterNumber === parseInt(chapterNumber || '0')
-    );
-  }
-} catch (error) {
-  console.warn('이미지 데이터 로드 실패:', error);
-}
 
 // 현재 챕터 위치 찾기
 const currentIndex = currentAllChapters.findIndex(ch => ch.data.chapterNumber === parseInt(chapterNumber || '0'));
@@ -242,7 +229,6 @@ const progress = ((currentIndex + 1) / currentAllChapters.length * 100).toFixed(
             chapterContent={currentChapter.body}
             chapterTitle={currentChapter.data.title}
             chapterSlug={currentChapter.slug}
-            keyImagePoint={chapterImageData?.keyImagePoint}
             className="fade-in-up"
           />
         </article>

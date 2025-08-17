@@ -1,8 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import ChapterImagePoint from '../../components/ChapterImagePoint.astro';
 import { getCollection } from 'astro:content';
-import { simplifiedImageAnalyzer } from '../../lib/simplified-image-analyzer';
 import '../../styles/globals.css';
 
 // URL에서 slug 파라미터 가져오기
@@ -49,16 +47,6 @@ const lastUpdate = novelChapters.length > 0 ?
 // 최신 3개 챕터
 const latestChapters = novelChapters.slice(-3).reverse();
 
-// 소설 대표 이미지 데이터 로드 (에러 발생시 무시하고 계속 진행)
-let novelCoverImagePoint = null;
-try {
-  const novelImageData = await simplifiedImageAnalyzer.loadNovelImageData(slug!);
-  if (novelImageData) {
-    novelCoverImagePoint = novelImageData.coverImagePoint;
-  }
-} catch (error) {
-  console.warn('소설 대표 이미지 데이터 로드 실패:', error);
-}
 ---
 
 <Layout title={`${currentNovel.data.title} | RO-FAN`}>
@@ -76,32 +64,22 @@ try {
         <!-- Novel Cover with AI-Generated Image -->
         <div class="lg:col-span-1 flex justify-center">
           <div class="relative group">
-            {novelCoverImagePoint ? (
-              <!-- AI-Generated Novel Cover -->
-              <div class="aspect-[3/4] w-80">
-                <ChapterImagePoint
-                  imagePoint={novelCoverImagePoint}
-                  className="w-full h-full rounded-3xl shadow-modern hover:shadow-glow transition-all duration-500"
+            <!-- Novel Cover -->
+            <div class="aspect-[3/4] w-80 bg-gradient-to-br from-rose-100 to-ink-100 rounded-3xl shadow-modern overflow-hidden">
+              {currentNovel.data.coverImage ? (
+                <img
+                  src={currentNovel.data.coverImage}
+                  alt={currentNovel.data.title}
+                  class="w-full h-full object-cover"
                 />
-              </div>
-            ) : (
-              <!-- Fallback Cover -->
-              <div class="aspect-[3/4] w-80 bg-gradient-to-br from-rose-100 to-ink-100 rounded-3xl shadow-modern overflow-hidden">
-                {currentNovel.data.coverImage ? (
-                  <img
-                    src={currentNovel.data.coverImage}
-                    alt={currentNovel.data.title}
-                    class="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div class="w-full h-full flex items-center justify-center">
-                    <span class="text-7xl font-display font-bold bg-gradient-to-br from-rose-400 to-ink-600 bg-clip-text text-transparent">
-                      {currentNovel.data.title[0]}
-                    </span>
-                  </div>
-                )}
-              </div>
-            )}
+              ) : (
+                <div class="w-full h-full flex items-center justify-center">
+                  <span class="text-7xl font-display font-bold bg-gradient-to-br from-rose-400 to-ink-600 bg-clip-text text-transparent">
+                    {currentNovel.data.title[0]}
+                  </span>
+                </div>
+              )}
+            </div>
             
             <!-- Status Badge -->
             <div class="absolute top-4 left-4 z-10">
@@ -116,15 +94,6 @@ try {
               </span>
             </div>
             
-            <!-- AI Cover Badge -->
-            {novelCoverImagePoint && (
-              <div class="absolute bottom-4 right-4 z-10">
-                <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-white/90 backdrop-blur-sm text-ink-900">
-                  <span class="mr-1">🎨</span>
-                  AI 커버
-                </span>
-              </div>
-            )}
           </div>
         </div>
 
