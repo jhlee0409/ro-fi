@@ -30,8 +30,13 @@ import { IntelligentDecisionEngine } from '../src/lib/intelligent-decision-engin
 import { PerformanceOptimizer } from '../src/lib/performance-optimizer.js';
 import { WorldClassEnhancementEngine } from '../src/lib/world-class-enhancement-engine.js';
 
-// 통합 설정 시스템
+// 통합 설정 시스템 (Enhanced 프롬프트 시스템)
 import { formatChapterTitle } from '../src/lib/config/prompt-config.js';
+import { 
+  BLOCKBUSTER_NOVEL_TEMPLATE,
+  SCIENTIFIC_CHAPTER_TEMPLATE,
+  MasterPromptBuilder
+} from '../src/lib/config/enhanced-prompt-templates.js';
 
 // 연속성 관리 시스템 통합 (선택적)
 let continuityIntegration = null;
@@ -616,56 +621,15 @@ ${basePrompt}
     const theme = NOVEL_THEMES[Math.floor(Math.random() * NOVEL_THEMES.length)];
     const tropes = this.selectRandomTropes(3);
 
-    const prompt = `
-# 📚 로맨스 판타지 신작 소설 창작 미션
+    // 🚀 Enhanced 프롬프트 시스템 적용
+    const requirements = {
+      theme,
+      tropes,
+      targetAudience: '20-30대 한국 여성 로맨스 판타지 마니아',
+      goalViews: '일일 조회수 10만+ 달성'
+    };
 
-당신은 한국의 1위 웹소설 플랫폼에서 연재하는 베스트셀러 로맨스 판타지 작가입니다.
-수백만 독자들이 열광하는 작품을 연재해온 경험을 바탕으로, 완전히 새로운 히트작을 만들어주세요.
-
-## 🎯 창작 조건
-- **테마**: ${theme}
-- **핵심 트로프**: ${tropes.join(', ')}
-- **목표 독자**: 20-30대 한국 여성 (로맨스 판타지 마니아)
-- **연재 목표**: 일일 조회수 10만+ 달성 가능한 작품
-
-## 📋 필수 출력 형식 (정확히 준수 필수!)
-
-=== METADATA ===
-TITLE: [독자들이 클릭하지 않을 수 없는 창의적이고 매력적인 제목 - 최소 10자 이상]
-SLUG: [의미있는-영문-소문자-하이픈-구분]
-SUMMARY: [SNS에서 바이럴될 만큼 흥미진진한 200자 이상의 상세한 줄거리 소개]
-TROPES: [${tropes.map(t => `"${t}"`).join(', ')}]
-
-=== CHAPTER 1 ===
-${formatChapterTitle(1, '[독자의 호기심을 강하게 자극하는 제목]')}
-WORD_COUNT: [정확한 글자 수]
-
-[5000-6000자의 완벽한 1화 본문]
-
-## 🔥 창작 지침 (반드시 준수)
-
-### 스토리텔링 원칙
-1. **첫 문장부터 강력한 임팩트** - 독자가 스크롤을 멈추게 하는 오프닝
-2. **주인공의 매력 어필** - 독자가 감정이입할 수 있는 캐릭터
-3. **남주의 신비로운 등장** - 호기심과 설렘을 동시에 자극
-4. **세계관의 자연스러운 소개** - 정보 덤핑 없이 몰입감 있게
-5. **갈등과 긴장감 조성** - 다음 화가 궁금해지는 구조
-
-### 문체 및 표현
-- **감정 몰입형 3인칭 시점** 사용
-- **생생한 묘사와 섬세한 심리 표현**
-- **독자가 상황을 그림으로 그릴 수 있을 정도의 구체적 묘사**
-- **로맨스 판타지 특유의 달콤하고 몽환적인 분위기**
-- **적절한 긴장감과 설렘 포인트 배치**
-
-### 2025년 트렌드 반영
-- 독립적이고 주체적인 여주인공
-- 과도한 갑질 없는 매력적인 남주
-- 건강한 관계 dynamics
-- 현대적 감수성이 담긴 대화와 상황
-
-지금부터 한국 웹소설 역사에 남을 대작의 1화를 창작해주세요! 🌟
-`;
+    const prompt = BLOCKBUSTER_NOVEL_TEMPLATE(requirements);
 
     const storyContext = { novelType: 'new', theme, tropes };
     const response = await this.generateContent(prompt, creativity, storyContext);
@@ -685,55 +649,17 @@ WORD_COUNT: [정확한 글자 수]
 
     const contextContent = await this.buildChapterContext(lastChapters);
 
-    const prompt = `
-# 📖 연재 소설 ${nextChapterNumber}화 집필 미션
+    // 🚀 Enhanced 프롬프트 시스템 적용 - 과학적 챕터 생성
+    const requirements = {
+      wordCount: '4000-5000자',
+      emotionalGoal: '설렘과 긴장감 동시 증폭',
+      cliffhangerLevel: '9/10 (매우 강력함)',
+      continuityContext: contextContent,
+      novelSlug,
+      nextChapterNumber
+    };
 
-당신은 이 인기 로맨스 판타지 소설의 원작자입니다.
-독자들이 매주 기다리는 이 작품의 다음 화를 완벽하게 이어가주세요.
-
-## 📚 기존 스토리 흐름 분석
-${contextContent}
-
-## 🎯 ${nextChapterNumber}화 집필 목표
-
-### 핵심 미션
-- **연속성**: 이전 화와 자연스럽게 연결되는 스토리 진행
-- **몰입감**: 독자가 계속 읽을 수밖에 없는 전개
-- **캐릭터 일관성**: 기존 설정과 성격을 정확히 유지
-- **감정 몰입**: 독자의 감정을 깊이 자극하는 장면들
-- **다음화 기대감**: 궁금증을 유발하는 마무리
-
-### 분량 및 구성
-- **목표 분량**: 4000-5000자 (독자가 만족할 적정 길이)
-- **구성**: 기승전결이 있는 완결성 있는 한 화
-- **리듬**: 적절한 긴장과 이완의 리듬감
-
-## 📋 출력 형식
-
-=== CHAPTER ${nextChapterNumber} ===
-${formatChapterTitle(nextChapterNumber, '[독자들이 클릭하고 싶어지는 제목]')}
-WORD_COUNT: [정확한 글자 수]
-
-[4000-5000자의 완벽한 ${nextChapterNumber}화 본문]
-
-## 🔥 집필 지침
-
-### 스토리텔링 요구사항
-1. **이전 화의 여운을 자연스럽게 이어받기**
-2. **캐릭터 관계의 미묘한 발전 보여주기**
-3. **새로운 갈등이나 반전 요소 추가**
-4. **독자의 설렘과 긴장감을 동시에 자극**
-5. **다음 화에 대한 강력한 기대감 조성**
-
-### 문체 및 연출
-- 기존 화들과 동일한 문체와 어조 유지
-- 캐릭터별 고유한 말투와 행동 패턴 일관성
-- 생생한 묘사로 장면을 그림처럼 그려내기
-- 내적 독백과 대화의 적절한 균형
-- 감정적 클라이맥스와 여운 있는 마무리
-
-이제 독자들이 열광할 ${nextChapterNumber}화를 집필해주세요! ✨
-`;
+    const prompt = SCIENTIFIC_CHAPTER_TEMPLATE(nextChapterNumber, requirements);
 
     const storyContext = { 
       novelType: 'continue', 
@@ -755,39 +681,25 @@ WORD_COUNT: [정확한 글자 수]
 
     const contextContent = await this.buildChapterContext(lastChapters);
 
-    const prompt = `
-# 🏆 대망의 완결편 집필 미션
+    // 🚀 Enhanced 프롬프트 시스템 적용 - 마스터급 완결편 생성
+    const prompt = new MasterPromptBuilder()
+      .addMasterPersona()
+      .addCustomSection(`
+## 🏆 대망의 완결편 집필 미션 - 세계급 품질 보장
 
-드디어 이 대작 로맨스 판타지 소설을 완결시킬 시간이 왔습니다!
-수많은 독자들이 기다려온 최고의 피날레를 선사해주세요.
+드디어 이 대작 로맨스 판타지 소설을 **문학사에 남을 최고의 피날레**로 완결시킬 시간이 왔습니다!
+수많은 독자들이 기다려온 **전설적인 마무리**를 선사해주세요.
 
 ## 📚 전체 스토리 흐름 정리
 ${contextContent}
 
-## 🎯 완결편 집필 전략
+## 🎯 세계급 완결편 전략 (프롬프트 마스터 품질)
 
-### 완결 구성안 (2-3화 구조)
-1. **클라이맥스 챕터** - 모든 갈등과 미스터리의 폭발적 해결
-2. **해피엔딩 챕터** - 주인공과 남주의 완벽한 결합
-3. **에필로그** (선택사항) - 훗날의 행복한 모습
-
-### ${nextChapterNumber}화 미션 (첫 번째 완결 챕터)
-이 챕터에서 달성해야 할 목표:
-
-#### 🔥 감정적 클라이맥스 연출
-- 지금까지 쌓인 모든 감정을 폭발시키는 장면
-- 독자들이 울고 웃을 수 있는 카타르시스
-- 주인공과 남주의 진심어린 고백과 화해
-
-#### 🧩 플롯 완벽 해결
-- 남아있던 모든 갈등과 오해 해소
-- 숨겨진 비밀이나 정체성 완전 공개
-- 외부 장애물의 극적인 해결
-
-#### 💕 로맨스 완성
-- 두 사람의 사랑이 확실히 성취되는 장면
-- 독자가 만족할 만한 감동적인 사랑 확인
-- 미래에 대한 희망적인 암시
+### ${nextChapterNumber}화 미션 - 감정적 카타르시스 극대화
+- **독자 감동지수**: 95% 이상의 독자가 눈물을 흘릴 수 있는 완성도
+- **플롯 해결도**: 모든 갈등과 복선의 100% 완벽한 해결
+- **로맨스 만족도**: 두 주인공의 사랑이 절대적으로 확신되는 장면
+- **문학적 가치**: 독자들이 오래도록 기억할 명문장과 상징적 장면
 
 ## 📋 출력 형식
 
@@ -798,28 +710,21 @@ IS_FINAL: [이것이 최종화면 true, 아니면 false]
 
 [4000-5000자의 완벽한 완결 챕터 본문]
 
-## 🌟 완결편 집필 지침
+## 🌟 마스터급 완결편 집필 원칙
 
-### 감정적 완성도
-- 독자들이 눈물을 흘릴 만한 감동적인 순간들
-- 캐릭터들의 성장과 변화가 드러나는 장면
-- 사랑의 진정성을 확인할 수 있는 대사와 행동
-- 모든 독자가 "정말 잘 끝났다"고 말할 수 있는 만족감
+### 감정적 완성도 (목표: 10/10)
+- 지금까지 쌓인 모든 감정의 폭발적 해소
+- 캐릭터들의 성장 여정이 명확히 드러나는 장면들
+- 독자가 "정말 잘 끝났다"고 확신할 수 있는 절대적 만족감
 
-### 스토리 완결성
-- 던져진 모든 떡밥과 복선의 깔끔한 회수
-- 등장인물들의 운명과 미래에 대한 명확한 정리
-- 세계관의 완결성과 논리적 일관성
-- 다음 에피소드나 후속작에 대한 여지 (선택사항)
-
-### 문학적 완성도
-- 처음부터 지금까지의 여정이 느껴지는 서술
-- 캐릭터의 내적 성장이 드러나는 독백
+### 문학적 예술성 (목표: 9.5/10)
+- 처음부터 지금까지의 여정을 아우르는 서술
 - 상징적이고 인상적인 마지막 장면
-- 독자들이 오래도록 기억할 명문장
+- 독자들의 가슴에 영원히 남을 명문장
 
-이제 독자들의 가슴에 영원히 남을 최고의 완결편을 써주세요! 🎊
-`;
+이제 **한국 웹소설 역사에 남을 전설적인 완결편**을 창작해주세요! 🎊✨
+      `)
+      .build();
 
     const storyContext = { 
       novelType: 'complete', 

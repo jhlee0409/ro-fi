@@ -261,10 +261,10 @@ export class ContinuityAwareEpisodeGenerator {
               recoveryMode: true,
             },
             context: {} as GenerationContext,
-            validationResult: { 
-              valid: false, 
-              errors: [], 
-              warnings: [], 
+            validationResult: {
+              valid: false,
+              errors: [],
+              warnings: [],
               confidence: 0.5,
               aspectScores: {
                 characterConsistency: 0.5,
@@ -272,8 +272,8 @@ export class ContinuityAwareEpisodeGenerator {
                 plotConsistency: 0.5,
                 emotionalFlow: 0.5,
                 timelineConsistency: 0.5,
-                styleConsistency: 0.5
-              }
+                styleConsistency: 0.5,
+              },
             } as ValidationResult,
           };
         }
@@ -309,8 +309,7 @@ export class ContinuityAwareEpisodeGenerator {
       //   totalChapters: 45,
       //   novels: [{ slug: novelSlug, status: '연재 중' }],
       // });
-      
-       
+
       const _unused = novelSlug;
 
       return systemAnalysis;
@@ -429,7 +428,7 @@ export class ContinuityAwareEpisodeGenerator {
               tokensUsed: totalTokens,
               validationPassed: continuityResult.valid,
               attempts: attempt,
-              operationId: operationId
+              operationId: operationId,
             },
             context: {} as GenerationContext,
             qualityScore: overallQuality,
@@ -540,7 +539,11 @@ export class ContinuityAwareEpisodeGenerator {
   /**
    * 📊 성능 메트릭 업데이트
    */
-  private async updatePerformanceMetrics(result: unknown, generationTime: number, success: boolean) {
+  private async updatePerformanceMetrics(
+    result: unknown,
+    generationTime: number,
+    success: boolean
+  ) {
     if (success && result && typeof result === 'object') {
       this.performanceMetrics.successfulGenerations++;
       const resultObj = result as { qualityScore?: number; continuityScore?: number };

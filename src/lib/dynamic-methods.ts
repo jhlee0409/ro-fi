@@ -4,11 +4,7 @@
  */
 
 import { join } from 'path';
-import type {
-  CharacterProfile,
-  WorldSettings,
-  PlotStructure,
-} from './types/index.js';
+import type { CharacterProfile, WorldSettings, PlotStructure } from './types/index.js';
 
 interface NovelData {
   title: string;
