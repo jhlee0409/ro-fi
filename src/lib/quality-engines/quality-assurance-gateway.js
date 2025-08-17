@@ -13,6 +13,14 @@ import { CharacterDevelopmentSystem } from './character-development-system.js';
 import { LiteraryExcellenceEngine } from './literary-excellence-engine.js';
 import { RomanceChemistryAnalyzer } from './romance-chemistry-analyzer.js';
 
+// 중앙화된 품질 설정 import
+import { 
+  QUALITY_THRESHOLDS, 
+  ENGINE_WEIGHTS,
+  IMPROVEMENT_STRATEGIES,
+  QualityHelpers 
+} from '../config/quality-config.js';
+
 export class QualityAssuranceGateway {
   constructor(logger) {
     this.logger = logger;
@@ -23,45 +31,12 @@ export class QualityAssuranceGateway {
     this.literaryEngine = new LiteraryExcellenceEngine(logger);
     this.romanceEngine = new RomanceChemistryAnalyzer(logger);
     
-    // 품질 임계값 및 가중치
-    this.qualityThresholds = {
-      minimum: 7.0,           // 최소 7.0/10 품질 요구
-      excellent: 8.5,         // 8.5+ 우수 품질
-      perfect: 9.5,           // 9.5+ 완벽 품질
-      critical: 5.0           // 5.0 미만 심각한 품질 문제
-    };
+    // 중앙화된 품질 설정 사용
+    this.qualityThresholds = QUALITY_THRESHOLDS;
+    this.engineWeights = ENGINE_WEIGHTS;
     
-    // 엔진별 가중치 (총합 1.0)
-    this.engineWeights = {
-      plot: 0.30,       // 플롯 진전 30%
-      character: 0.25,  // 캐릭터 발전 25%
-      literary: 0.25,   // 문체 품질 25%
-      romance: 0.20     // 로맨스 케미스트리 20%
-    };
-    
-    // 품질 개선 전략
-    this.improvementStrategies = {
-      plot: {
-        priority: 1,    // 최우선
-        maxAttempts: 3,
-        improvementMethods: ['enforceProgression', 'injectDramaticEvent']
-      },
-      character: {
-        priority: 2,
-        maxAttempts: 3,
-        improvementMethods: ['enforceCharacterAgency', 'diversifyDialogue']
-      },
-      literary: {
-        priority: 3,
-        maxAttempts: 2,
-        improvementMethods: ['enhanceVocabularyDiversity', 'enhanceEmotionalDescription']
-      },
-      romance: {
-        priority: 4,
-        maxAttempts: 2,
-        improvementMethods: ['generateRomanticTension', 'enhanceDialogueChemistry']
-      }
-    };
+    // 중앙화된 개선 전략 사용
+    this.improvementStrategies = IMPROVEMENT_STRATEGIES;
     
     // 품질 히스토리 추적
     this.qualityHistory = [];
@@ -264,33 +239,17 @@ export class QualityAssuranceGateway {
   }
 
   /**
-   * 📊 가중 점수 계산
+   * 📊 가중 점수 계산 (중앙화된 헬퍼 사용)
    */
   calculateWeightedScore(scores) {
-    const weightedSum = 
-      (scores.plotScore * this.engineWeights.plot) +
-      (scores.characterScore * this.engineWeights.character) +
-      (scores.literaryScore * this.engineWeights.literary) +
-      (scores.romanceScore * this.engineWeights.romance);
-    
-    return parseFloat(Math.max(0, Math.min(10, weightedSum)).toFixed(1));
+    return QualityHelpers.calculateWeightedScore(scores);
   }
 
   /**
-   * 🏆 품질 등급 결정
+   * 🏆 품질 등급 결정 (중앙화된 헬퍼 사용)
    */
   determineQualityGrade(score) {
-    if (score >= this.qualityThresholds.perfect) {
-      return 'PERFECT';       // 9.5+ 완벽
-    } else if (score >= this.qualityThresholds.excellent) {
-      return 'EXCELLENT';     // 8.5-9.4 우수
-    } else if (score >= this.qualityThresholds.minimum) {
-      return 'GOOD';          // 7.0-8.4 양호
-    } else if (score >= this.qualityThresholds.critical) {
-      return 'POOR';          // 5.0-6.9 부족
-    } else {
-      return 'CRITICAL';      // <5.0 심각
-    }
+    return QualityHelpers.scoreToGrade(score);
   }
 
   /**

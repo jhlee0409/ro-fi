@@ -1,5 +1,5 @@
 ---
-title: 멈춰버린 시계탑 아래에서**
+title: '1화: 멈춰버린 시계탑 아래에서'
 novel: time-guardian-fate-thread
 chapterNumber: 1
 publicationDate: '2025-08-16'

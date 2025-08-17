@@ -187,7 +187,7 @@ class SubAgentOrchestrator {
 - 깊이 있는 캐릭터 개발
 - 로맨스의 급속한 진전
 
-TITLE: [챕터 제목]
+TITLE: ${nextChapterNumber}화: [제목]
 
 CONTENT:
 [기본 스토리 구조 - 2000자 내외]

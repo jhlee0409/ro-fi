@@ -1,5 +1,5 @@
 ---
-title: 어긋나는 시계바늘
+title: '2화: 어긋나는 시계바늘'
 novel: time-guardian-fate-thread
 chapterNumber: 2
 publicationDate: '2025-08-16'

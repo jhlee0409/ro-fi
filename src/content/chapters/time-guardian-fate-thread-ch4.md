@@ -1,5 +1,5 @@
 ---
-title: '4화: 멈춘 시계, 깨어진 미래**'
+title: '4화: 멈춘 시계, 깨어진 미래'
 novel: time-guardian-fate-thread
 chapterNumber: 4
 publicationDate: '2025-08-16'

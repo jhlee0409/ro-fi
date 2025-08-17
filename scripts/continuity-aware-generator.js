@@ -16,6 +16,9 @@ import fs from 'fs/promises';
 import matter from 'gray-matter';
 import dotenv from 'dotenv';
 
+// 중앙화된 설정 시스템
+import { OUTPUT_FORMAT } from '../src/lib/config/prompt-config.js';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const PROJECT_ROOT = join(__dirname, '..');
@@ -218,7 +221,7 @@ ${cliffhangers.map(ch => `- ${ch.description} (중요도: ${ch.intensity})`).joi
 5. 감정적 몰입도 높은 장면 구성
 6. 다음 화로 이어질 새로운 긴장감 조성
 
-TITLE: [의미있는 챕터 제목]
+${OUTPUT_FORMAT.chapterTitle(nextChapterNumber)}
 
 CONTENT:
 [story-state.json과 완벽 연결되는 2500자 이상 소설]

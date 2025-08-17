@@ -377,7 +377,7 @@ TWIST_STRATEGY:
 
 2000자 내외로 생성하세요.
 
-TITLE: [챕터 제목]
+TITLE: ${nextChapterNumber}화: [제목]
 
 CONTENT:
 [SharedContext와 완벽히 조화된 내용]

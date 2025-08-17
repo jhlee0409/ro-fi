@@ -1,5 +1,5 @@
 ---
-title: '**5화: 정오의 약속, 영혼의 등대**'
+title: '5화: 정오의 약속, 영혼의 등대'
 novel: time-guardian-fate-thread
 chapterNumber: 5
 publicationDate: '2025-08-16'

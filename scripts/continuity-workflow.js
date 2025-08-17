@@ -318,7 +318,7 @@ ${lastChapter.chapter}화: ${lastChapter.title}
 
 === 출력 형식 (JSON) ===
 {
-  "title": "챕터 제목",
+  "title": "N화: 제목 (예: ${chapterNumber}화: 어긋나는 시계바늘)",
   "content": "본문 내용 (2,500-3,500자)",
   "summary": "100자 이내 요약",
   "keyEvents": ["핵심 사건1", "핵심 사건2"],

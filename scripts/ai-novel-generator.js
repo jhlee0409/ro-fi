@@ -30,6 +30,9 @@ import { IntelligentDecisionEngine } from '../src/lib/intelligent-decision-engin
 import { PerformanceOptimizer } from '../src/lib/performance-optimizer.js';
 import { WorldClassEnhancementEngine } from '../src/lib/world-class-enhancement-engine.js';
 
+// 통합 설정 시스템
+import { formatChapterTitle } from '../src/lib/config/prompt-config.js';
+
 // 연속성 관리 시스템 통합 (선택적)
 let continuityIntegration = null;
 try {
@@ -47,34 +50,40 @@ const PROJECT_ROOT = join(__dirname, '..');
 // 환경변수 로드 (GitHub Actions와 로컬 환경 모두 지원)
 dotenv.config({ path: join(PROJECT_ROOT, '.env.local') });
 
-// 🌟 GENESIS AI 세계급 품질 표준 설정 (2025 UPDATE)
+// 🌟 중앙화된 품질 설정 사용
+const { 
+  QUALITY_THRESHOLDS: CENTRAL_THRESHOLDS, 
+  IMPROVEMENT_STRATEGIES
+} = await import('../src/lib/config/quality-config.js');
+
+// GENESIS AI 세계급 품질 표준 (중앙 설정 기반)
 const WORLD_CLASS_STANDARDS = {
   overall: {
-    minimumScore: 9.0,
+    minimumScore: CENTRAL_THRESHOLDS.excellent, // 8.5
     targetScore: 9.7,
-    excellenceThreshold: 9.3,
-    worldClassThreshold: 9.5,
+    excellenceThreshold: CENTRAL_THRESHOLDS.excellent, // 8.5
+    worldClassThreshold: CENTRAL_THRESHOLDS.perfect, // 9.5
     masterworkThreshold: 9.8
   },
   plot: {
-    progressionRate: 0.8,
+    progressionRate: IMPROVEMENT_STRATEGIES.plot.thresholds.progression, // 0.7
     noveltyScore: 0.7,
     engagementLevel: 0.85
   },
   character: {
-    agencyLevel: 0.8,
+    agencyLevel: IMPROVEMENT_STRATEGIES.character.thresholds.agency, // 0.6
     depthScore: 0.85,
-    growthRate: 0.7
+    growthRate: IMPROVEMENT_STRATEGIES.character.thresholds.growth // 0.5
   },
   prose: {
     sophisticationLevel: 8.0,
-    diversityScore: 0.85,
+    diversityScore: IMPROVEMENT_STRATEGIES.literary.thresholds.vocabulary, // 0.75
     literaryQuality: 8.5
   },
   romance: {
-    chemistryScore: 8.0,
-    progressionRate: 0.75,
-    emotionalDepth: 0.8
+    chemistryScore: IMPROVEMENT_STRATEGIES.romance.thresholds.chemistry * 10, // 7.0
+    progressionRate: IMPROVEMENT_STRATEGIES.romance.thresholds.progression, // 0.6
+    emotionalDepth: IMPROVEMENT_STRATEGIES.romance.thresholds.emotionalDepth // 0.8
   }
 };
 
@@ -92,11 +101,11 @@ const CONFIG = {
   COMPLETION_CHAPTER_THRESHOLD: 50,
   MAX_ACTIVE_NOVELS: 2,
   UPDATE_THRESHOLD_DAYS: 3,
-  // GENESIS AI 세계급 설정 (타협 불가)
+  // 중앙화된 품질 설정 사용
   QUALITY_ASSURANCE: {
     maxAttempts: 5,
-    qualityThreshold: 9.0,
-    worldClassThreshold: 9.5,
+    qualityThreshold: CENTRAL_THRESHOLDS.excellent, // 8.5
+    worldClassThreshold: CENTRAL_THRESHOLDS.perfect, // 9.5
     adaptiveImprovement: true,
     realTimeValidation: true,
     strictEnforcement: true,
@@ -628,7 +637,7 @@ SUMMARY: [SNS에서 바이럴될 만큼 흥미진진한 200자 이상의 상세�
 TROPES: [${tropes.map(t => `"${t}"`).join(', ')}]
 
 === CHAPTER 1 ===
-CHAPTER_TITLE: [1화 제목 - 독자의 호기심을 강하게 자극하는 제목]
+${formatChapterTitle(1, '[독자의 호기심을 강하게 자극하는 제목]')}
 WORD_COUNT: [정확한 글자 수]
 
 [5000-6000자의 완벽한 1화 본문]
@@ -702,7 +711,7 @@ ${contextContent}
 ## 📋 출력 형식
 
 === CHAPTER ${nextChapterNumber} ===
-CHAPTER_TITLE: [독자들이 클릭하고 싶어지는 ${nextChapterNumber}화 제목]
+${formatChapterTitle(nextChapterNumber, '[독자들이 클릭하고 싶어지는 제목]')}
 WORD_COUNT: [정확한 글자 수]
 
 [4000-5000자의 완벽한 ${nextChapterNumber}화 본문]
@@ -783,7 +792,7 @@ ${contextContent}
 ## 📋 출력 형식
 
 === COMPLETION CHAPTER ${nextChapterNumber} ===
-CHAPTER_TITLE: [독자들의 심장을 뛰게 할 ${nextChapterNumber}화 제목]
+${formatChapterTitle(nextChapterNumber, '[독자들의 심장을 뛰게 할 제목]')}
 WORD_COUNT: [정확한 글자 수]
 IS_FINAL: [이것이 최종화면 true, 아니면 false]
 
