@@ -5,8 +5,10 @@ describe('Novel Detail Page E2E Tests', () => {
     // 테스트용 소설 슬러그 가져오기
     cy.visit('/novels');
     cy.get('[data-testid="novel-card"]').first().within(() => {
-      cy.get('a').first().invoke('attr', 'href').then((href) => {
-        novelSlug = href.split('/novels/')[1];
+      cy.get('a').first().invoke('attr', 'href').then((href: string | undefined) => {
+        if (href) {
+          novelSlug = href.split('/novels/')[1];
+        }
       });
     });
   });

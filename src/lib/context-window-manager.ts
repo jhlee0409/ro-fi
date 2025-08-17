@@ -12,7 +12,8 @@ import type {
   CharacterProfile
 } from './types/continuity.js';
 import { storyStateManager } from './story-state-manager.js';
-import { Logger, createLogger } from './logger.js';
+import type { Logger } from './logger.js';
+import { createLogger } from './logger.js';
 // Removed unused imports: isObject, isString, isNumber
 export class ContextWindowManager {
   private maxTokens = 1000000; // Gemini 2.0 Flash 한계

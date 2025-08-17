@@ -7,8 +7,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { QualityConsistencyValidator } from '../lib/quality-consistency-validator.js';
 import type { Novel, Chapter, QualityMetrics } from '../lib/types/index.js';
 
-// 테스트용 타입 확장 - private 메서드 접근용  
-type ValidatorForTesting = QualityConsistencyValidator & {
+// 테스트용 타입 정의 - private 메서드 접근용  
+interface ValidatorForTesting {
   analyzeContentQuality: (chapter: Chapter) => unknown;
   validateCharacterConsistency: (novel: Novel, chapters: Chapter[]) => unknown;
   validateWorldConsistency: (novel: Novel, chapters: Chapter[]) => unknown;
@@ -27,7 +27,7 @@ type ValidatorForTesting = QualityConsistencyValidator & {
   extractDialogues: (content: string) => unknown[];
   extractCharacterNames: (content: string) => string[];
   calculateOverallScore: (...args: unknown[]) => number;
-};
+}
 
 describe('QualityConsistencyValidator', () => {
   let validator: QualityConsistencyValidator;
@@ -480,6 +480,15 @@ describe('QualityConsistencyValidator', () => {
 // Helper functions
 function createMockQualityMetrics(overallScore: number = 80): QualityMetrics {
   return {
+    score: overallScore,
+    threshold: 70,
+    aspects: {
+      readability: overallScore - 5,
+      creativity: overallScore - 10,
+      consistency: overallScore + 5,
+      engagement: overallScore
+    },
+    passed: overallScore >= 70,
     overallScore,
     readabilityScore: overallScore - 5,
     creativityScore: overallScore - 10,

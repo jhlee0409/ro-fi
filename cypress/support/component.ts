@@ -110,8 +110,8 @@ Cypress.Commands.add('testResponsive', (breakpoints: string[]) => {
   };
   
   breakpoints.forEach((breakpoint) => {
-    if (viewports[breakpoint]) {
-      const [width, height] = viewports[breakpoint];
+    if (viewports[breakpoint as keyof typeof viewports]) {
+      const [width, height] = viewports[breakpoint as keyof typeof viewports];
       cy.viewport(width, height);
       
       // 각 뷰포트에서 기본 레이아웃 확인

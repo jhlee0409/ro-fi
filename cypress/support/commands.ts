@@ -108,7 +108,7 @@ Cypress.Commands.add('setDesktopViewport', () => {
 });
 
 // 기존 명령어 확장
-Cypress.Commands.overwrite('visit', (originalFn, url, options) => {
+Cypress.Commands.overwrite('visit', (originalFn: Cypress.CommandOriginalFn<'visit'>, url: string | Partial<Cypress.VisitOptions>, options?: Partial<Cypress.VisitOptions>) => {
   // 모든 방문에 대해 기본 대기 설정
   const extendedOptions = {
     ...options,
@@ -125,7 +125,7 @@ Cypress.Commands.overwrite('visit', (originalFn, url, options) => {
   });
 });
 
-Cypress.Commands.overwrite('type', (originalFn, element, text, options) => {
+Cypress.Commands.overwrite('type', (originalFn: Cypress.CommandOriginalFn<'type'>, element: string, text: string, options?: Partial<Cypress.TypeOptions>) => {
   // 타이핑 시 더 자연스러운 지연 추가
   const extendedOptions = {
     delay: 50,
@@ -164,10 +164,10 @@ export const measurePagePerformance = () => {
 // 콘솔 에러 체크 헬퍼
 export const checkConsoleErrors = () => {
   cy.window().then((win) => {
-    const errors = [];
+    const errors: string[] = [];
     const originalError = win.console.error;
     
-    win.console.error = (...args) => {
+    win.console.error = (...args: unknown[]) => {
       errors.push(args.join(' '));
       originalError.apply(win.console, args);
     };

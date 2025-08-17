@@ -129,8 +129,8 @@ export default defineConfig({
             }
             
             return { cleaned: true };
-          } catch (error) {
-            return { error: error.message };
+          } catch (error: unknown) {
+            return { error: error instanceof Error ? error.message : 'Unknown error' };
           }
         }
       });
@@ -142,7 +142,7 @@ export default defineConfig({
   // 컴포넌트 테스트 설정 (Astro + React 컴포넌트용)
   component: {
     devServer: {
-      framework: 'astro',
+      framework: 'react' as const,
       bundler: 'vite',
     },
     specPattern: 'cypress/component/**/*.cy.{js,jsx,ts,tsx}',

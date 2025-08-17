@@ -21,7 +21,16 @@ export function createTestNovelDetector(): NovelDetector {
 /**
  * 테스트용 샘플 소설 파일 생성
  */
-export async function createTestNovel(slug: string, data?: unknown) {
+interface TestNovelData {
+  title?: string;
+  status?: string;
+  summary?: string;
+  publishedDate?: string;
+  totalChapters?: number;
+  tropes?: string[];
+}
+
+export async function createTestNovel(slug: string, data?: TestNovelData) {
   if (!isTestEnvironment()) {
     throw new Error('🚨 테스트 환경이 아닙니다!');
   }
@@ -50,7 +59,13 @@ tropes: ${JSON.stringify(data?.tropes || ['test-trope'])}
 /**
  * 테스트용 샘플 챕터 파일 생성
  */
-export async function createTestChapter(novelSlug: string, chapterNumber: number, data?: unknown) {
+interface TestChapterData {
+  publicationDate?: string;
+  wordCount?: number;
+  content?: string;
+}
+
+export async function createTestChapter(novelSlug: string, chapterNumber: number, data?: TestChapterData) {
   if (!isTestEnvironment()) {
     throw new Error('🚨 테스트 환경이 아닙니다!');
   }
