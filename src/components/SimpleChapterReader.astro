@@ -23,55 +23,28 @@ const chapterNumber = chapterSlug?.includes('-ch')
   ? parseInt(chapterSlug.split('-ch')[1]) || 1
   : 1;
 
-// 챕터 내용을 문단별로 분리
+// 챕터 내용을 문단별로 분리 (개선된 처리)
 const paragraphs = chapterContent
   .split('\n')
   .filter(p => p.trim().length > 0)
-  .map(p => p.trim());
+  .map(p => p.trim())
+  .filter(p => !p.startsWith('---') && !p.startsWith('**')); // frontmatter와 빈 마크다운 제거
 
 
-// 문단 스타일 클래스 결정
+// 단순한 텍스트 표시 (복잡한 분류 제거)
 function getParagraphClass(content: string): string {
-  const trimmed = content.trim();
-  
-  // 대화 감지
-  if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
-    return 'novel-dialogue';
-  }
-  
-  // 강조된 대화 감지
-  if (trimmed.includes('!!') || trimmed.includes('!?')) {
-    return 'novel-dialogue-emphasis';
-  }
-  
-  // 독백 감지
-  if (trimmed.startsWith("'") && trimmed.endsWith("'")) {
-    return 'novel-monologue';
-  }
-  
-  // 액션/장면 묘사 감지
-  if (trimmed.startsWith('*') || trimmed.includes('[') || trimmed.length < 100) {
-    return 'novel-action';
-  }
-  
-  // 기본 서술
-  return 'novel-narrative';
+  return 'novel-text';
 }
 ---
 
 <div class={`simple-chapter-reader reading-content ${className}`}>
   <!-- Chapter Content -->
-  <article class="chapter-content space-y-6 max-w-4xl mx-auto">
-    {paragraphs.map((paragraph, index) => {
-      return (
-        <div 
-          class={`paragraph-section ${getParagraphClass(paragraph)}`}
-          data-paragraph={index}
-        >
-          <p>{paragraph}</p>
-        </div>
-      );
-    })}
+  <article class="chapter-content space-y-4 max-w-4xl mx-auto">
+    {paragraphs.map((paragraph, index) => (
+      <p class="text-lg leading-relaxed text-gray-800 mb-4">
+        {paragraph}
+      </p>
+    ))}
   </article>
 
   <!-- Chapter End -->
