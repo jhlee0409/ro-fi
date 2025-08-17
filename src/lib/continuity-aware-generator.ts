@@ -218,7 +218,7 @@ export class ContinuityAwareEpisodeGenerator {
           creativity: 'medium',
           storyContext: { novelType: 'continue_chapter', novelSlug },
           operationId,
-          logger: this.logger,
+          _logger: this.logger,
         });
 
         // 복구 성공 시 기본 결과 반환
@@ -460,7 +460,7 @@ export class ContinuityAwareEpisodeGenerator {
               creativity: 'medium',
               storyContext: { novelType: 'continue_chapter', novelSlug },
               operationId,
-              logger: this.logger,
+              _logger: this.logger,
             });
 
             if (recoveryResult?.content) {
@@ -525,7 +525,7 @@ export class ContinuityAwareEpisodeGenerator {
           : `연속성 기준 미달: ${(continuityResult.confidence * 100).toFixed(1)}%`,
       };
     } catch (_error) {
-      const errorMessage = _error instanceof Error ? error.message : String(_error);
+      const errorMessage = _error instanceof Error ? _error.message : String(_error);
       // console.error('최종 검증 실패:', _error);
       return {
         passed: false,
@@ -727,7 +727,7 @@ ${ch.chapterNumber}화: ${ch.title} - ${ch.emotionalTone}
   /**
    * Gemini API 호출
    */
-  private async callGeminiWithContext(prompt: _, _context: GenerationContext): Promise<string> {
+  private async callGeminiWithContext(prompt: string, _context: GenerationContext): Promise<string> {
     try {
       const result = await this.model.generateContent({
         contents: [
@@ -754,7 +754,7 @@ ${ch.chapterNumber}화: ${ch.title} - ${ch.emotionalTone}
       return text;
     } catch (_error) {
       // console.error('Gemini API 호출 실패:', _error);
-      throw new Error(`Gemini API 오류: ${error}`);
+      throw new Error(`Gemini API 오류: ${_error}`);
     }
   }
 
@@ -811,7 +811,7 @@ ${ch.chapterNumber}화: ${ch.title} - ${ch.emotionalTone}
     } catch (_error) {
       // console.error('생성된 컨텐츠 파싱 실패:', _error);
       // console.error('원본 컨텐츠:', content.substring(0, 500) + '...');
-      throw new Error(`컨텐츠 파싱 오류: ${error}`);
+      throw new Error(`컨텐츠 파싱 오류: ${_error}`);
     }
   }
 
@@ -825,10 +825,10 @@ ${ch.chapterNumber}화: ${ch.title} - ${ch.emotionalTone}
 
     if (validationResult.errors.length > 0) {
       feedback.push('\n❌ 오류 (반드시 수정):');
-      for (const _error of validationResult.errors) {
-        feedback.push(`- ${error.description}`);
-        if (error.suggestedFix) {
-          feedback.push(`  수정 방안: ${error.suggestedFix}`);
+      for (const validationError of validationResult.errors) {
+        feedback.push(`- ${validationError.description}`);
+        if (validationError.suggestedFix) {
+          feedback.push(`  수정 방안: ${validationError.suggestedFix}`);
         }
       }
     }

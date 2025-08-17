@@ -4,7 +4,47 @@
  */
 
 import { join } from 'path';
-import type { CharacterProfile, WorldSettings, PlotStructure } from './types/index.js';
+// Define interfaces that match the actual usage in this file
+interface CharacterProfile {
+  name: string;
+  description: string;
+  personality: string[];
+}
+
+interface WorldSettings {
+  world_name: string;
+  setting_description: string;
+  magic_system: string;
+  social_structure: string;
+  key_locations: string[];
+  unique_elements: string[];
+}
+
+interface PlotStructure {
+  introduction: {
+    chapters: string;
+    relationship_stage: string;
+    key_events: string[];
+  };
+  development: {
+    chapters: string;
+    relationship_stage: string;
+    key_events: string[];
+    conflict_escalation?: string;
+  };
+  climax: {
+    chapters: string;
+    relationship_stage: string;
+    key_events: string[];
+    major_crisis?: string;
+  };
+  resolution: {
+    chapters: string;
+    relationship_stage: string;
+    key_events: string[];
+    ending_type?: string;
+  };
+}
 
 interface NovelData {
   title: string;
@@ -18,6 +58,9 @@ interface NovelData {
   tropeCombination: {
     main_trope: string;
     sub_tropes: string[];
+    conflict_driver?: string;
+    romance_tension?: string;
+    unique_twist?: string;
   };
   plotStructure: PlotStructure;
   keywords: string[];
@@ -75,12 +118,12 @@ ${worldSetting.unique_elements.map(elem => `- ${elem}`).join('\n')}
 ## 주요 캐릭터
 
 **${characters.female.name} (여주인공)**
-- **의미**: ${characters.female.meaning}
-- **성격**: ${characters.female.personality_hint}
+- **의미**: ${characters.female.description}
+- **성격**: ${characters.female.personality.join(', ')}
 
 **${characters.male.name} (남주인공)**
-- **의미**: ${characters.male.meaning}
-- **성격**: ${characters.male.personality_hint}
+- **의미**: ${characters.male.description}
+- **성격**: ${characters.male.personality.join(', ')}
 
 ## 스토리 트로프
 
@@ -100,15 +143,15 @@ ${tropeCombination.unique_twist}
 
 ### 전개부 (${plotStructure.development.chapters})
 - **관계 단계**: ${plotStructure.development.relationship_stage}
-- **갈등 확대**: ${plotStructure.development.conflict_escalation}
+- **갈등 확대**: ${plotStructure.development.conflict_escalation || '로맨스 중심 갈등 전개'}
 
 ### 절정부 (${plotStructure.climax.chapters})
 - **관계 단계**: ${plotStructure.climax.relationship_stage}
-- **주요 위기**: ${plotStructure.climax.major_crisis}
+- **주요 위기**: ${plotStructure.climax.major_crisis || '반전과 위기의 절정'}
 
 ### 결말부 (${plotStructure.resolution.chapters})
 - **관계 단계**: ${plotStructure.resolution.relationship_stage}
-- **결말 유형**: ${plotStructure.resolution.ending_type}`;
+- **결말 유형**: ${plotStructure.resolution.ending_type || '행복한 결말'}`;
 
     if (this.dryRun) {
       // console.log(`🔄 [DRY-RUN] 동적 소설 파일 생성 시뮬레이션: ${slug}.md`);
@@ -119,6 +162,8 @@ ${tropeCombination.unique_twist}
       await this.writeFile(novelPath, frontmatter);
       // console.log(`📚 100% 동적 생성 소설 파일 저장: ${novelPath}`);
     }
+    
+    return frontmatter;
   },
 
   /**
@@ -145,7 +190,7 @@ ${tropeCombination.unique_twist}
       let finalCharacters;
       if (characters && characters.female && characters.male) {
         // 완전한 캐릭터 객체가 있는 경우 (새 소설 생성시)
-        finalCharacters: any = characters;
+        finalCharacters = characters;
       } else if (characterNames && characterNames.length >= 2) {
         // characterNames 배열만 있는 경우 (기존 소설 계속시)
         finalCharacters = {
@@ -211,7 +256,7 @@ ${tropeCombination.unique_twist}
 
       // AI 챕터 생성 (기존 generateChapter와 동일한 품질 보장)
       let bestResult = null;
-      const bestScore = 0;
+      let bestScore = 0;
       const maxRetries = 2;
 
       for (let i = 0; i < maxRetries; i++) {
@@ -239,7 +284,7 @@ ${tropeCombination.unique_twist}
         // console.log(`📊 동적 생성 품질 점수: ${qualityScore.score}/100`);
 
         if (qualityScore.score > bestScore) {
-          bestScore: any = qualityScore.score;
+          bestScore = qualityScore.score;
           bestResult = {
             title: chapterTitle, // 동적 생성된 제목 사용
             content: aiResult.content,

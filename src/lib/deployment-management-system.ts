@@ -197,7 +197,7 @@ export class DeploymentManagementSystem {
       
     } catch (_error) {
       // 5. 배포 실패 처리
-      await this.handleDeploymentFailure(execution, _, _error as Error);
+      await this.handleDeploymentFailure(execution, pipeline, _error as Error);
       throw _error;
     }
   }
@@ -424,8 +424,8 @@ export class DeploymentManagementSystem {
       stageExecution.status = 'failed';
       stageExecution.endTime = new Date();
       stageExecution.errorDetails = {
-        message: _error instanceof Error ? error.message : 'Unknown error',
-        stack: _error instanceof Error ? error.stack : undefined,
+        message: _error instanceof Error ? _error.message : 'Unknown error',
+        stack: _error instanceof Error ? _error.stack : undefined,
         timestamp: new Date()
       };
       
@@ -711,7 +711,7 @@ export class DeploymentManagementSystem {
   }
 
   // 스텁 메서드들
-  private async prepareGreenEnvironment(execution: _, _config: BlueGreenConfig): Promise<void> {
+  private async prepareGreenEnvironment(execution: DeploymentExecution, _config: BlueGreenConfig): Promise<void> {
     execution.stages.push({
       stageId: 'prepare-green',
       status: 'completed',
@@ -723,23 +723,23 @@ export class DeploymentManagementSystem {
     });
   }
 
-  private async deployToGreenEnvironment(_execution: _, _pipeline: DeploymentPipeline): Promise<void> {
+  private async deployToGreenEnvironment(_execution: DeploymentExecution, _pipeline: DeploymentPipeline): Promise<void> {
     // Green 환경 배포 로직
   }
 
-  private async validateGreenEnvironment(_execution: _, _config: BlueGreenConfig): Promise<ValidationResult> {
+  private async validateGreenEnvironment(_execution: DeploymentExecution, _config: BlueGreenConfig): Promise<ValidationResult> {
     return { success: true, reason: 'All validations passed' };
   }
 
-  private async switchTrafficToGreen(_execution: _, _config: BlueGreenConfig): Promise<void> {
+  private async switchTrafficToGreen(_execution: DeploymentExecution, _config: BlueGreenConfig): Promise<void> {
     // 트래픽 전환 로직
   }
 
-  private async cleanupBlueEnvironment(_execution: _, _config: BlueGreenConfig): Promise<void> {
+  private async cleanupBlueEnvironment(_execution: DeploymentExecution, _config: BlueGreenConfig): Promise<void> {
     // Blue 환경 정리 로직
   }
 
-  private async rollbackBlueGreenDeployment(execution: _, _config: BlueGreenConfig): Promise<void> {
+  private async rollbackBlueGreenDeployment(execution: DeploymentExecution, _config: BlueGreenConfig): Promise<void> {
     execution.status = 'rolled_back';
   }
 
@@ -747,13 +747,13 @@ export class DeploymentManagementSystem {
     return 'previous-version';
   }
 
-  private async executeRollback(execution: DeploymentExecution, pipeline: DeploymentPipeline, target: _, _reason?: string): Promise<DeploymentExecution> {
+  private async executeRollback(execution: DeploymentExecution, pipeline: DeploymentPipeline, target: string, _reason?: string): Promise<DeploymentExecution> {
     const rollbackExecution = this.createDeploymentExecution(pipeline, target, 'system');
     rollbackExecution.rollbackTarget = execution.version;
     return rollbackExecution;
   }
 
-  private async validateRollback(_execution: _, _pipeline: DeploymentPipeline): Promise<ValidationResult> {
+  private async validateRollback(_execution: DeploymentExecution, _pipeline: DeploymentPipeline): Promise<ValidationResult> {
     return { success: true, reason: 'Rollback validated successfully' };
   }
 
@@ -782,11 +782,11 @@ export class DeploymentManagementSystem {
     return `commit-${Date.now()}`;
   }
 
-  private async checkStageDependencies(_stage: _, _execution: DeploymentExecution): Promise<void> {
+  private async checkStageDependencies(_stage: DeploymentStage, _execution: DeploymentExecution): Promise<void> {
     // 의존성 확인 로직
   }
 
-  private async executeStageCommands(stageExecution: StageExecution, stage: _, _pipeline: _, _options: DeploymentOptions): Promise<void> {
+  private async executeStageCommands(stageExecution: StageExecution, stage: DeploymentStage, _pipeline: DeploymentPipeline, _options: DeploymentOptions): Promise<void> {
     stageExecution.logs.push(`Executing stage: ${stage.name}`);
   }
 
@@ -802,27 +802,27 @@ export class DeploymentManagementSystem {
     }
   }
 
-  private async checkRollbackConditions(_stageExecution: _, _stage: DeploymentStage): Promise<void> {
+  private async checkRollbackConditions(_stageExecution: StageExecution, _stage: DeploymentStage): Promise<void> {
     // 롤백 조건 확인 로직
   }
 
-  private async retryStage(stageExecution: _, _stage: _, _pipeline: _, _options: DeploymentOptions): Promise<RetryResult> {
+  private async retryStage(stageExecution: StageExecution, _stage: DeploymentStage, _pipeline: DeploymentPipeline, _options: DeploymentOptions): Promise<RetryResult> {
     return { success: false, stageExecution };
   }
 
-  private async collectDeploymentMetrics(execution: _, _pipeline: DeploymentPipeline): Promise<DeploymentMetrics> {
+  private async collectDeploymentMetrics(execution: DeploymentExecution, _pipeline: DeploymentPipeline): Promise<DeploymentMetrics> {
     return execution.metrics;
   }
 
-  private async sendDeploymentNotifications(_execution: _, _pipeline: DeploymentPipeline): Promise<void> {
+  private async sendDeploymentNotifications(_execution: DeploymentExecution, _pipeline: DeploymentPipeline): Promise<void> {
     // 알림 발송 로직
   }
 
-  private async archiveDeploymentArtifacts(_execution: _, _pipeline: DeploymentPipeline): Promise<void> {
+  private async archiveDeploymentArtifacts(_execution: DeploymentExecution, _pipeline: DeploymentPipeline): Promise<void> {
     // 아티팩트 보관 로직
   }
 
-  private async updateMonitoringConfiguration(_execution: _, _pipeline: DeploymentPipeline): Promise<void> {
+  private async updateMonitoringConfiguration(_execution: DeploymentExecution, _pipeline: DeploymentPipeline): Promise<void> {
     // 모니터링 설정 업데이트 로직
   }
 
@@ -1124,7 +1124,7 @@ class SecretManager {
     return `secret_${key}`;
   }
 
-  setSecret(_key: _, _value: string): void {
+  setSecret(_key: string, _value: string): void {
     // 시크릿 저장 로직
   }
 }

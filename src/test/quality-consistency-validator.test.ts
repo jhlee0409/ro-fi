@@ -38,7 +38,7 @@ describe('QualityConsistencyValidator', () => {
 
   beforeEach(() => {
     validator = new QualityConsistencyValidator();
-    validatorForTesting = validator as ValidatorForTesting;
+    validatorForTesting = validator as unknown as ValidatorForTesting;
     
     mockNovel = {
       slug: 'test-novel',
@@ -72,9 +72,7 @@ describe('QualityConsistencyValidator', () => {
         마법의 빛이 그녀 주위를 둘러쌌다. 평소와 같은 따뜻한 금빛이었다.
         
         두 사람은 학교 옥상에서 석양을 바라보며 조용히 서 있었다.
-      `,
-      contentRating: 'All',
-      wordCount: 150
+      `
     };
 
     previousChapters = [
@@ -236,15 +234,15 @@ describe('QualityConsistencyValidator', () => {
       validator.updateCharacterProfile('서연', profile);
 
       const check = await (validatorForTesting).validateCharacterConsistency(
-        mockChapter, 
+        mockNovel, 
         previousChapters
       );
 
       expect(check).toHaveProperty('score');
       expect(check).toHaveProperty('issues');
       expect(check).toHaveProperty('validations');
-      expect(typeof check.score).toBe('number');
-      expect(Array.isArray(check.issues)).toBe(true);
+      expect(typeof (check as any).score).toBe('number');
+      expect(Array.isArray((check as any).issues)).toBe(true);
     });
 
     it('should detect speech pattern inconsistencies', () => {
@@ -274,13 +272,13 @@ describe('QualityConsistencyValidator', () => {
       validator.addWorldRule(worldRule);
 
       const check = await (validatorForTesting).validateWorldConsistency(
-        mockChapter, 
-        mockNovel
+        mockNovel, 
+        [mockChapter]
       );
 
       expect(check).toHaveProperty('score');
       expect(check).toHaveProperty('issues');
-      expect(typeof check.score).toBe('number');
+      expect(typeof (check as any).score).toBe('number');
     });
 
     it('should validate magic system consistency', () => {
@@ -441,8 +439,8 @@ describe('QualityConsistencyValidator', () => {
       
       expect(Array.isArray(dialogues)).toBe(true);
       expect(dialogues.length).toBe(2);
-      expect(dialogues[0].text).toBe('안녕하세요');
-      expect(dialogues[1].text).toBe('오늘 날씨가 좋네요');
+      expect((dialogues[0] as any).text).toBe('안녕하세요');
+      expect((dialogues[1] as any).text).toBe('오늘 날씨가 좋네요');
     });
 
     it('should extract character names', () => {
