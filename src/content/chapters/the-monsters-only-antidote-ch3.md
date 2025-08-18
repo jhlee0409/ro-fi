@@ -3,14 +3,13 @@ title: '3화: 차가운 온기, 잔혹한 낙인'
 novel: the-monsters-only-antidote
 chapterNumber: 3
 publicationDate: '2025-08-18'
-wordCount: 3420
+wordCount: 3294
 contentRating: 15+
 emotionalTone: 긴장감있는
 keyEvents:
   - 위기 상황
 characterDevelopment: 캐릭터 발전 사항
 ---
-[여기에 과학적 방법론에 기반한 완벽한 챕터 작성]
 
 타닥, 타닥.
 마른 장작이 타들어가는 소리가 눅눅한 동굴의 공기를 미세하게 떨었다. 엘라라는 의식을 붙든 것이 그 소리 때문인지, 아니면 제 뺨을 간질이는 온기 때문인지 분간할 수 없었다. 흐릿한 시야 너머로 주황빛 불꽃이 춤을 추고 있었다.

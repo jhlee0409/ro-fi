@@ -3,7 +3,7 @@ title: '3화: 엇갈리는 시계바늘'
 novel: time-guardian-fate-thread
 chapterNumber: 3
 publicationDate: '2025-08-16'
-wordCount: 3622
+wordCount: 3527
 contentRating: 15+
 gemini25pro: true
 continuitySystem: true

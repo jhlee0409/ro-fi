@@ -3,7 +3,7 @@ title: '1화: 붉은 타이머와 검은 그림자'
 novel: the-monsters-only-antidote
 chapterNumber: 1
 publicationDate: '2025-08-18'
-wordCount: 3102
+wordCount: 3079
 contentRating: 15+
 emotionalTone: 긴장감있는
 keyEvents:
@@ -11,7 +11,6 @@ keyEvents:
   - 갈등 발생
 characterDevelopment: 캐릭터 발전 사항
 ---
-[5000-6000자의 완벽한 대박 1화 콘텐츠]
 
 **[00:00:03]**
 

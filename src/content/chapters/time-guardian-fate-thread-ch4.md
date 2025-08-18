@@ -3,7 +3,7 @@ title: '4화: 멈춘 시계, 깨어진 미래'
 novel: time-guardian-fate-thread
 chapterNumber: 4
 publicationDate: '2025-08-16'
-wordCount: 2913
+wordCount: 2911
 contentRating: 15+
 gemini25pro: true
 continuitySystem: true

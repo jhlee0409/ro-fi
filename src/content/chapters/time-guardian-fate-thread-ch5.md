@@ -3,7 +3,7 @@ title: '5화: 정오의 약속, 영혼의 등대'
 novel: time-guardian-fate-thread
 chapterNumber: 5
 publicationDate: '2025-08-16'
-wordCount: 2949
+wordCount: 2947
 contentRating: 15+
 gemini25pro: true
 continuitySystem: true

@@ -3,14 +3,13 @@ title: '2화: 낙인이 된 축복'
 novel: the-monsters-only-antidote
 chapterNumber: 2
 publicationDate: '2025-08-18'
-wordCount: 4073
+wordCount: 3730
 contentRating: 15+
 emotionalTone: 스릴있는
 keyEvents:
   - 첫 만남
 characterDevelopment: 캐릭터 발전 사항
 ---
-[여기에 과학적 방법론에 기반한 완벽한 챕터 작성]
 
 차가운 밤공기가 칼날처럼 폐부를 찔렀다.
 

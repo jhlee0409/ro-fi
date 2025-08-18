@@ -3,7 +3,7 @@ title: '1화: 멈춰버린 시계탑 아래에서'
 novel: time-guardian-fate-thread
 chapterNumber: 1
 publicationDate: '2025-08-16'
-wordCount: 3220
+wordCount: 3218
 contentRating: 15+
 gemini25pro: true
 continuitySystem: true

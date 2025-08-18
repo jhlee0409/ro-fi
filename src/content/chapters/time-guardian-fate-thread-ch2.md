@@ -3,7 +3,7 @@ title: '2화: 어긋나는 시계바늘'
 novel: time-guardian-fate-thread
 chapterNumber: 2
 publicationDate: '2025-08-16'
-wordCount: 2868
+wordCount: 2701
 contentRating: 15+
 gemini25pro: true
 continuitySystem: true
