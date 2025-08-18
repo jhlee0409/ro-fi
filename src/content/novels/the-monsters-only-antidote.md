@@ -17,7 +17,7 @@ tropes:
   - '#구원물'
   - '#선결혼후연애'
 publishedDate: '2025-08-18'
-totalChapters: 2
+totalChapters: 3
 rating: 0
 ---
 

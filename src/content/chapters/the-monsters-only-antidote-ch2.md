@@ -3,7 +3,7 @@ title: '2화: 낙인이 된 축복'
 novel: the-monsters-only-antidote
 chapterNumber: 2
 publicationDate: '2025-08-18'
-wordCount: 4895
+wordCount: 4073
 contentRating: 15+
 emotionalTone: 스릴있는
 keyEvents:
