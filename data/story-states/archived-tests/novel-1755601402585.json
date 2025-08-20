@@ -1,0 +1,93 @@
+{
+  "novelSlug": "novel-1755601402585",
+  "metadata": {
+    "title": "테스트 로맨스 판타지",
+    "author": "하이브리드 AI (Gemini)",
+    "genre": "로맨스 판타지",
+    "status": "완결",
+    "createdAt": "2025-08-19T11:03:22.585Z",
+    "totalChapters": 2,
+    "completionTarget": 100,
+    "currentArc": "introduction",
+    "plotProgress": 100,
+    "completedAt": "2025-08-19T11:03:23.100Z"
+  },
+  "worldState": {
+    "setting": "",
+    "timeframe": "",
+    "magicSystem": "",
+    "politicalStructure": "",
+    "importantLocations": []
+  },
+  "characters": {
+    "protagonist": {
+      "name": "",
+      "age": 0,
+      "appearance": "",
+      "personality": [],
+      "abilities": [],
+      "goals": [],
+      "currentEmotionalState": "",
+      "relationshipStatus": ""
+    },
+    "mainLead": {
+      "name": "",
+      "age": 0,
+      "appearance": "",
+      "personality": [],
+      "abilities": [],
+      "goals": [],
+      "currentEmotionalState": "",
+      "relationshipStatus": ""
+    },
+    "supportingCharacters": [],
+    "antagonists": []
+  },
+  "plot": {
+    "mainConflict": "",
+    "subplots": [],
+    "resolvedPlots": [],
+    "foreshadowing": [],
+    "unresolvedMysteries": [],
+    "romanceProgression": 100,
+    "tensionLevel": 5
+  },
+  "chapters": [
+    {
+      "chapterNumber": 1,
+      "title": "1화: 두 번째 인생의 시작",
+      "summary": "아리아가 죽음 직전 시간 마법으로 과거로 돌아가며 새로운 인생을 시작한다",
+      "keyEvents": [
+        "죽음의 순간",
+        "시간 역행 마법 발동",
+        "17세로 회귀"
+      ],
+      "characterDevelopments": [],
+      "emotionalTone": "neutral",
+      "wordCount": 3500,
+      "createdAt": "2025-08-19T11:03:22.586Z"
+    },
+    {
+      "chapterNumber": 1,
+      "title": "1화: 두 번째 인생의 시작",
+      "summary": "아리아가 죽음 직전 시간 마법으로 과거로 돌아가며 새로운 인생을 시작한다",
+      "keyEvents": [
+        "죽음의 순간",
+        "시간 역행 마법 발동",
+        "17세로 회귀"
+      ],
+      "characterDevelopments": [],
+      "emotionalTone": "neutral",
+      "wordCount": 3500,
+      "createdAt": "2025-08-19T11:03:23.099Z"
+    }
+  ],
+  "continuityNotes": [],
+  "qualityMetrics": {
+    "averageWordCount": 3500,
+    "averageRating": 0,
+    "consistencyScore": 100,
+    "engagementScore": 0
+  },
+  "lastUpdated": "2025-08-19T11:03:23.100Z"
+}

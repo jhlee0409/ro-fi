@@ -10,7 +10,7 @@
  */
 
 import { 
-  MASTER_PERSONA,
+  MASTER_PERSONA as _MASTER_PERSONA,
   STORYTELLING_SCIENCE,
   ADVANCED_WRITING_TECHNIQUES,
   ADVANCED_OUTPUT_FORMAT,
@@ -118,13 +118,6 @@ ${ADVANCED_OUTPUT_FORMAT.chapter.emotionalTone}
 ${ADVANCED_OUTPUT_FORMAT.chapter.cliffhangerLevel}
 
 [여기에 과학적 방법론에 기반한 완벽한 챕터 작성]
-
-**창작 후 필수 자체 검증**:
-${ADVANCED_OUTPUT_FORMAT.qualityChecklist.hook}
-${ADVANCED_OUTPUT_FORMAT.qualityChecklist.pacing}
-${ADVANCED_OUTPUT_FORMAT.qualityChecklist.character}
-${ADVANCED_OUTPUT_FORMAT.qualityChecklist.emotion}
-${ADVANCED_OUTPUT_FORMAT.qualityChecklist.cliffhanger}
 
 이제 한국 웹소설 역사에 남을 레전드 챕터를 창작해주세요! 🌟
 `.trim();
@@ -401,18 +394,7 @@ ${ADVANCED_OUTPUT_FORMAT.chapter.readingTime}
 ${ADVANCED_OUTPUT_FORMAT.chapter.emotionalTone}
 ${ADVANCED_OUTPUT_FORMAT.chapter.cliffhangerLevel}
 
-[5000-6000자의 완벽한 대박 1화 콘텐츠]
-
-**대박 예측 지표**:
-- 몰입도: ___/10 (목표: 9.5+)
-- 캐릭터 매력도: ___/10 (목표: 9.0+)
-- 세계관 흥미도: ___/10 (목표: 8.5+)  
-- 클리프행어 강도: ___/10 (목표: 9.5+)
-- 재방문 의도: ___/10 (목표: 9.5+)
-
-이제 **한국 웹소설 역사에 새로운 전설**을 써내려가세요! 🌟
-
-목표: 연간 조회수 1억뷰 돌파! 📈
+**중요**: 오직 소설 내용만 출력하세요. 메타데이터, 분석, 지표는 포함하지 마세요.
 `.trim();
 
 /**

@@ -173,11 +173,11 @@ export const ADVANCED_OUTPUT_FORMAT = {
 
   // 품질 검증 체크리스트 (자체 평가)
   qualityChecklist: {
-    hook: "HOOK_CHECK: [첫 3문장이 충분히 매력적인가? Y/N]",
-    pacing: "PACING_CHECK: [전개 속도가 적절한가? Y/N]",
-    character: "CHARACTER_CHECK: [캐릭터가 일관성 있게 행동하는가? Y/N]",
-    emotion: "EMOTION_CHECK: [독자의 감정을 적절히 자극하는가? Y/N]",
-    cliffhanger: "CLIFFHANGER_CHECK: [다음 화가 궁금하게 만드는가? Y/N]"
+    hook: "",
+    pacing: "",
+    character: "",
+    emotion: "",
+    cliffhanger: ""
   }
 };
 
@@ -324,13 +324,6 @@ ${ADVANCED_OUTPUT_FORMAT.chapter.emotionalTone}
 ${ADVANCED_OUTPUT_FORMAT.chapter.cliffhangerLevel}
 
 [챕터 내용]
-
-**품질 자체 검증**:
-${ADVANCED_OUTPUT_FORMAT.qualityChecklist.hook}
-${ADVANCED_OUTPUT_FORMAT.qualityChecklist.pacing}
-${ADVANCED_OUTPUT_FORMAT.qualityChecklist.character}
-${ADVANCED_OUTPUT_FORMAT.qualityChecklist.emotion}
-${ADVANCED_OUTPUT_FORMAT.qualityChecklist.cliffhanger}
     `.trim());
     return this;
   }
