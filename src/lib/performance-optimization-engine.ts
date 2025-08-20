@@ -11,7 +11,7 @@
  * - 비동기 작업 큐 관리
  */
 
-import { Novel as _Novel, _Chapter as __Chapter } from './_types/index.js';
+import type { Novel, Chapter } from './types/index.js';
 import { EnhancedContextManager } from './enhanced-context-manager.js';
 import { EnhancedGeminiWrapper } from './enhanced-gemini-wrapper.js';
 

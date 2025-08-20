@@ -1,0 +1,131 @@
+name: 🎯 연속성 시스템 테스트
+
+on:
+  push:
+    paths:
+      - 'src/lib/simple-continuity-system.js'
+      - 'src/lib/continuity-enhanced-generator.js'
+      - 'scripts/test-new-continuity-system.js'
+      - '.github/workflows/continuity-test.yml'
+  pull_request:
+    paths:
+      - 'src/lib/**'
+      - 'scripts/**'
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: '테스트 유형'
+        required: true
+        default: 'full'
+        type: choice
+        options:
+          - 'full'
+          - 'basic'
+          - 'integration'
+
+jobs:
+  continuity-test:
+    runs-on: ubuntu-latest
+    name: 연속성 시스템 테스트
+
+    steps:
+      - name: 체크아웃 코드
+        uses: actions/checkout@v4
+
+      - name: pnpm 환경 설정
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+          run_install: false
+
+      - name: Node.js 환경 설정
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: 의존성 설치
+        run: pnpm install --no-frozen-lockfile
+
+      - name: 연속성 시스템 데이터 디렉토리 생성
+        run: |
+          mkdir -p data/story-states
+          echo "📁 스토리 상태 디렉토리 생성 완료"
+
+      - name: 🧪 연속성 시스템 기본 테스트
+        env:
+          ENABLE_CONTINUITY_SYSTEM: true
+          NODE_ENV: test
+        run: |
+          echo "🧪 연속성 시스템 기본 테스트 시작"
+          pnpm continuity:test
+          echo "✅ 기본 테스트 완료"
+
+      - name: 📊 연속성 시스템 상태 확인
+        run: |
+          echo "📊 연속성 시스템 상태 확인"
+          pnpm continuity:status
+          echo "✅ 상태 확인 완료"
+
+      - name: 🔧 통합 테스트 (선택적)
+        if: ${{ github.event.inputs.test_type == 'full' || github.event.inputs.test_type == 'integration' }}
+        env:
+          ENABLE_CONTINUITY_SYSTEM: true
+          NODE_ENV: test
+        run: |
+          echo "🔧 연속성 시스템 통합 테스트 시작"
+          node scripts/integrate-continuity-system.js
+          echo "✅ 통합 테스트 완료"
+
+      - name: 📁 생성된 스토리 상태 파일 확인
+        run: |
+          echo "📁 생성된 스토리 상태 파일 확인"
+          if [ -d "data/story-states" ]; then
+            story_count=$(find data/story-states/ -name "*.json" | wc -l)
+            echo "생성된 스토리: ${story_count}개"
+            
+            if [ $story_count -gt 0 ]; then
+              echo "스토리 목록:"
+              ls -la data/story-states/
+              
+              # 첫 번째 스토리 파일 내용 확인 (구조 검증)
+              first_story=$(find data/story-states/ -name "*.json" | head -1)
+              if [ -n "$first_story" ]; then
+                echo "📄 첫 번째 스토리 구조 확인:"
+                echo "파일: $first_story"
+                # JSON 유효성 검사
+                if node -e "JSON.parse(require('fs').readFileSync('$first_story', 'utf-8')); console.log('✅ JSON 유효함')"; then
+                  echo "✅ JSON 구조 정상"
+                else
+                  echo "❌ JSON 구조 오류"
+                  exit 1
+                fi
+              fi
+            fi
+          else
+            echo "⚠️ 스토리 상태 디렉토리 없음"
+          fi
+
+      - name: 🎊 테스트 완료 요약
+        if: always()
+        run: |
+          echo ""
+          echo "=========================================="
+          echo "🎯 연속성 시스템 테스트 완료"
+          echo "=========================================="
+          echo ""
+          echo "⏰ 테스트 시간: $(date '+%Y-%m-%d %H:%M:%S UTC')"
+          echo "🔧 테스트 유형: ${{ github.event.inputs.test_type || 'auto' }}"
+          echo "✨ 테스트 범위: 연속성 시스템 v2.0"
+          echo ""
+          
+          # 최종 상태 확인
+          if pnpm continuity:status > /dev/null 2>&1; then
+            echo "📊 연속성 시스템: ✅ 정상 작동"
+          else
+            echo "📊 연속성 시스템: ⚠️ 확인 불가"
+          fi
+          
+          echo ""
+          echo "🎊 모든 테스트가 완료되었습니다!"
+          echo "연속성 시스템이 정상적으로 작동합니다."

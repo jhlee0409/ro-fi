@@ -11,7 +11,7 @@
  */
 
 import { EnhancedContext } from './enhanced-context-manager.js';
-import { Novel, _Chapter } from './_types/index.js';
+import type { Novel, Chapter } from './types/index.js';
 
 /**
  * 프롬프트 템플릿 카테고리
