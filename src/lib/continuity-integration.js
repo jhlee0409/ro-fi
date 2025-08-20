@@ -13,10 +13,10 @@ let storyStateManager, _, _contextWindowManager, continuityAwareGenerator;
 // 연속성 모듈 동적 로딩
 async function loadContinuityModules() {
   try {
-    const storyModule = await import('./story-state-manager.ts');
-    const continuityModule = await import('./episode-continuity-engine.ts');
-    const contextModule = await import('./context-window-manager.ts');
-    const generatorModule = await import('./continuity-aware-generator.ts');
+    const storyModule = await import('./story-state-manager.js');
+    const continuityModule = await import('./episode-continuity-engine.js');
+    const contextModule = await import('./context-window-manager.js');
+    const generatorModule = await import('./continuity-aware-generator.js');
     
     storyStateManager = storyModule.storyStateManager;
     episodeContinuityEngine = continuityModule.episodeContinuityEngine;
