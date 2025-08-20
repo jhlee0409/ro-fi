@@ -53,7 +53,11 @@
     "ci": "pnpm lint && pnpm type-check && pnpm test:coverage && pnpm test:e2e",
     "ci:cypress": "pnpm lint && pnpm type-check && pnpm test:coverage && pnpm test:e2e:cypress",
     "ci:all": "pnpm lint && pnpm type-check && pnpm test:coverage && pnpm test:e2e && pnpm test:e2e:cypress",
-    "postinstall": "echo 'Skipping Playwright install in production'"
+    "postinstall": "echo 'Skipping Playwright install in production'",
+    "continuity:test": "node scripts/test-new-continuity-system.js",
+    "continuity:status": "node -e \"import('./src/lib/simple-continuity-system.js').then(m => new m.SimpleContinuityManager().getSystemStatus().then(console.log))\"",
+    "continuity:integrate": "node scripts/integrate-continuity-system.js",
+    "automation:continuity": "ENABLE_CONTINUITY_SYSTEM=true node scripts/run-automation.js"
   },
   "dependencies": {
     "@astrojs/react": "^4.0.0",

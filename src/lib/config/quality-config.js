@@ -276,12 +276,17 @@ export const QualityHelpers = {
   
   // 가중 평균 계산
   calculateWeightedScore: (scores) => {
-    return (
-      scores.plot * ENGINE_WEIGHTS.plot +
-      scores.character * ENGINE_WEIGHTS.character +
-      scores.literary * ENGINE_WEIGHTS.literary +
-      scores.romance * ENGINE_WEIGHTS.romance
-    );
+    const plotScore = scores.plotScore || scores.plot || 0;
+    const characterScore = scores.characterScore || scores.character || 0;
+    const literaryScore = scores.literaryScore || scores.literary || 0;
+    const romanceScore = scores.romanceScore || scores.romance || 0;
+    
+    return parseFloat((
+      plotScore * ENGINE_WEIGHTS.plot +
+      characterScore * ENGINE_WEIGHTS.character +
+      literaryScore * ENGINE_WEIGHTS.literary +
+      romanceScore * ENGINE_WEIGHTS.romance
+    ).toFixed(1));
   },
   
   // 임계값 통과 여부 확인

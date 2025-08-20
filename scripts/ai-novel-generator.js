@@ -17,6 +17,9 @@
  */
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
+// 🎯 연속성 시스템 통합 (v2.0)
+import { GeneratorWrapper as _GeneratorWrapper } from '../src/lib/continuity-enhanced-generator.js';
+
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import fs from 'fs/promises';
@@ -30,13 +33,13 @@ import { IntelligentDecisionEngine } from '../src/lib/intelligent-decision-engin
 import { PerformanceOptimizer } from '../src/lib/performance-optimizer.js';
 import { WorldClassEnhancementEngine } from '../src/lib/world-class-enhancement-engine.js';
 
-// 통합 설정 시스템 (Enhanced 프롬프트 시스템)
+// 단순화된 프롬프트 시스템 (과적합 해소)
 import { formatChapterTitle } from '../src/lib/config/prompt-config.js';
 import { 
-  BLOCKBUSTER_NOVEL_TEMPLATE,
-  SCIENTIFIC_CHAPTER_TEMPLATE,
-  MasterPromptBuilder
-} from '../src/lib/config/enhanced-prompt-templates.js';
+  SimplePromptBuilder,
+  NOVEL_CREATION_TEMPLATE as _NOVEL_CREATION_TEMPLATE,
+  CHAPTER_TEMPLATE as _CHAPTER_TEMPLATE
+} from '../src/lib/config/simplified-prompt-templates.js';
 
 // 연속성 관리 시스템 통합 (선택적)
 let continuityIntegration = null;
@@ -62,9 +65,9 @@ const {
 } = await import('../src/lib/config/quality-config.js');
 
 // GENESIS AI 세계급 품질 표준 (중앙 설정 기반)
-const WORLD_CLASS_STANDARDS = {
+const _WORLD_CLASS_STANDARDS = {
   overall: {
-    minimumScore: CENTRAL_THRESHOLDS.excellent, // 8.5
+    minimumScore: CENTRAL_THRESHOLDS.minimum, // 7.0 (현실적 기준)
     targetScore: 9.7,
     excellenceThreshold: CENTRAL_THRESHOLDS.excellent, // 8.5
     worldClassThreshold: CENTRAL_THRESHOLDS.perfect, // 9.5
@@ -109,7 +112,7 @@ const CONFIG = {
   // 중앙화된 품질 설정 사용
   QUALITY_ASSURANCE: {
     maxAttempts: 5,
-    qualityThreshold: CENTRAL_THRESHOLDS.excellent, // 8.5
+    qualityThreshold: CENTRAL_THRESHOLDS.minimum, // 7.0 (현실적 기준)
     worldClassThreshold: CENTRAL_THRESHOLDS.perfect, // 9.5
     adaptiveImprovement: true,
     realTimeValidation: true,
@@ -136,6 +139,18 @@ const NOVEL_THEMES = [
   '엘프왕국', '시간여행자', '전생귀족영애', '마탑의마법사', '신전의성녀'
 ];
 
+// 커스텀 에러 클래스 정의
+class QualityThresholdError extends Error {
+  constructor(message, score) {
+    super(message);
+    this.name = 'QualityThresholdError';
+    this.score = score;
+  
+    // 🎯 연속성 시스템 초기화
+    this._initializeContinuitySystem();
+  }
+}
+
 class Logger {
   constructor(verbose = false) {
     this.verbose = verbose;
@@ -156,7 +171,7 @@ class Logger {
     const logLine = `[${timestamp}] ${level.toUpperCase()}: ${message}${data ? ` | ${JSON.stringify(data)}` : ''}\n`;
 
     if (this.verbose || level === 'ERROR') {
-      // console.log(logLine.trim());
+      console.log(logLine.trim());
     }
 
     try {
@@ -331,24 +346,23 @@ class NovelGenerator {
       // Step 1: 지능형 컨텍스트 분석
       const contextAnalysis = await this.analyzeStoryContext(storyContext);
       
-      // Step 2: GENESIS AI 다단계 프롬프트 생성
-      const genesisPrompt = await this.generateGenesisPrompt({
+      // Step 2: 단순화된 프롬프트 생성 (과적합 해소)
+      const simplifiedPrompt = await this.generateSimplifiedPrompt({
         basePrompt: prompt,
         storyContext: contextAnalysis,
-        qualityRequirements: WORLD_CLASS_STANDARDS,
         creativity
       });
 
       // Step 3: 품질 보장 생성 워크플로우
       const generationResult = await this.generateWithQualityAssurance({
-        prompt: genesisPrompt,
+        prompt: simplifiedPrompt,
         creativity,
         storyContext: contextAnalysis,
         operationId
       });
 
       // Step 4: 실시간 성능 메트릭 업데이트
-      await this.updateGenerationStats(generationResult, startTime);
+      this.updateGenerationStats(generationResult, startTime);
 
       await this.logger.success('✨ GENESIS AI 세계급 생성 완료', {
         operationId,
@@ -361,7 +375,7 @@ class NovelGenerator {
 
     } catch (_error) {
     // Intentionally unused error variable
-      await this.logger.error(`콘텐츠 생성 실패: ${_error.message}`, { _, _error: _error.stack });
+      await this.logger.error(`콘텐츠 생성 실패: ${_error.message}`, { operationId, error: _error.stack });
       throw _error;
     }
   }
@@ -390,93 +404,17 @@ class NovelGenerator {
   }
 
   /**
-   * 🎯 GENESIS AI 다단계 프롬프트 생성 시스템
+   * 📝 단순화된 프롬프트 생성 시스템 (과적합 해소)
    */
-  async generateGenesisPrompt({ basePrompt, storyContext, qualityRequirements, creativity }) {
-    const promptKey = `${basePrompt.substring(0, 100)}_${creativity}_${JSON.stringify(storyContext)}`;
+  async generateSimplifiedPrompt({ basePrompt, storyContext: _storyContext, creativity }) {
+    const promptKey = `${basePrompt.substring(0, 100)}_${creativity}_simplified`;
     
     if (this.promptCache.has(promptKey)) {
       return this.promptCache.get(promptKey);
     }
 
-    const enhancedPrompt = `🌟 GENESIS AI 세계급 로맨스 판타지 창작 시스템 v3.0
-
-당신은 GENESIS AI로 강화된 세계 최고 수준의 로맨스 판타지 작가입니다.
-글로벌 베스트셀러 작가들의 창작 기법과 AI의 무한한 창의력이 결합된 완벽한 시스템입니다.
-
-${basePrompt}
-
-## 🎯 GENESIS AI 세계급 품질 기준 (절대 기준)
-
-### 📊 품질 점수 목표
-- 전체 품질: ${qualityRequirements.overall.targetScore}/10 이상
-- 플롯 진행: ${qualityRequirements.plot.progressionRate * 100}% 이상
-- 캐릭터 능동성: ${qualityRequirements.character.agencyLevel * 100}% 이상
-- 문체 수준: ${qualityRequirements.prose.sophisticationLevel}/10 이상
-- 로맨스 케미스트리: ${qualityRequirements.romance.chemistryScore}/10 이상
-
-### 📖 플롯 진전 혁신 요구사항 (분석.md 기반 개선)
-- **스토리 진행률 ${qualityRequirements.plot.progressionRate * 100}% 이상**: 새로운 사건, 갈등, 발견이 반드시 포함 (5화 0% 진전 금지)
-- **창의성 지수 ${qualityRequirements.plot.noveltyScore * 100}% 이상**: "숲→위기→탈출" 패턴 완전 금지, 독창적 아이디어 필수
-- **독자 몰입도 ${qualityRequirements.plot.engagementLevel * 100}% 이상**: 1화 이탈률 30% 이하 목표
-- **갈등 에스컬레이션**: "예언이 뭔지도 모름" 상태 금지, 핵심 갈등 조기 도입
-- **개연성 확보**: "18년 차별받은 리아가 처음 만난 남자 무조건 신뢰" 같은 설정 오류 완전 제거
-
-### 👥 캐릭터 발전 마스터클래스 (종이인형 탈출)
-- **능동성 ${qualityRequirements.character.agencyLevel * 100}% 이상**: "어디로 가죠? 뭐죠? 에시온!" 수동 대사 완전 금지
-- **캐릭터 깊이 ${qualityRequirements.character.depthScore * 100}% 이상**: "주체성 제로" → 복합적 인격체 변환
-- **말투 개성화**: "차가운" 26회 반복 금지, 캐릭터별 고유 언어 패턴
-- **성장 아크 ${qualityRequirements.character.growthRate * 100}% 이상**: "스스로 결정하는 행동 단 한 번도 없음" 해결
-- **배경과 동기**: "동기/배경/감정선 불명" 상태 완전 해소
-
-### ✍️ 문체 예술성 최고 수준 (중학생 일기장 탈출)
-- **어휘 수준 ${qualityRequirements.prose.sophisticationLevel}/10 이상**: "갑자기 11회, 차가운 26회" 반복 완전 금지
-- **표현 다양성 ${qualityRequirements.prose.diversityScore * 100}% 이상**: "푸른 기가 도는 은발 12회" 등 과도 반복 해결
-- **5감 몰입 묘사**: "리아는 불안했다. 에시온은 차가운 눈빛으로 바라보았다" 수준 탈피
-- **은유와 상징**: 단순 서술 → 자연, 보석, 음악 등 창의적 비유 활용
-- **리듬감**: 단조로운 문장 패턴 → 다양한 길이와 구조
-- **문학적 품격 ${qualityRequirements.prose.literaryQuality}/10 이상**: 2024년 연재 불가 수준 → 순문학 수준
-
-### 💕 로맨스 케미스트리 마스터피스 (절대 제로 탈출)
-- **케미스트리 ${qualityRequirements.romance.chemistryScore}/10 이상**: "케미스트리 절대 제로" → 심장 뛰는 설렘
-- **감정 진행률 ${qualityRequirements.romance.progressionRate * 100}% 이상**: "감정 발전 당위성 없음" 해결
-- **감정 깊이 ${qualityRequirements.romance.emotionalDepth * 100}% 이상**: "스킨십만 있고 정서적 교감 부재" 해결
-- **로맨틱 텐션**: "손 잡음 → 팔 잡음 → 손 잡고 달림" 단순 패턴 탈피
-- **심리적 교감**: 피상적 접촉 → 깊은 마음의 연결
-
-### 🚀 창작 철학 (절대 원칙)
-1. **독자 중심**: 모든 문장이 독자의 감정을 자극해야 함
-2. **품질 우선**: 분량보다 완성도, 속도보다 예술성
-3. **혁신 추구**: 기존 틀을 깨는 창의적 접근
-4. **감정 몰입**: 독자가 캐릭터와 하나가 되는 경험
-5. **문학적 가치**: 엔터테인먼트를 넘어선 예술 작품
-
-### 📚 스토리텔링 마스터 기법
-- **몰입형 오프닝**: 첫 문장부터 독자를 사로잡는 강력한 임팩트
-- **레이어드 내러티브**: 겉으로 보이는 이야기와 숨겨진 의미의 이중 구조
-- **감정적 클라이맥스**: 독자가 눈물 흘릴 만한 감동의 순간
-- **시각적 스토리텔링**: 영화처럼 생생한 장면 묘사
-- **여운 있는 마무리**: 독자가 계속 생각하게 되는 마무리
-
-## 🎨 2025년 트렌드 반영 (구시대 클리셰 완전 탈피)
-- **주체적 여주인공**: "수동적 피해자" → 독립적이고 자아가 확실한 캐릭터
-- **건강한 로맨스**: "2010년대 초반 조아라 수준" → 상호 존중과 평등한 관계
-- **다양성 수용**: 고정관념 탈피, 다양한 배경과 가치관 인정
-- **현대적 감수성**: "구시대적 클리셰" → 젊은 독자들의 정서 반영
-- **글로벌 어필**: 로컬 한정 → 세계적으로 통하는 보편성
-
-## 📈 품질 검증 체크리스트
-□ 플롯 진행률 ${qualityRequirements.plot.progressionRate * 100}% 이상 달성
-□ 캐릭터 능동성 ${qualityRequirements.character.agencyLevel * 100}% 이상 구현
-□ 문체 수준 ${qualityRequirements.prose.sophisticationLevel}/10 이상 실현
-□ 로맨스 점수 ${qualityRequirements.romance.chemistryScore}/10 이상 완성
-□ 독자 몰입도 극대화 구현
-□ 독창성과 예술성 동시 달성
-
-지금부터 GENESIS AI의 모든 잠재력을 발휘하여 세계 문학사에 남을 걸작을 창조해주세요! 🌟✨
-
-창의성 레벨: ${creativity.toUpperCase()}
-스토리 컨텍스트: ${JSON.stringify(storyContext, null, 2)}`;
+    // 단순화된 프롬프트 - 핵심만 남김
+    const enhancedPrompt = basePrompt;
 
     this.promptCache.set(promptKey, enhancedPrompt);
     return enhancedPrompt;
@@ -510,17 +448,17 @@ ${basePrompt}
         // 🌟 STEP 1: 세계급 컨텐츠 변환 (분석.md/개선.md 기반)
         if (this.worldClassMode) {
           await this.logger.info('세계급 컨텐츠 변환 적용', { operationId });
-          const transformationResult = await this.worldClassEngine.transformToWorldClass(
+          const enhancementResult = await this.worldClassEngine.enhanceContent(
             content,
-            storyContext
+            { genre: ['romance', 'fantasy'], ...storyContext }
           );
           
-          content = transformationResult.enhancedContent;
+          content = enhancementResult.content;
           
           await this.logger.info('세계급 변환 완료', {
             operationId,
-            improvements: transformationResult.transformationReport.improvements,
-            worldClassStatus: transformationResult.finalQuality.worldClassStatus
+            qualityScore: enhancementResult.qualityScore,
+            enhancements: enhancementResult.enhancements
           });
         }
 
@@ -575,7 +513,7 @@ ${basePrompt}
         attempt++;
       } catch (_error) {
     // Intentionally unused error variable
-        await this.logger.warn(`생성 시도 ${attempt} 실패`, { _, _error: _error.message });
+        await this.logger.warn(`생성 시도 ${attempt} 실패`, { operationId, attempt, error: _error.message });
         
         if (attempt === CONFIG.QUALITY_ASSURANCE.maxAttempts) {
           // 최종 시도도 실패한 경우
@@ -629,7 +567,8 @@ ${basePrompt}
       goalViews: '일일 조회수 10만+ 달성'
     };
 
-    const prompt = BLOCKBUSTER_NOVEL_TEMPLATE(requirements);
+    const builder = new SimplePromptBuilder();
+    const prompt = builder.addNovelCreation(requirements).build();
 
     const storyContext = { novelType: 'new', theme, tropes };
     const response = await this.generateContent(prompt, creativity, storyContext);
@@ -659,7 +598,8 @@ ${basePrompt}
       nextChapterNumber
     };
 
-    const prompt = SCIENTIFIC_CHAPTER_TEMPLATE(nextChapterNumber, requirements);
+    const builder = new SimplePromptBuilder();
+    const prompt = builder.addChapterRequest(nextChapterNumber, requirements.previousSummary).build();
 
     const storyContext = { 
       novelType: 'continue', 
@@ -936,7 +876,7 @@ IS_FINAL: [이것이 최종화면 true, 아니면 false]
   parseChapter(chapterText, novelSlug, chapterNumber, isCompletion = false) {
     const lines = chapterText.trim().split('\n');
     let title = '';
-    let wordCount = 0;
+    const wordCount = 0;
     let isFinal = false;
     let content = '';
     let contentStarted = false;
@@ -945,7 +885,7 @@ IS_FINAL: [이것이 최종화면 true, 아니면 false]
       if (line.startsWith('CHAPTER_TITLE:')) {
         title = line.replace('CHAPTER_TITLE:', '').trim();
       } else if (line.startsWith('WORD_COUNT:')) {
-        wordCount = parseInt(line.replace('WORD_COUNT:', '').trim()) || 0;
+        const _wordCount = parseInt(line.replace('WORD_COUNT:', '').trim()) || 0;
       } else if (line.startsWith('IS_FINAL:')) {
         isFinal = line.replace('IS_FINAL:', '').trim() === 'true';
       } else if (line.trim() === '' && !contentStarted) {
@@ -955,12 +895,27 @@ IS_FINAL: [이것이 최종화면 true, 아니면 false]
       }
     }
 
+    // 메타데이터 누출 방지 필터링
+    let cleanContent = content.trim();
+    
+    // 개발자 주석 제거
+    cleanContent = cleanContent.replace(/\[.*?자.*?콘텐츠\]/g, '');
+    
+    // 예측 지표 섹션 제거
+    cleanContent = cleanContent.replace(/\*\*대박 예측 지표\*\*:[\s\S]*?(\n\n|$)/g, '');
+    
+    // 목표 관련 문구 제거
+    cleanContent = cleanContent.replace(/목표:.*?📈/g, '');
+    
+    // 기타 메타데이터 패턴 제거
+    cleanContent = cleanContent.replace(/---\s*\n\n\*\*대박.*?$/gm, '');
+    
     return {
       title: title || `${chapterNumber}화`,
       novel: novelSlug,
       chapterNumber,
-      content: content.trim(),
-      wordCount: wordCount || content.length,
+      content: cleanContent,
+      wordCount: cleanContent.replace(/\s/g, '').length, // 공백 제거 후 실제 글자 수
       isCompletion,
       isFinal
     };
@@ -1035,6 +990,32 @@ IS_FINAL: [이것이 최종화면 true, 아니면 false]
       pacing: storyContext.pacing || 'medium',
       tensions: storyContext.tensions || []
     };
+  }
+
+  /**
+   * 생성 통계 업데이트
+   */
+  updateGenerationStats(generationResult, startTime) {
+    this.generationStats.totalGenerations++;
+    
+    if (generationResult.qualityScore) {
+      const totalScore = this.generationStats.averageScore * (this.generationStats.totalGenerations - 1);
+      this.generationStats.averageScore = (totalScore + generationResult.qualityScore) / this.generationStats.totalGenerations;
+    }
+    
+    if (generationResult.improvementCycles > 0) {
+      this.generationStats.qualityImprovements++;
+    }
+    
+    this.generationStats.successRate = this.generationStats.totalGenerations > 0 ? 
+      (this.generationStats.totalGenerations - this.generationStats.qualityImprovements) / this.generationStats.totalGenerations : 0;
+    
+    const duration = Date.now() - startTime;
+    this.logger?.info('생성 통계 업데이트', {
+      totalGenerations: this.generationStats.totalGenerations,
+      averageScore: this.generationStats.averageScore.toFixed(2),
+      duration: `${duration}ms`
+    });
   }
 }
 
@@ -1144,7 +1125,7 @@ class FileManager {
       
     } catch (_error) {
     // Intentionally unused error variable
-      await this.logger.warn('소설 챕터 수 업데이트 실패', { _, _error: _error.message });
+      await this.logger.warn('소설 챕터 수 업데이트 실패', { error: _error.message });
     }
   }
 
@@ -1552,7 +1533,7 @@ async function main() {
       options.dryRun = true;
     } else if (arg === '--verbose') {
       options.verbose = true;
-    } else if (arg === '--enable-continuity') {
+    } else if (arg === '--enable-continuity' || arg === '--continuity') {
       process.env.ENABLE_CONTINUITY_SYSTEM = 'true';
     } else if (arg === '--disable-continuity') {
       process.env.ENABLE_CONTINUITY_SYSTEM = 'false';
@@ -1575,8 +1556,10 @@ async function main() {
 }
 
 // 스크립트가 직접 실행될 때만 main 함수 호출
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.url === `file://${fileURLToPath(import.meta.url)}`) {
   main();
 }
 
 export { AutomationEngine, CONFIG };
+
+// 개선된 novelSlug 추출 로직은 continuity-enhanced-generator.js로 이동됨

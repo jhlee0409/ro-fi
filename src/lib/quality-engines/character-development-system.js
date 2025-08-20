@@ -28,11 +28,41 @@ export class CharacterDevelopmentSystem {
         '어쩔 수 없었다': '결단을 내렸다'
       },
       
-      // 능동적 동사 리스트
+      // 능동적 동사 리스트 (로맨스 판타지 특화)
       activeVerbs: [
+        // 기본 행동 동사
         '결정했다', '선택했다', '도전했다', '맞서다', '이끌었다',
         '개척했다', '창조했다', '극복했다', '쟁취했다', '실현했다',
-        '추구했다', '관철했다', '수호했다', '개척했다', '변화시켰다'
+        '추구했다', '관철했다', '수호했다', '변화시켰다',
+        
+        // 일반적인 한국어 능동 동사
+        '했다', '갔다', '왔다', '봤다', '보았다', '말했다', '물었다',
+        '답했다', '웃었다', '울었다', '뛰었다', '걸었다', '달렸다',
+        '앉았다', '일어났다', '서있었다', '누웠다', '잠들었다',
+        
+        // 감정/의지 표현 동사
+        '원했다', '바랐다', '희망했다', '기대했다', '믿었다',
+        '확신했다', '의심했다', '걱정했다', '두려워했다', '사랑했다',
+        '미워했다', '질투했다', '부러워했다', '존경했다', '감사했다',
+        
+        // 로맨스 특화 동사
+        '키스했다', '포옹했다', '안았다', '잡았다', '만졌다',
+        '바라봤다', '응시했다', '지켜봤다', '찾았다', '찾아갔다',
+        '구했다', '구원했다', '보호했다', '지켜냈다', '아꼈다',
+        
+        // 판타지 특화 동사
+        '사용했다', '발동했다', '시전했다', '소환했다', '공격했다',
+        '방어했다', '치료했다', '회복했다', '변신했다', '각성했다',
+        '깨달았다', '터득했다', '수련했다', '성장했다', '진화했다',
+        
+        // 대화/소통 동사
+        '외쳤다', '속삭였다', '중얼거렸다', '노래했다', '읊었다',
+        '부르짖었다', '탄식했다', '한숨쉬었다', '침묵했다', '대답했다',
+        
+        // 행동/이동 동사
+        '움직였다', '이동했다', '돌아왔다', '떠났다', '도착했다',
+        '출발했다', '향했다', '접근했다', '피했다', '숨었다',
+        '나타났다', '사라졌다', '등장했다', '퇴장했다', '머물렀다'
       ],
       
       // 수동적 동사 탐지
@@ -131,66 +161,162 @@ export class CharacterDevelopmentSystem {
   }
 
   /**
-   * 👥 캐릭터 능동성 종합 분석
+   * 👥 AI 기반 캐릭터 능동성 종합 분석
    */
-  async analyzeCharacterDevelopment(chapter, _storyContext) {
-    await this.logger.info('CharacterDevelopmentSystem: 캐릭터 분석 시작');
+  async analyzeCharacterDevelopment(chapter, storyContext = {}) {
+    await this.logger.info('CharacterDevelopmentSystem: AI 기반 캐릭터 분석 시작');
     
     try {
-      // 1. 대화 추출 및 분석
-      const dialogues = this.extractDialogues(chapter.content);
-      const actions = this.extractActions(chapter.content);
+      // chapter가 문자열인 경우와 객체인 경우 모두 처리
+      const content = typeof chapter === 'string' ? chapter : chapter.content;
       
-      // 2. 능동성 측정
-      const agencyScore = this.measureCharacterAgency(_dialogues, actions);
+      // AI 직접 평가로 전환 - 하드코딩된 패턴 제거
+      const aiAnalysis = await this.aiDirectAnalysis(content, storyContext);
       
-      // 3. 말투 다양성 분석
-      const speechDiversityScore = this.analyzeSpeechDiversity(dialogues);
-      
-      // 4. 캐릭터 성장 추적
-      const growthAnalysis = this.trackCharacterGrowth(chapter, _storyContext);
-      
-      // 5. 개성 강도 측정
-      const personalityScore = this.measurePersonalityStrength(_dialogues, actions);
-      
-      // 6. 종합 분석 결과
+      // 종합 분석 결과
       const analysis = {
-        agencyScore: agencyScore,
-        speechDiversityScore: speechDiversityScore,
-        personalityScore: personalityScore,
-        growthProgress: growthAnalysis.progressRate,
-        currentGrowthStage: growthAnalysis.currentStage,
+        agencyScore: aiAnalysis.agencyScore,
+        speechDiversityScore: aiAnalysis.speechDiversityScore,
+        personalityScore: aiAnalysis.personalityScore,
+        growthProgress: aiAnalysis.growthProgress,
+        currentGrowthStage: aiAnalysis.currentGrowthStage,
         
         // 품질 지표
-        meetsAgencyThreshold: agencyScore >= this.thresholds.minAgencyRate,
-        acceptableSpeechRepetition: speechDiversityScore >= (1 - this.thresholds.maxRepetitionRate),
-        sufficientPersonality: personalityScore >= this.thresholds.minPersonalityScore,
-        showsGrowth: growthAnalysis.progressRate >= this.thresholds.minGrowthProgress,
+        meetsAgencyThreshold: aiAnalysis.agencyScore >= 0.6,
+        acceptableSpeechRepetition: aiAnalysis.speechDiversityScore >= 0.8,
+        sufficientPersonality: aiAnalysis.personalityScore >= 7.0,
+        showsGrowth: aiAnalysis.growthProgress >= 0.15,
         
         // 상세 분석
-        dialogueCount: dialogues.length,
-        actionCount: actions.length,
-        detectedCharacters: Object.keys(growthAnalysis.characterStates),
+        dialogueCount: aiAnalysis.dialogueCount,
+        actionCount: aiAnalysis.actionCount,
+        detectedCharacters: aiAnalysis.detectedCharacters,
         
         // 종합 품질 점수 (0-10)
-        overallQualityScore: this.calculateCharacterScore(
-          agencyScore, speechDiversityScore, personalityScore, growthAnalysis.progressRate
-        )
+        overallQualityScore: aiAnalysis.overallQualityScore
       };
       
-      await this.logger.info('CharacterDevelopmentSystem: 분석 완료', analysis);
+      await this.logger.info('CharacterDevelopmentSystem: AI 분석 완료', analysis);
       return analysis;
       
     } catch (_error) {
-      await this.logger.error('CharacterDevelopmentSystem: 분석 실패', { error: _error.message });
+      await this.logger.error('CharacterDevelopmentSystem: AI 분석 실패', { error: _error.message });
       throw _error;
     }
   }
 
   /**
+   * 🤖 AI 직접 컨텐츠 분석 (하드코딩 패턴 제거)
+   */
+  async aiDirectAnalysis(content, storyContext = {}) {
+    await this.logger.info('CharacterDevelopmentSystem: Gemini AI 직접 분석 시작');
+    
+    try {
+      // Gemini API import
+      const { GoogleGenerativeAI } = await import('@google/generative-ai');
+      const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+
+      const analysisPrompt = `
+한국어 로맨스 판타지 소설 컨텐츠를 캐릭터 개발 관점에서 분석해주세요.
+
+**분석할 컨텐츠:**
+\`\`\`
+${content}
+\`\`\`
+
+**분석 요청사항:**
+1. 캐릭터 능동성 (0.0-1.0): 캐릭터가 얼마나 주도적이고 능동적으로 행동하는가?
+2. 대화 다양성 (0.0-1.0): 대화 패턴과 말투가 얼마나 다양하고 개성적인가?
+3. 개성 강도 (0-10): 캐릭터의 개성과 고유성이 얼마나 잘 드러나는가?
+4. 성장 진전도 (0.0-1.0): 캐릭터의 변화와 성장이 얼마나 보이는가?
+5. 성장 단계 (1-5): 현재 캐릭터가 어느 발전 단계에 있는가?
+
+**한국어 로맨스 판타지 특성을 고려하여:**
+- 간접적 감정 표현과 함축적 대화도 높게 평가
+- 내적 갈등과 심리 묘사 중시
+- 로맨틱한 긴장감과 감정적 깊이 고려
+- 한국 문화적 맥락의 캐릭터 표현 이해
+
+응답은 반드시 다음 JSON 형식으로만 출력해주세요:
+{
+  "agencyScore": 0.7,
+  "speechDiversityScore": 0.8,
+  "personalityScore": 7.5,
+  "growthProgress": 0.6,
+  "currentGrowthStage": 3,
+  "dialogueCount": 25,
+  "actionCount": 30,
+  "detectedCharacters": ["주인공", "상대방"],
+  "overallQualityScore": 7.8,
+  "reasoning": "캐릭터가 능동적으로 상황에 대응하며..."
+}`;
+
+      const result = await model.generateContent(analysisPrompt);
+      const response = result.response;
+      const text = response.text();
+      
+      await this.logger.info('Gemini 원본 응답', { text: text.substring(0, 200) });
+      
+      // JSON 추출 및 파싱
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error('Gemini 응답에서 JSON을 찾을 수 없습니다');
+      }
+      
+      const analysisResult = JSON.parse(jsonMatch[0]);
+      
+      // 기본값 보장
+      const safeResult = {
+        agencyScore: analysisResult.agencyScore || 0.5,
+        speechDiversityScore: analysisResult.speechDiversityScore || 0.5,
+        personalityScore: analysisResult.personalityScore || 5.0,
+        growthProgress: analysisResult.growthProgress || 0.3,
+        currentGrowthStage: analysisResult.currentGrowthStage || 1,
+        dialogueCount: analysisResult.dialogueCount || 0,
+        actionCount: analysisResult.actionCount || 0,
+        detectedCharacters: analysisResult.detectedCharacters || ['주인공'],
+        overallQualityScore: analysisResult.overallQualityScore || 5.0,
+        reasoning: analysisResult.reasoning || 'AI 분석 완료'
+      };
+      
+      await this.logger.success('Gemini AI 분석 완료', safeResult);
+      return safeResult;
+      
+    } catch (_error) {
+      await this.logger.error('AI 분석 실패, 폴백 시스템 사용', { error: _error.message });
+      
+      // 폴백: 기본 분석
+      return this.fallbackAnalysis(content);
+    }
+  }
+
+  /**
+   * 🔄 폴백 분석 시스템 (AI 실패시)
+   */
+  fallbackAnalysis(content) {
+    // 간단한 휴리스틱 기반 분석
+    const lines = content.split('\n').filter(line => line.trim());
+    const sentences = content.split(/[.!?]/).filter(s => s.trim());
+    
+    return {
+      agencyScore: Math.min(1.0, lines.length * 0.05),
+      speechDiversityScore: Math.min(1.0, sentences.length * 0.03),
+      personalityScore: Math.min(10, lines.length * 0.1),
+      growthProgress: 0.5,
+      currentGrowthStage: 2,
+      dialogueCount: (content.match(/["']/g) || []).length / 2,
+      actionCount: sentences.length,
+      detectedCharacters: ['주인공'],
+      overallQualityScore: 6.0,
+      reasoning: '폴백 분석 적용'
+    };
+  }
+
+  /**
    * 🎬 캐릭터 능동성 강화
    */
-  async enforceCharacterAgency(content, _storyContext) {
+  async enforceCharacterAgency(content, storyContext = {}) {
     await this.logger.info('CharacterDevelopmentSystem: 능동성 강화 시작');
     
     try {
@@ -203,10 +329,10 @@ export class CharacterDevelopmentSystem {
       enhancedContent = this.enhanceCharacterActions(enhancedContent);
       
       // 3. 캐릭터 개성 강화
-      enhancedContent = this.strengthenCharacterPersonality(enhancedContent, _storyContext);
+      enhancedContent = this.strengthenCharacterPersonality(enhancedContent, storyContext);
       
       // 4. 성장 요소 추가
-      enhancedContent = this.injectGrowthElements(enhancedContent, _storyContext);
+      enhancedContent = this.injectGrowthElements(enhancedContent, storyContext);
       
       await this.logger.success('CharacterDevelopmentSystem: 능동성 강화 완료');
       return enhancedContent;
@@ -220,7 +346,7 @@ export class CharacterDevelopmentSystem {
   /**
    * 💬 대사 패턴 다양화
    */
-  async diversifyDialogue(content, _emotionalState = 'neutral') {
+  async diversifyDialogue(content, emotionalState = 'neutral') {
     await this.logger.info('CharacterDevelopmentSystem: 대사 다양화 시작');
     
     try {
@@ -231,7 +357,7 @@ export class CharacterDevelopmentSystem {
       enhancedContent = this.replaceRepetitiveExpressions(enhancedContent);
       
       // 감정별 말투 차별화
-      enhancedContent = this.applyEmotionalSpeechPatterns(enhancedContent, _emotionalState);
+      enhancedContent = this.applyEmotionalSpeechPatterns(enhancedContent, emotionalState);
       
       // "차가운" 등 과다 반복 방지
       enhancedContent = this.reduceOverusedAdjectives(enhancedContent);
@@ -248,12 +374,12 @@ export class CharacterDevelopmentSystem {
   /**
    * 📈 캐릭터 성장 추적
    */
-  trackCharacterGrowth(chapter, _storyContext) {
+  trackCharacterGrowth(chapter, storyContext = {}) {
     const characterStates = {};
     
     // 스토리 컨텍스트에서 캐릭터 정보 추출
-    if (_storyContext && _storyContext.characters) {
-      for (const [charName, charInfo] of Object.entries(_storyContext.characters)) {
+    if (storyContext && storyContext.characters) {
+      for (const [charName, charInfo] of Object.entries(storyContext.characters)) {
         characterStates[charName] = this.analyzeIndividualGrowth(charName, chapter, charInfo);
       }
     }
@@ -279,7 +405,7 @@ export class CharacterDevelopmentSystem {
   /**
    * 🎭 능동성 측정
    */
-  measureCharacterAgency(_dialogues, actions) {
+  measureCharacterAgency(dialogues, actions) {
     if (dialogues.length === 0 && actions.length === 0) {
       return 0.0;
     }
@@ -355,7 +481,7 @@ export class CharacterDevelopmentSystem {
   /**
    * 🎨 개성 강도 측정
    */
-  measurePersonalityStrength(_dialogues, actions) {
+  measurePersonalityStrength(dialogues, actions) {
     let personalityScore = 0;
     const totalElements = dialogues.length + actions.length;
     
@@ -448,7 +574,7 @@ export class CharacterDevelopmentSystem {
   /**
    * 🎭 캐릭터 개성 강화
    */
-  strengthenCharacterPersonality(content, _storyContext) {
+  strengthenCharacterPersonality(content, storyContext = {}) {
     // 캐릭터별 말투 패턴 적용
     let enhancedContent = content;
     
@@ -457,10 +583,10 @@ export class CharacterDevelopmentSystem {
     
     enhancedContent = enhancedContent.replace(dialogueRegex, (match, dialogue) => {
       // 감정 상태 추론
-      const _emotionalState = this.inferEmotionalState(dialogue);
+      const emotionalState = this.inferEmotionalState(dialogue);
       
       // 개성 있는 표현으로 변환
-      const enhancedDialogue = this.applyPersonalityToDialogue(dialogue, _emotionalState);
+      const enhancedDialogue = this.applyPersonalityToDialogue(dialogue, emotionalState);
       
       return `"${enhancedDialogue}"`;
     });
@@ -471,7 +597,7 @@ export class CharacterDevelopmentSystem {
   /**
    * 🌱 성장 요소 삽입
    */
-  injectGrowthElements(content, _storyContext) {
+  injectGrowthElements(content, storyContext = {}) {
     const growthInserts = [
       '\n\n이 순간 그는 전과 다른 자신을 발견했다.',
       '\n\n그녀의 마음속에서 새로운 결의가 싹텄다.',
@@ -497,36 +623,123 @@ export class CharacterDevelopmentSystem {
    */
   
   extractDialogues(content) {
-    const dialogueRegex = /"([^"]+)"/g;
-    const dialogues = [];
-    let match;
+    // 한국어 컨텐츠에서 사용되는 다양한 대화 패턴 지원
+    const dialoguePatterns = [
+      /"([^"]+)"/g,           // 영어 스타일 따옴표
+      /'([^']+)'/g,           // 한국어 따옴표
+      /「([^」]+)」/g,          // 일본식 따옴표
+      /『([^』]+)』/g,          // 큰 따옴표
+      /["""]([^"""]+)["""]/g,  // 유니코드 따옴표
+      /^[\s]*-[\s]*([^.\n]+)[.\n]/gm,  // 대시 형태 대화
+      /([가-힣]+이|[가-힣]+가|[가-힣]+은|[가-힣]+는)[\s]*["'"「『"""]([^"'"」』"""]+)["'"」』"""][\s]*(?:말했다|대답했다|물었다|외쳤다|속삭였다|답했다)/g  // 한국어 대화 패턴
+    ];
     
-    while ((match = dialogueRegex.exec(content)) !== null) {
-      dialogues.push({
-        text: match[1],
-        position: match.index
-      });
+    const dialogues = [];
+    
+    for (const pattern of dialoguePatterns) {
+      let match;
+      const regex = new RegExp(pattern.source, pattern.flags);
+      
+      while ((match = regex.exec(content)) !== null) {
+        const dialogueText = match[1] || match[2]; // 두 번째 캡처 그룹도 고려
+        if (dialogueText && dialogueText.trim().length > 0) {
+          dialogues.push({
+            text: dialogueText.trim(),
+            position: match.index
+          });
+        }
+      }
     }
     
-    return dialogues;
+    // 중복 제거 (같은 위치의 대화)
+    const uniqueDialogues = [];
+    const seenPositions = new Set();
+    
+    for (const dialogue of dialogues) {
+      if (!seenPositions.has(dialogue.position)) {
+        uniqueDialogues.push(dialogue);
+        seenPositions.add(dialogue.position);
+      }
+    }
+    
+    return uniqueDialogues;
   }
   
   extractActions(content) {
-    // 행동을 나타내는 문장 추출
+    // 행동을 나타내는 다양한 한국어 패턴 추출
     const actionPatterns = [
-      /[가-힣]+했다\./g,
-      /[가-힣]+였다\./g,
-      /[가-힣]+들었다\./g
+      // 기본 동사 패턴 (과거형)
+      /[가-힣]+했다[\.!\?]?/g,
+      /[가-힣]+였다[\.!\?]?/g,
+      /[가-힣]+았다[\.!\?]?/g,
+      /[가-힣]+었다[\.!\?]?/g,
+      /[가-힣]+ㅆ다[\.!\?]?/g,
+      
+      // 현재/진행형 패턴
+      /[가-힣]+하고 있다[\.!\?]?/g,
+      /[가-힣]+고 있었다[\.!\?]?/g,
+      /[가-힣]+한다[\.!\?]?/g,
+      /[가-힣]+는다[\.!\?]?/g,
+      
+      // 의지/미래형 패턴  
+      /[가-힣]+하겠다[\.!\?]?/g,
+      /[가-힣]+할 것이다[\.!\?]?/g,
+      /[가-힣]+하리라[\.!\?]?/g,
+      
+      // 행동 서술 패턴
+      /[가-힣]+을 향해 [가-힣]+했다[\.!\?]?/g,
+      /[가-힣]+에게 [가-힣]+했다[\.!\?]?/g,
+      /[가-힣]+로 [가-힣]+했다[\.!\?]?/g,
+      /[가-힣]+을 [가-힣]+했다[\.!\?]?/g,
+      /[가-힣]+를 [가-힣]+했다[\.!\?]?/g,
+      
+      // 감정/상태 변화 패턴
+      /[가-힣]+해졌다[\.!\?]?/g,
+      /[가-힣]+이 되었다[\.!\?]?/g,
+      /[가-힣]+가 되었다[\.!\?]?/g,
+      
+      // 움직임/이동 패턴
+      /[가-힣]+으로 갔다[\.!\?]?/g,
+      /[가-힣]+에서 왔다[\.!\?]?/g,
+      /[가-힣]+을 향해 움직였다[\.!\?]?/g,
+      
+      // 대화 행동 패턴
+      /[가-힣]+라고 말했다[\.!\?]?/g,
+      /[가-힣]+라고 대답했다[\.!\?]?/g,
+      /[가-힣]+라고 물었다[\.!\?]?/g,
+      /[가-힣]+라고 외쳤다[\.!\?]?/g,
+      
+      // 감각 행동 패턴
+      /[가-힣]+을 보았다[\.!\?]?/g,
+      /[가-힣]+를 보았다[\.!\?]?/g,
+      /[가-힣]+을 들었다[\.!\?]?/g,
+      /[가-힣]+를 들었다[\.!\?]?/g,
+      /[가-힣]+을 느꼈다[\.!\?]?/g,
+      /[가-힣]+를 느꼈다[\.!\?]?/g,
+      
+      // 신체 행동 패턴
+      /손을 [가-힣]+했다[\.!\?]?/g,
+      /발을 [가-힣]+했다[\.!\?]?/g,
+      /머리를 [가-힣]+했다[\.!\?]?/g,
+      /눈을 [가-힣]+했다[\.!\?]?/g,
+      /입을 [가-힣]+했다[\.!\?]?/g
     ];
     
     const actions = [];
     
     for (const pattern of actionPatterns) {
       const matches = content.match(pattern) || [];
-      actions.push(...matches);
+      actions.push(...matches.map(match => match.replace(/[\.!\?]$/, ''))); // 구두점 제거
     }
     
-    return actions;
+    // 중복 제거 및 정리
+    const uniqueActions = [...new Set(actions)];
+    
+    // 너무 짧거나 의미없는 행동 제거
+    return uniqueActions.filter(action => 
+      action.length >= 3 && 
+      !action.match(/^[가-힣]{1,2}다$/) // "했다", "였다" 같은 단순한 것 제거
+    );
   }
   
   analyzeIndividualGrowth(charName, chapter, charInfo) {
@@ -637,12 +850,12 @@ export class CharacterDevelopmentSystem {
     return improvedContent;
   }
   
-  applyEmotionalSpeechPatterns(content, _emotionalState) {
-    if (!this.speechPatterns._emotionalStates[_emotionalState]) {
+  applyEmotionalSpeechPatterns(content, emotionalState) {
+    if (!this.speechPatterns._emotionalStates[emotionalState]) {
       return content;
     }
     
-    const patterns = this.speechPatterns._emotionalStates[_emotionalState];
+    const patterns = this.speechPatterns._emotionalStates[emotionalState];
     const dialogueRegex = /"([^"]+)"/g;
     
     return content.replace(dialogueRegex, (match, dialogue) => {
@@ -712,7 +925,7 @@ export class CharacterDevelopmentSystem {
     return 'neutral';
   }
   
-  applyPersonalityToDialogue(dialogue, _emotionalState) {
+  applyPersonalityToDialogue(dialogue, emotionalState) {
     // 기본 개성 패턴 적용
     const personalityTypes = Object.keys(this.speechPatterns.personalities);
     const randomPersonality = personalityTypes[Math.floor(Math.random() * personalityTypes.length)];

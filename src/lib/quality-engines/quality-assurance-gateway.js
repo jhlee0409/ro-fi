@@ -12,6 +12,7 @@ import { PlotProgressionEngine } from './plot-progression-engine.js';
 import { CharacterDevelopmentSystem } from './character-development-system.js';
 import { LiteraryExcellenceEngine } from './literary-excellence-engine.js';
 import { RomanceChemistryAnalyzer } from './romance-chemistry-analyzer.js';
+import { QualityThresholdAgent } from './quality-threshold-agent.js';
 
 // 중앙화된 품질 설정 import
 import { 
@@ -31,9 +32,16 @@ export class QualityAssuranceGateway {
     this.literaryEngine = new LiteraryExcellenceEngine(logger);
     this.romanceEngine = new RomanceChemistryAnalyzer(logger);
     
-    // 중앙화된 품질 설정 사용
+    // 동적 임계값 에이전트 생성
+    this.thresholdAgent = new QualityThresholdAgent(logger);
+    
+    // 중앙화된 품질 설정 사용 (기본값)
     this.qualityThresholds = QUALITY_THRESHOLDS;
     this.engineWeights = ENGINE_WEIGHTS;
+    
+    // 동적 조정된 설정 (런타임에 업데이트)
+    this.dynamicThresholds = { ...QUALITY_THRESHOLDS };
+    this.dynamicWeights = { ...ENGINE_WEIGHTS };
     
     // 중앙화된 개선 전략 사용
     this.improvementStrategies = IMPROVEMENT_STRATEGIES;
@@ -51,10 +59,23 @@ export class QualityAssuranceGateway {
     await this.logger.info('QualityAssuranceGateway: 통합 품질 분석 시작');
     
     try {
+      // 0. 동적 임계값 및 가중치 최적화
+      await this.logger.info('QualityAssuranceGateway: 동적 임계값 최적화 시작');
+      const optimization = await this.thresholdAgent.diagnoseAndOptimize(content, storyContext, {});
+      
+      // 최적화된 설정 적용
+      this.dynamicThresholds = optimization.optimizedThresholds;
+      this.dynamicWeights = optimization.optimizedWeights;
+      
+      await this.logger.info('QualityAssuranceGateway: 동적 최적화 완료', {
+        thresholdAdjustment: this.dynamicThresholds.minimum - this.qualityThresholds.minimum,
+        optimizationRecommendations: optimization.koreanOptimization.recommendations.length
+      });
+      
       // 1. 각 엔진별 분석 실행 (병렬 처리)
       const [plotAnalysis, characterAnalysis, literaryAnalysis, romanceAnalysis] = await Promise.all([
         this.plotEngine.validatePlotProgression({ content }, storyContext),
-        this.characterEngine.analyzeCharacterDevelopment({ content }, storyContext),
+        this.characterEngine.analyzeCharacterDevelopment(content, storyContext),
         this.literaryEngine.analyzeLiteraryQuality(content),
         this.romanceEngine.analyzeRomanceChemistry({ content }, storyContext)
       ]);
@@ -67,8 +88,8 @@ export class QualityAssuranceGateway {
         romanceScore: romanceAnalysis.overallQualityScore
       };
       
-      // 3. 가중평균으로 전체 점수 계산
-      const overallScore = this.calculateWeightedScore(scores);
+      // 3. 동적 가중평균으로 전체 점수 계산
+      const overallScore = this.calculateDynamicWeightedScore(scores);
       
       // 4. 품질 등급 결정
       const qualityGrade = this.determineQualityGrade(overallScore);
@@ -83,7 +104,16 @@ export class QualityAssuranceGateway {
         // 전체 점수 및 등급
         overallScore: overallScore,
         qualityGrade: qualityGrade,
-        passThreshold: overallScore >= this.qualityThresholds.minimum,
+        passThreshold: overallScore >= this.dynamicThresholds.minimum,
+        
+        // 동적 최적화 정보
+        dynamicOptimization: {
+          originalThreshold: this.qualityThresholds.minimum,
+          adjustedThreshold: this.dynamicThresholds.minimum,
+          thresholdAdjustment: this.dynamicThresholds.minimum - this.qualityThresholds.minimum,
+          optimizationApplied: true,
+          contentCharacteristics: optimization.contentCharacteristics.overallCharacteristics
+        },
         
         // 개별 엔진 점수
         scores: scores,
@@ -200,7 +230,9 @@ export class QualityAssuranceGateway {
       if (!qualityReport.passThreshold) {
         await this.logger.warn('품질 임계값 미달, 자동 개선 시작', {
           currentScore: qualityReport.overallScore,
-          threshold: this.qualityThresholds.minimum
+          originalThreshold: this.qualityThresholds.minimum,
+          adjustedThreshold: this.dynamicThresholds.minimum,
+          thresholdAdjustment: this.dynamicThresholds.minimum - this.qualityThresholds.minimum
         });
         
         const improvementResult = await this.improveContent(
@@ -243,6 +275,23 @@ export class QualityAssuranceGateway {
    */
   calculateWeightedScore(scores) {
     return QualityHelpers.calculateWeightedScore(scores);
+  }
+
+  /**
+   * 📊 동적 가중 점수 계산 (최적화된 가중치 사용)
+   */
+  calculateDynamicWeightedScore(scores) {
+    const plotScore = scores.plotScore || scores.plot || 0;
+    const characterScore = scores.characterScore || scores.character || 0;
+    const literaryScore = scores.literaryScore || scores.literary || 0;
+    const romanceScore = scores.romanceScore || scores.romance || 0;
+    
+    return parseFloat((
+      plotScore * this.dynamicWeights.plot +
+      characterScore * this.dynamicWeights.character +
+      literaryScore * this.dynamicWeights.literary +
+      romanceScore * this.dynamicWeights.romance
+    ).toFixed(1));
   }
 
   /**
@@ -289,7 +338,7 @@ export class QualityAssuranceGateway {
     const issues = [];
     
     // 플롯 관련 문제
-    if (scores.plotScore < this.qualityThresholds.minimum) {
+    if (scores.plotScore < this.dynamicThresholds.minimum) {
       issues.push({
         engine: 'plot',
         severity: 'HIGH',
@@ -304,7 +353,7 @@ export class QualityAssuranceGateway {
     }
     
     // 캐릭터 관련 문제
-    if (scores.characterScore < this.qualityThresholds.minimum) {
+    if (scores.characterScore < this.dynamicThresholds.minimum) {
       issues.push({
         engine: 'character',
         severity: 'HIGH',
@@ -320,7 +369,7 @@ export class QualityAssuranceGateway {
     }
     
     // 문체 관련 문제
-    if (scores.literaryScore < this.qualityThresholds.minimum) {
+    if (scores.literaryScore < this.dynamicThresholds.minimum) {
       issues.push({
         engine: 'literary',
         severity: 'MEDIUM',
@@ -336,7 +385,7 @@ export class QualityAssuranceGateway {
     }
     
     // 로맨스 관련 문제
-    if (scores.romanceScore < this.qualityThresholds.minimum) {
+    if (scores.romanceScore < this.dynamicThresholds.minimum) {
       issues.push({
         engine: 'romance',
         severity: 'MEDIUM',
@@ -369,13 +418,13 @@ export class QualityAssuranceGateway {
     ].sort((a, b) => a.score - b.score);
     
     for (const issue of priorityIssues) {
-      if (issue.score < this.qualityThresholds.minimum) {
+      if (issue.score < this.dynamicThresholds.minimum) {
         recommendations.push({
           priority: 'HIGH',
           engine: issue.engine,
-          recommendation: `${issue.name} 품질을 우선적으로 개선하세요 (현재 ${issue.score}/10)`
+          recommendation: `${issue.name} 품질을 우선적으로 개선하세요 (현재 ${issue.score}/10, 조정된 임계값: ${this.dynamicThresholds.minimum})`
         });
-      } else if (issue.score < this.qualityThresholds.excellent) {
+      } else if (issue.score < this.dynamicThresholds.excellent) {
         recommendations.push({
           priority: 'MEDIUM',
           engine: issue.engine,

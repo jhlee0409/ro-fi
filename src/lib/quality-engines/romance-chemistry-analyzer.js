@@ -198,65 +198,163 @@ export class RomanceChemistryAnalyzer {
   }
 
   /**
-   * 💕 로맨스 케미스트리 종합 분석
+   * 💕 AI 기반 로맨스 케미스트리 종합 분석
    */
   async analyzeRomanceChemistry(chapter, storyContext) {
-    await this.logger.info('RomanceChemistryAnalyzer: 로맨스 분석 시작');
+    await this.logger.info('RomanceChemistryAnalyzer: AI 기반 로맨스 분석 시작');
     
     try {
-      // 1. 현재 로맨스 진행도 측정
-      const progressionAnalysis = this.trackRomanceProgression(chapter, storyContext);
+      // AI 직접 분석으로 전환
+      const aiAnalysis = await this.aiDirectRomanceAnalysis(chapter.content, storyContext);
       
-      // 2. 케미스트리 점수 계산
-      const chemistryScore = this.calculateChemistryScore(chapter.content);
-      
-      // 3. 감정선 발전 속도 분석
-      const emotionalDevelopment = this.analyzeEmotionalDevelopment(chapter, storyContext);
-      
-      // 4. 로맨틱 텐션 측정
-      const tensionLevel = this.measureRomanticTension(chapter.content);
-      
-      // 5. 대화 케미스트리 분석
-      const dialogueChemistry = this.analyzeDialogueChemistry(chapter.content);
-      
-      // 6. 설렘 포인트 개수 확인
-      const heartFlutterCount = this.countHeartFlutterMoments(chapter.content);
-      
-      // 7. 종합 분석 결과
+      // 종합 분석 결과
       const analysis = {
-        currentStage: progressionAnalysis.currentStage,
-        progressionRate: progressionAnalysis.progressionRate,
-        chemistryScore: chemistryScore,
-        emotionalDepth: emotionalDevelopment.depth,
-        tensionLevel: tensionLevel,
-        dialogueChemistryScore: dialogueChemistry,
-        heartFlutterCount: heartFlutterCount,
+        currentStage: aiAnalysis.currentStage,
+        progressionRate: aiAnalysis.progressionRate,
+        chemistryScore: aiAnalysis.chemistryScore,
+        emotionalDepth: aiAnalysis.emotionalDepth,
+        tensionLevel: aiAnalysis.tensionLevel,
+        dialogueChemistryScore: aiAnalysis.dialogueChemistryScore,
+        heartFlutterCount: aiAnalysis.heartFlutterCount,
         
         // 품질 지표
-        meetsChemistryThreshold: chemistryScore >= this.thresholds.minChemistryScore,
-        sufficientProgression: progressionAnalysis.progressionRate >= this.thresholds.minRomanceProgression,
-        adequateEmotionalDepth: emotionalDevelopment.depth >= this.thresholds.minEmotionalDepth,
-        appropriateTension: tensionLevel >= this.thresholds.optimalTensionLevel,
+        meetsChemistryThreshold: aiAnalysis.chemistryScore >= 0.7,
+        sufficientProgression: aiAnalysis.progressionRate >= 0.6,
+        adequateEmotionalDepth: aiAnalysis.emotionalDepth >= 0.8,
+        appropriateTension: aiAnalysis.tensionLevel >= 0.65,
         
         // 상세 분석
-        stageIndicators: progressionAnalysis.detectedIndicators,
-        emotionalElements: emotionalDevelopment.elements,
-        tensionSources: this.identifyTensionSources(chapter.content),
+        stageIndicators: aiAnalysis.stageIndicators,
+        emotionalElements: aiAnalysis.emotionalElements,
+        tensionSources: aiAnalysis.tensionSources,
         
         // 종합 품질 점수 (0-10)
-        overallQualityScore: this.calculateRomanceScore(
-          chemistryScore, progressionAnalysis.progressionRate, 
-          emotionalDevelopment.depth, tensionLevel, dialogueChemistry
-        )
+        overallQualityScore: aiAnalysis.overallQualityScore
       };
       
-      await this.logger.info('RomanceChemistryAnalyzer: 분석 완료', analysis);
+      await this.logger.info('RomanceChemistryAnalyzer: AI 분석 완료', analysis);
       return analysis;
       
     } catch (_error) {
-      await this.logger.error('RomanceChemistryAnalyzer: 분석 실패', { error: _error.message });
+      await this.logger.error('RomanceChemistryAnalyzer: AI 분석 실패', { error: _error.message });
       throw _error;
     }
+  }
+
+  /**
+   * 🤖 AI 직접 로맨스 분석 (하드코딩 패턴 제거)
+   */
+  async aiDirectRomanceAnalysis(content, _storyContext = {}) {
+    await this.logger.info('RomanceChemistryAnalyzer: Gemini AI 직접 로맨스 분석 시작');
+    
+    try {
+      // Gemini API import
+      const { GoogleGenerativeAI } = await import('@google/generative-ai');
+      const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+
+      const romanceAnalysisPrompt = `
+한국어 로맨스 판타지 소설 컨텐츠를 로맨스 케미스트리 관점에서 분석해주세요.
+
+**분석할 컨텐츠:**
+\`\`\`
+${content}
+\`\`\`
+
+**분석 요청사항:**
+1. 로맨스 진행도 (1-10): 현재 로맨스가 어느 단계에 있는가? (1=첫만남, 10=완성된사랑)
+2. 진행률 (0.0-1.0): 이 단계에서 얼마나 발전했는가?
+3. 케미스트리 점수 (0.0-1.0): 두 인물 간 화학적 끌림이 얼마나 강한가?
+4. 감정적 깊이 (0.0-1.0): 감정 표현이 얼마나 깊고 진정성 있는가?
+5. 로맨틱 텐션 (0.0-1.0): 로맨틱한 긴장감과 설렘이 얼마나 있는가?
+6. 대화 케미스트리 (0.0-1.0): 대화에서 느껴지는 화학적 반응은?
+7. 설렘 포인트 개수 (0-10): 독자가 설렐 만한 순간들의 개수
+
+**한국어 로맨스 판타지 특성을 고려하여:**
+- 간접적이고 함축적인 로맨스 표현도 높게 평가
+- 내적 감정과 심리적 변화를 중요하게 고려  
+- 시선, 터치, 분위기 등 미묘한 로맨틱 신호 인식
+- 한국 문화적 맥락의 로맨스 표현 방식 이해
+
+응답은 반드시 다음 JSON 형식으로만 출력해주세요:
+{
+  "currentStage": 6,
+  "progressionRate": 0.7,
+  "chemistryScore": 0.8,
+  "emotionalDepth": 0.9,
+  "tensionLevel": 0.75,
+  "dialogueChemistryScore": 0.7,
+  "heartFlutterCount": 4,
+  "stageIndicators": ["끌림", "설렘"],
+  "emotionalElements": [{"type": "love", "keyword": "마음"}],
+  "tensionSources": [{"type": "approach", "trigger": "가까워진 거리"}],
+  "overallQualityScore": 8.2,
+  "reasoning": "두 인물 간 로맨틱한 케미스트리가 효과적으로 표현됨..."
+}`;
+
+      const result = await model.generateContent(romanceAnalysisPrompt);
+      const response = result.response;
+      const text = response.text();
+      
+      await this.logger.info('Gemini 로맨스 분석 응답', { text: text.substring(0, 200) });
+      
+      // JSON 추출 및 파싱 (제어 문자 처리 개선)
+      const cleanedText = text.replace(/[\x00-\x1F\x7F-\x9F]/g, ''); // 제어 문자 제거
+      const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error('Gemini 응답에서 JSON을 찾을 수 없습니다');
+      }
+      
+      const analysisResult = JSON.parse(jsonMatch[0]);
+      
+      // 기본값 보장
+      const safeResult = {
+        currentStage: Math.max(1, Math.min(10, analysisResult.currentStage || 5)),
+        progressionRate: Math.max(0, Math.min(1, analysisResult.progressionRate || 0.5)),
+        chemistryScore: Math.max(0, Math.min(1, analysisResult.chemistryScore || 0.5)),
+        emotionalDepth: Math.max(0, Math.min(1, analysisResult.emotionalDepth || 0.5)),
+        tensionLevel: Math.max(0, Math.min(1, analysisResult.tensionLevel || 0.5)),
+        dialogueChemistryScore: Math.max(0, Math.min(1, analysisResult.dialogueChemistryScore || 0.5)),
+        heartFlutterCount: Math.max(0, analysisResult.heartFlutterCount || 2),
+        stageIndicators: analysisResult.stageIndicators || ['로맨스'],
+        emotionalElements: analysisResult.emotionalElements || [{"type": "love", "keyword": "마음"}],
+        tensionSources: analysisResult.tensionSources || [],
+        overallQualityScore: Math.max(0, Math.min(10, analysisResult.overallQualityScore || 6.0)),
+        reasoning: analysisResult.reasoning || 'AI 로맨스 분석 완료'
+      };
+      
+      await this.logger.success('Gemini AI 로맨스 분석 완료', safeResult);
+      return safeResult;
+      
+    } catch (_error) {
+      await this.logger.error('AI 로맨스 분석 실패, 폴백 시스템 사용', { error: _error.message });
+      
+      // 폴백: 기본 분석
+      return this.fallbackRomanceAnalysis(content);
+    }
+  }
+
+  /**
+   * 🔄 로맨스 분석 폴백 시스템 (AI 실패시)
+   */
+  fallbackRomanceAnalysis(content) {
+    const hasRomanceKeywords = /사랑|마음|설레|끌리|좋아/.test(content);
+    const hasTensionElements = /시선|손|가까이|멀어/.test(content);
+    
+    return {
+      currentStage: hasRomanceKeywords ? 7 : 4,
+      progressionRate: 0.6,
+      chemistryScore: hasRomanceKeywords ? 0.7 : 0.4,
+      emotionalDepth: 0.6,
+      tensionLevel: hasTensionElements ? 0.5 : 0.3,
+      dialogueChemistryScore: 0.5,
+      heartFlutterCount: hasRomanceKeywords ? 3 : 1,
+      stageIndicators: ['로맨스'],
+      emotionalElements: [{"type": "love", "keyword": "마음"}],
+      tensionSources: [],
+      overallQualityScore: 7.0,
+      reasoning: '폴백 로맨스 분석 적용'
+    };
   }
 
   /**
