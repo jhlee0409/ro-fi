@@ -52,11 +52,23 @@ chapter-draft-*.md
 quality-report-*.json
 analysis-temp.md
 
+# Story states and data management
+data/story-states-backup/
+data/story-states/archived-tests/
+
+# Report and documentation temp files
+CLEANUP-REPORT.md
+DEEP-CLEANUP-REPORT.md
+ENTERPRISE-FRAMEWORK-SUMMARY.md
+STORY-STATES-IMPROVEMENT-REPORT.md
+CONTINUITY_INTEGRATION.md
+
 # Development artifacts
 logs/
 *.debug.log
 performance-*.json
 benchmark-*.json
+playwright-report/
 
 # IDE and editor settings
 .vscode/
