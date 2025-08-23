@@ -1,0 +1,45 @@
+name: 🌸 로판 AI 자동 연재
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # 매일 오전 11시 (KST)
+  workflow_dispatch:  # 수동 실행 허용
+
+jobs:
+  auto-generate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Node.js 설정
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: 의존성 설치
+        run: npm install
+
+      - name: 🌸 로판 AI 자동 생성 실행
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          echo "🌸 로판 AI 자동 연재 시작"
+          npm run ai:generate
+
+      - name: 📝 변경사항 커밋 및 푸시
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: '🌸 AI: 새 챕터 자동 생성'
+          commit_options: '--no-verify'
+          file_pattern: 'src/content/chapters/*.md'
+          commit_user_name: 'GitHub Actions'
+          commit_user_email: 'actions@github.com'
+          commit_author: 'GitHub Actions <actions@github.com>'
