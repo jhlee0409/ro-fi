@@ -18,21 +18,26 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
+      - name: pnpm 설정
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
       - name: Node.js 설정
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
+          cache: 'pnpm'
 
       - name: 의존성 설치
-        run: npm install
+        run: pnpm install --frozen-lockfile
 
       - name: 🌸 로판 AI 자동 생성 실행
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           echo "🌸 로판 AI 자동 연재 시작"
-          npm run ai:generate
+          pnpm run ai:generate
 
       - name: 📝 변경사항 커밋 및 푸시
         uses: stefanzweifel/git-auto-commit-action@v5
